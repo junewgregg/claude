@@ -1,0 +1,21 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "FUNCTIONS_WORKER_RUNTIME": "python",
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+
+    "ANTHROPIC_API_KEY": "sk-ant-...",
+
+    "SMARTSHEET_TOKEN": "your-smartsheet-token",
+    "SMARTSHEET_SHEET_ID": "1234567890123456",
+
+    "GRAPH_TENANT_ID": "00000000-0000-0000-0000-000000000000",
+    "GRAPH_CLIENT_ID": "00000000-0000-0000-0000-000000000000",
+    "GRAPH_CLIENT_SECRET": "your-client-secret",
+    "SHAREPOINT_DRIVE_ID": "b!....",
+    "SHAREPOINT_BASE_FOLDER": "Asset Intake",
+    "THESIS_SHAREPOINT_PATH": "Config/thesis.md",
+
+    "RUN_RESEARCH": "false"
+  }
+}

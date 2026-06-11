@@ -8,3 +8,6 @@ venv/
 # Biotech DD agent runtime data
 decks/*.pdf
 out/
+
+# Azure Functions local secrets
+local.settings.json
