@@ -4,3 +4,7 @@ __pycache__/
 .venv/
 venv/
 .env
+
+# Biotech DD agent runtime data
+decks/*.pdf
+out/

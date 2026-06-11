@@ -1,0 +1,82 @@
+# Due-diligence category schema.
+#
+# This is the core artifact you control. Add, remove, or rename categories in
+# any tier without touching code. Three tiers:
+#
+#   extracted     - facts read directly from the deck (each gets a source_slide)
+#   thesis_scored - categories scored against config/thesis.md (score/label/
+#                   rationale/confidence); `scale` sets the numeric range
+#   researched    - categories filled via web research; `query_hint` is a
+#                   template that interpolates extracted field values, e.g.
+#                   {lead_indication}, {mechanism}, {modality}
+#
+# The starter categories below are a reasonable biopharma-asset template —
+# replace them with your firm's predefined list.
+
+asset_name_field: program_name
+
+tiers:
+  extracted:
+    - key: program_name
+      prompt: "Asset / program name or lead candidate code."
+    - key: company
+      prompt: "Developing company or sponsor."
+    - key: mechanism
+      prompt: "Mechanism of action and molecular target."
+    - key: modality
+      prompt: "Drug modality (small molecule, mAb, ADC, cell, gene, RNA, etc.)."
+    - key: lead_indication
+      prompt: "Lead indication and patient population."
+    - key: other_indications
+      prompt: "Other indications in the pipeline for this asset."
+    - key: development_stage
+      prompt: "Most advanced clinical stage; include trial IDs (e.g. NCT) if shown."
+    - key: clinical_data
+      prompt: "Key efficacy and safety results reported (endpoints, effect sizes, n)."
+    - key: differentiation
+      prompt: "Claimed differentiation vs. existing or competing therapies."
+    - key: ip_exclusivity
+      prompt: "Patent estate and exclusivity runway (key patents, expiry, orphan/PTE)."
+    - key: cmc_manufacturing
+      prompt: "CMC / manufacturing status, process, and any scale-up risks noted."
+    - key: regulatory_designations
+      prompt: "Regulatory designations (Fast Track, Breakthrough, Orphan, PRIME, etc.)."
+    - key: market_size
+      prompt: "Stated addressable market size / epidemiology / peak sales estimate."
+    - key: financing_ask
+      prompt: "Capital sought, round, valuation, and intended use of proceeds."
+    - key: team
+      prompt: "Management / scientific founders and notable track record."
+
+  thesis_scored:
+    - key: modality_fit
+      prompt: "How well the modality fits the firm's thesis and capabilities."
+      scale: [1, 5]
+    - key: indication_fit
+      prompt: "Alignment of the indication / therapeutic area with thesis focus."
+      scale: [1, 5]
+    - key: clinical_strength
+      prompt: "Strength and maturity of clinical evidence relative to stage."
+      scale: [1, 5]
+    - key: differentiation_strength
+      prompt: "Credibility and durability of the differentiation claim."
+      scale: [1, 5]
+    - key: ip_strength
+      prompt: "Quality and runway of the IP / exclusivity position."
+      scale: [1, 5]
+    - key: commercial_attractiveness
+      prompt: "Market size, pricing power, and commercial path against the thesis."
+      scale: [1, 5]
+    - key: deal_fit
+      prompt: "Fit of the financing ask / structure with the firm's mandate."
+      scale: [1, 5]
+
+  researched:
+    - key: standard_of_care
+      query_hint: "current standard of care and guideline regimens for {lead_indication}"
+    - key: competitors
+      query_hint: "clinical-stage competitors targeting {mechanism} in {lead_indication}, including pipeline assets"
+    - key: reimbursement
+      query_hint: "payer coverage, pricing, and reimbursement landscape for {lead_indication} therapies"
+    - key: recent_deals
+      query_hint: "recent M&A and licensing deals for {modality} assets in {lead_indication} over the last 3 years, with deal values"
