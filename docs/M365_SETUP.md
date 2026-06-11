@@ -80,7 +80,8 @@ Set **Application settings** (Configuration) on the Function App:
 | `SHAREPOINT_DRIVE_ID` | target document-library drive id |
 | `SHAREPOINT_BASE_FOLDER` | optional, default `Asset Intake` |
 | `DD_SCHEMA_PATH` | optional, default `config/schema.yaml` |
-| `DD_THESIS_PATH` | optional, default `config/thesis.md` |
+| `DD_THESIS_PATH` | optional local fallback, default `config/thesis.md` |
+| `THESIS_SHAREPOINT_PATH` | optional, drive-relative path to the editable thesis doc (e.g. `Config/thesis.md`); enables versioned thesis + rescore |
 | `RUN_RESEARCH` | `true`/`false` (default `true`) |
 
 > **Timeout note:** scoring + web research on Opus can run minutes. `host.json` sets
@@ -138,4 +139,41 @@ pipeline still runs the Anthropic stages and reports writer failures in
   links), extracted facts, scores + assessments, and research summaries + sources.
   Re-runs update the same row. The memo is attached to the row.
 - **SharePoint:** `…/{SHAREPOINT_BASE_FOLDER}/{asset-key} - {date}/` containing the
-  generated memo and every original attachment.
+  generated memo and every original attachment. Agent state lives under
+  `…/{SHAREPOINT_BASE_FOLDER}/_state/` (output snapshots + `corrections.jsonl`).
+
+## 8. Learning loop & thesis updates
+
+The agent improves from analyst review and adapts when strategy changes. Three
+extra Smartsheet columns drive this (auto-created): **Status**, **Reviewer Notes**,
+**Feedback Captured**, plus **Thesis Version**.
+
+### Learn from reviewed rows
+
+1. An analyst reviews a row, edits any wrong scores or extracted values, optionally
+   writes **Reviewer Notes**, and sets **Status** to `Reviewed` or `Approved`.
+2. A **nightly Power Automate Recurrence flow** POSTs to `…/api/feedback?code=<key>`.
+3. The sweep diffs each reviewed row against the agent's saved output, appends the
+   corrections to `_state/corrections.jsonl`, and stamps **Feedback Captured**.
+4. On the next asset, the scorer retrieves the most similar past corrections (by
+   indication / modality / mechanism) and injects them as worked examples — so the
+   model improves while every score still carries its own rationale + confidence.
+
+> Set up: add an automated cloud flow with a **Recurrence** trigger (e.g. daily
+> 02:00) → **HTTP POST** to the `feedback` function URL. No body needed.
+
+### Update the thesis
+
+1. Put the thesis in SharePoint and point `THESIS_SHAREPOINT_PATH` at it (e.g.
+   `Config/thesis.md`). The agent loads it each run and stamps the row's
+   **Thesis Version** (a content hash) so you always know what each asset was
+   scored under.
+2. When the thesis changes, trigger a **rescore**: POST to `…/api/rescore?code=<key>`
+   (a Power Automate button flow, or any scheduled/manual trigger).
+3. Rescore re-scores every **active** asset whose Thesis Version is stale — reusing
+   the cached extraction (no deck re-read, no re-research), applying the same
+   few-shot precedent — and updates each row's scores, assessment, **Status**
+   (`Re-scored`), and **Thesis Version**.
+
+Rescore is manual by design so you control when (and the token cost of) a
+re-evaluation happens.

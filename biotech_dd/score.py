@@ -48,9 +48,20 @@ def _clamp_scores(scored: BaseModel, schema: Schema) -> BaseModel:
     return scored
 
 
-def score(schema: Schema, thesis: str, extracted: BaseModel) -> BaseModel:
-    """Score one asset's extracted facts against the thesis."""
+def score(
+    schema: Schema, thesis: str, extracted: BaseModel, examples: str = ""
+) -> BaseModel:
+    """Score one asset's extracted facts against the thesis.
+
+    ``examples`` is optional few-shot text (precedent analyst corrections on
+    similar past deals) injected to steer the rubric without changing it.
+    """
     model = schema.scored_model()
+    user = f"{_category_instructions(schema)}\n\n"
+    if examples:
+        user += f"=== PRECEDENT FROM REVIEWED DEALS ===\n{examples}\n\n"
+    user += f"=== EXTRACTED ASSET FACTS ===\n{_facts_block(extracted)}"
+
     response = client().messages.parse(
         model=MODEL,
         max_tokens=16000,
@@ -63,15 +74,7 @@ def score(schema: Schema, thesis: str, extracted: BaseModel) -> BaseModel:
                 "cache_control": {"type": "ephemeral"},
             }
         ],
-        messages=[
-            {
-                "role": "user",
-                "content": (
-                    f"{_category_instructions(schema)}\n\n"
-                    f"=== EXTRACTED ASSET FACTS ===\n{_facts_block(extracted)}"
-                ),
-            }
-        ],
+        messages=[{"role": "user", "content": user}],
         output_format=model,
     )
     return _clamp_scores(response.parsed_output, schema)

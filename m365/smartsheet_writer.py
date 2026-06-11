@@ -86,6 +86,34 @@ class SmartsheetWriter:
         result = self._ss.Sheets.add_rows(self._sheet_id, [row])
         return result.result[0].id, True
 
+    def read_rows(self, schema: Schema) -> list[dict]:
+        """Return every row as ``{"id": row_id, "values": {col_name: value}}``."""
+        col_ids = self.ensure_columns(schema)
+        id_to_name = {cid: name for name, cid in col_ids.items()}
+        sheet = self._ss.Sheets.get_sheet(self._sheet_id)
+        rows: list[dict] = []
+        for row in sheet.rows:
+            values = {
+                id_to_name[cell.column_id]: ("" if cell.value is None else str(cell.value))
+                for cell in row.cells
+                if cell.column_id in id_to_name
+            }
+            rows.append({"id": row.id, "values": values})
+        return rows
+
+    def update_row(self, row_id: int, values: dict[str, str], schema: Schema) -> None:
+        """Update only the named columns on an existing row."""
+        col_ids = self.ensure_columns(schema)
+        cells = [
+            smartsheet.models.Cell(
+                {"column_id": col_ids[name], "value": value if value != "" else None}
+            )
+            for name, value in values.items()
+            if name in col_ids
+        ]
+        row = smartsheet.models.Row({"id": row_id, "cells": cells})
+        self._ss.Sheets.update_rows(self._sheet_id, [row])
+
     # -- attachments ------------------------------------------------------- #
 
     def attach_file_to_row(self, row_id: int, path: str, content_type: str) -> None:

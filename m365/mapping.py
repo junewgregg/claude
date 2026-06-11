@@ -15,10 +15,15 @@ from pydantic import BaseModel
 
 from biotech_dd.schema import Schema
 
-# Fixed meta columns, in display order.
+# Fixed meta columns, in display order. "Reviewer Notes" is the analyst's free-text
+# feedback channel; "Feedback Captured" and "Thesis Version" are written by the
+# learning sweep and the rescore job respectively.
 META_COLUMNS = [
     "Asset Key",
     "Status",
+    "Thesis Version",
+    "Reviewer Notes",
+    "Feedback Captured",
     "Intake Date",
     "Company",
     "Contact Name",
@@ -82,6 +87,7 @@ def build_row(
     subject: str,
     sender: str,
     intake_date: str,
+    thesis_version: str = "",
     memo_link: str = "",
     folder_link: str = "",
 ) -> dict[str, str]:
@@ -89,6 +95,10 @@ def build_row(
     row: dict[str, str] = {
         "Asset Key": key,
         "Status": status,
+        "Thesis Version": thesis_version,
+        # Reset the capture flag on (re)intake so refreshed data is reviewed again.
+        # Reviewer Notes is intentionally not written here, to preserve analyst input.
+        "Feedback Captured": "",
         "Intake Date": intake_date,
         "Company": intake.company or _val(extracted, "company") or "",
         "Contact Name": intake.contact_name or "",

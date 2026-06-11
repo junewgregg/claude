@@ -40,7 +40,12 @@ class Config:
 
     # DD config files (bundled in the function app or mounted).
     schema_path: Path
-    thesis_path: Path
+    thesis_path: Path  # local fallback if the SharePoint thesis isn't configured
+
+    # Drive-relative path to the editable thesis doc in SharePoint (e.g.
+    # "Config/thesis.md"). When set, the thesis is loaded from there each run and
+    # the asset's row records the version used.
+    thesis_sharepoint_path: str
 
     # Smartsheet
     smartsheet_token: str
@@ -61,6 +66,7 @@ class Config:
         return cls(
             schema_path=Path(os.environ.get("DD_SCHEMA_PATH", "config/schema.yaml")),
             thesis_path=Path(os.environ.get("DD_THESIS_PATH", "config/thesis.md")),
+            thesis_sharepoint_path=os.environ.get("THESIS_SHAREPOINT_PATH", ""),
             smartsheet_token=_require("SMARTSHEET_TOKEN"),
             smartsheet_sheet_id=int(_require("SMARTSHEET_SHEET_ID")),
             graph_tenant_id=_require("GRAPH_TENANT_ID"),

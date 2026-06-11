@@ -17,31 +17,70 @@ import logging
 import azure.functions as func
 
 from m365.config import Config, ConfigError
+from m365.feedback import sweep
 from m365.pipeline import run
+from m365.rescore import rescore
 
 app = func.FunctionApp()
 
 
+def _config_or_500() -> tuple[Config | None, func.HttpResponse | None]:
+    try:
+        return Config.from_env(), None
+    except ConfigError as e:
+        logging.error("configuration error: %s", e)
+        return None, func.HttpResponse(str(e), status_code=500)
+
+
+def _json(result: dict, *, warn_key: str = "warnings") -> func.HttpResponse:
+    status = 207 if result.get(warn_key) else 200
+    return func.HttpResponse(
+        json.dumps(result), status_code=status, mimetype="application/json"
+    )
+
+
 @app.route(route="intake", methods=["POST"], auth_level=func.AuthLevel.FUNCTION)
 def intake(req: func.HttpRequest) -> func.HttpResponse:
+    """Called by Power Automate when a new asset email arrives."""
     try:
         payload = req.get_json()
     except ValueError:
         return func.HttpResponse("invalid JSON body", status_code=400)
 
-    try:
-        config = Config.from_env()
-    except ConfigError as e:
-        logging.error("configuration error: %s", e)
-        return func.HttpResponse(str(e), status_code=500)
-
+    config, err = _config_or_500()
+    if err:
+        return err
     try:
         result = run(payload, config)
     except Exception as e:  # noqa: BLE001
         logging.exception("intake pipeline crashed")
         return func.HttpResponse(f"pipeline error: {e}", status_code=500)
+    return _json(result)
 
-    status = 200 if not result["warnings"] else 207
-    return func.HttpResponse(
-        json.dumps(result), status_code=status, mimetype="application/json"
-    )
+
+@app.route(route="feedback", methods=["POST"], auth_level=func.AuthLevel.FUNCTION)
+def feedback(req: func.HttpRequest) -> func.HttpResponse:
+    """Nightly sweep: capture analyst corrections from reviewed rows."""
+    config, err = _config_or_500()
+    if err:
+        return err
+    try:
+        result = sweep(config)
+    except Exception as e:  # noqa: BLE001
+        logging.exception("feedback sweep crashed")
+        return func.HttpResponse(f"sweep error: {e}", status_code=500)
+    return _json(result, warn_key="_none")
+
+
+@app.route(route="rescore", methods=["POST"], auth_level=func.AuthLevel.FUNCTION)
+def rescore_route(req: func.HttpRequest) -> func.HttpResponse:
+    """Manual trigger: re-score active assets against the current thesis."""
+    config, err = _config_or_500()
+    if err:
+        return err
+    try:
+        result = rescore(config)
+    except Exception as e:  # noqa: BLE001
+        logging.exception("rescore crashed")
+        return func.HttpResponse(f"rescore error: {e}", status_code=500)
+    return _json(result, warn_key="_none")
