@@ -1,6 +1,16 @@
-playwright>=1.40.0
-rich>=13.0.0
+# Core DD agent
 anthropic>=0.92.0
 pyyaml>=6.0
 pydantic>=2.0
 openpyxl>=3.1
+rich>=13.0.0
+
+# Microsoft 365 intake service (Azure Function)
+azure-functions>=1.18
+smartsheet-python-sdk>=3.0
+msal>=1.28
+requests>=2.31
+
+# Only used by the unrelated linkedin_messenger utility; safe to drop from the
+# Azure Function deploy (see .funcignore).
+playwright>=1.40.0

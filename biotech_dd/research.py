@@ -13,16 +13,26 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
+from . import clinicaltrials
 from .llm import MODEL, WEB_FETCH_TOOL, WEB_SEARCH_TOOL, client
 from .schema import Schema
 
 _RESEARCH_SYSTEM = (
     "You are a biopharma research analyst. Investigate each topic below using web "
-    "search and fetch. Prioritize authoritative public sources: ClinicalTrials.gov, "
-    "FDA/EMA, peer-reviewed literature and PubMed, clinical guidelines, company "
-    "press releases and SEC filings, and reputable industry trackers. For every "
-    "claim, keep the source URL. Be specific and current; note publication dates "
-    "where they matter. If evidence is thin, say so rather than guessing."
+    "search and fetch. Prioritize authoritative public databases and pull from them "
+    "explicitly:\n"
+    "- ClinicalTrials.gov for trial status, design, enrollment, and read-out timing\n"
+    "- FDA (Drugs@FDA, Orange Book, labels) and EMA for approvals and exclusivity\n"
+    "- CMS for reimbursement: Medicare coverage (NCDs/LCDs), Part B ASP drug "
+    "pricing, and fee schedules\n"
+    "- PubMed and peer-reviewed literature plus clinical-practice guidelines for "
+    "standard of care\n"
+    "- Company press releases, SEC/EDGAR filings, and reputable deal trackers for "
+    "competitive and transaction intelligence\n"
+    "A ClinicalTrials.gov registry digest pulled directly from the API may be "
+    "provided below; treat it as ground truth and build on it. For every claim, "
+    "keep the source URL. Be specific and current; note publication dates where "
+    "they matter. If evidence is thin, say so rather than guessing."
 )
 
 _MAX_CONTINUATIONS = 8
@@ -57,10 +67,13 @@ def _topics(schema: Schema, facts: dict[str, str]) -> str:
 
 def _gather(schema: Schema, facts: dict[str, str]) -> str:
     """Run the agentic web-research loop and return the accumulated notes."""
+    registry = clinicaltrials.digest(facts)
     user = (
         "Research the following topics for this drug asset and write detailed "
         "notes with source URLs for each:\n\n" + _topics(schema, facts)
     )
+    if registry:
+        user += f"\n\n=== ClinicalTrials.gov registry digest ===\n{registry}"
     messages = [{"role": "user", "content": user}]
     tools = [WEB_SEARCH_TOOL, WEB_FETCH_TOOL]
     notes: list[str] = []
