@@ -177,3 +177,14 @@ extra Smartsheet columns drive this (auto-created): **Status**, **Reviewer Notes
 
 Rescore is manual by design so you control when (and the token cost of) a
 re-evaluation happens.
+
+### Calibration report
+
+POST to `…/api/calibration?code=<key>` (a monthly Recurrence flow, or on demand) to
+generate a report of where the agent **systematically** diverges from analysts:
+per-category score bias (does it over- or under-score, by how much, over how many
+reviews), the extraction fields analysts most often fix, and a model-written
+summary of the patterns with recommended rubric/thesis adjustments. The report is
+written to `…/{SHAREPOINT_BASE_FOLDER}/Calibration/calibration-<date>.md`; the
+response returns the link and the detected biases. Use it to decide which thesis or
+schema prompts to tighten — closing the loop from feedback back into the rubric.

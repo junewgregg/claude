@@ -16,6 +16,7 @@ import logging
 
 import azure.functions as func
 
+from m365.calibration import generate_report
 from m365.config import Config, ConfigError
 from m365.feedback import sweep
 from m365.pipeline import run
@@ -83,4 +84,18 @@ def rescore_route(req: func.HttpRequest) -> func.HttpResponse:
     except Exception as e:  # noqa: BLE001
         logging.exception("rescore crashed")
         return func.HttpResponse(f"rescore error: {e}", status_code=500)
+    return _json(result, warn_key="_none")
+
+
+@app.route(route="calibration", methods=["POST"], auth_level=func.AuthLevel.FUNCTION)
+def calibration(req: func.HttpRequest) -> func.HttpResponse:
+    """Periodic report: where the agent systematically over/under-scores."""
+    config, err = _config_or_500()
+    if err:
+        return err
+    try:
+        result = generate_report(config)
+    except Exception as e:  # noqa: BLE001
+        logging.exception("calibration crashed")
+        return func.HttpResponse(f"calibration error: {e}", status_code=500)
     return _json(result, warn_key="_none")
