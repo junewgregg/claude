@@ -122,16 +122,49 @@ That's the whole flow — the function does the rest.
 
 ## 6. Local testing
 
+### Fully local (no cloud) — quickest
+
+Test the whole brain end to end with just an Anthropic key — no Smartsheet,
+SharePoint, or Azure. Email + PDF in, a regular Excel sheet + memo out:
+
+```bash
+pip install -r requirements.txt
+export ANTHROPIC_API_KEY=sk-ant-...
+
+# From a raw .eml (body + PDF attachment parsed out of it):
+python -m m365.local_runner --eml sample.eml
+
+# Or pass the PDF and body directly:
+python -m m365.local_runner --pdf deck.pdf \
+    --from "jane@institute.edu" --subject "[Asset] KRAS program" \
+    --body "Lead asset attached. Contact: Dr Jane Doe, MIT, 617-555-1212."
+
+# Add public-database research (slower, more tokens):
+python -m m365.local_runner --eml sample.eml --research
+```
+
+Outputs land in `./out`: `local_table.xlsx` (one row per asset — contact/institute
+from the email, extracted facts, scores, and research) and a `<asset>.md` memo.
+Each run upserts a row by asset key, so repeated runs build a comparison sheet.
+
+### Against the Function runtime
+
 ```bash
 pip install -r requirements.txt
 func start          # runs the function locally on :7071
 ```
 
 Post a sample envelope (a tiny base64 PDF) to
-`http://localhost:7071/api/intake`. Set the same settings in a local
-`local.settings.json` (not committed). Without M365/Smartsheet credentials the
-pipeline still runs the Anthropic stages and reports writer failures in
-`warnings` rather than crashing.
+`http://localhost:7071/api/intake` — use the helper:
+
+```bash
+python scripts/post_intake.py --pdf ./decks/yourdeck.pdf \
+    --from "jane@institute.edu" --body "Contact: Dr Jane Doe, MIT."
+```
+
+Copy `local.settings.json.example` to `local.settings.json` (gitignored) and fill
+in the values. Without M365/Smartsheet credentials the pipeline still runs the
+Anthropic stages and reports writer failures in `warnings` rather than crashing.
 
 ## 7. What lands where
 

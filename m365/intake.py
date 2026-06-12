@@ -9,7 +9,10 @@ sender writes as free text rather than a fixed form.
 from __future__ import annotations
 
 import base64
+import email
 from dataclasses import dataclass, field
+from email import policy
+from pathlib import Path
 from typing import Optional
 
 from pydantic import BaseModel
@@ -95,6 +98,37 @@ def parse_payload(raw: dict) -> EmailPayload:
         sender=pick("from", "sender", "from_address"),
         received=pick("receivedDateTime", "received", "received_at"),
         body=pick("body", "bodyPreview", "body_text"),
+        attachments=attachments,
+    )
+
+
+def parse_eml(path: str | Path) -> EmailPayload:
+    """Parse a raw ``.eml`` file into an EmailPayload (for local testing)."""
+    msg = email.message_from_bytes(Path(path).read_bytes(), policy=policy.default)
+    body = ""
+    attachments: list[Attachment] = []
+    for part in msg.walk():
+        if part.is_multipart():
+            continue
+        disposition = part.get_content_disposition()
+        ctype = part.get_content_type()
+        if ctype == "text/plain" and disposition != "attachment" and not body:
+            body = part.get_content()
+        elif disposition == "attachment" or part.get_filename():
+            data = part.get_payload(decode=True)
+            if data:
+                attachments.append(
+                    Attachment(
+                        name=part.get_filename() or "attachment",
+                        content_type=ctype,
+                        data=data,
+                    )
+                )
+    return EmailPayload(
+        subject=msg.get("subject", "") or "",
+        sender=msg.get("from", "") or "",
+        received=msg.get("date", "") or "",
+        body=body,
         attachments=attachments,
     )
 
