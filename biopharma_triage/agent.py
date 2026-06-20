@@ -50,17 +50,22 @@ class TriageAgent:
         deck_text = "\n\n".join(deck_blocks) if deck_blocks else "(no deck provided)"
 
         user = (
-            f"Triage the following asset for the LSB screen.\n"
+            f"Triage the following asset for the LevelSet Bio (LSB) screen.\n"
             f"Analyst hint: {asset_hint or '(none)'}\n\n"
             f"=== UPLOADED NON-CONFIDENTIAL MATERIALS ===\n{deck_text}\n\n"
             "Steps:\n"
             "1. Read the materials and identify the lead asset, mechanism, modality, "
-            "lead indication, and stage.\n"
-            "2. Use the public-data tools (clinical_trials, pubmed, uspto_patents, "
-            "cms_spending) to verify or fill gaps in the sponsor's claims. Only cite "
-            "what you retrieve.\n"
-            "3. Score against the LSB thesis gates and disease/modality priorities.\n"
-            "4. Call emit_scorecard exactly once with the complete scorecard."
+            "lead indication, stage, sponsor/institution, and IP status.\n"
+            "2. Check all pre-screen hard filters. If any fail, flag clearly and "
+            "recommend Deprioritize before going further.\n"
+            "3. Use the public-data tools to verify or fill gaps in the sponsor's "
+            "claims — especially: ClinicalTrials.gov for trial stage/status, "
+            "PubMed for independent evidence depth, USPTO for IP coverage, "
+            "CMS for SoC reimbursement context. Only cite what you retrieve.\n"
+            "4. Assess pharma M&A/BD exit likelihood: which large pharma would "
+            "plausibly acquire this, and does it land in their stated priority TAs?\n"
+            "5. Score the four LSB thesis gates.\n"
+            "6. Call emit_scorecard exactly once with the complete scorecard."
         )
 
         messages = [{"role": "user", "content": user}]

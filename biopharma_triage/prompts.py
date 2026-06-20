@@ -17,19 +17,37 @@ def load_thesis() -> dict:
 
 
 def _format_thesis(thesis: dict) -> str:
-    lines = [f"FUND: {thesis['fund']}", "", "ECONOMIC THESIS GATES (evaluate every asset against all four):"]
+    lines = [
+        f"FUND: {thesis['fund']}",
+        "",
+        "INVESTMENT PREMISE:",
+        "- Assets must be available for full acquisition/licensing with IP rights transfer",
+        "- Single-asset Newco formed for each acquired asset (LSB owns IP)",
+        "- Target: Low/no upfront payment",
+        "- Portfolio goal: up to 20 Newcos over 5 years from 300+ triaged assets",
+        "- Partner for diligence & development planning: Radyus Research",
+        "",
+        "PRE-SCREEN HARD FILTERS (if an asset fails any, overall rating is Deprioritize):",
+    ]
+    for c in thesis.get("pre_screen_criteria", []):
+        lines.append(f"  ✗ {c}")
+    lines.append("")
+    lines.append("ECONOMIC THESIS GATES (rate each: On target / Plausible / Stretched / Not met):")
     for g in thesis["thesis_gates"]:
         lines.append(f"  - {g['label']}: {g['description']}")
     lines.append("")
-    lines.append("DISEASE PRIORITIES:")
+    lines.append("DISEASE / TA PRIORITIES (disease fit is the dominant rating hurdle):")
     for tier, items in thesis["disease_priorities"].items():
-        lines.append(f"  {tier.upper()}:")
-        for it in items:
+        lines.append(f"  {tier.upper().replace('_',' ')}:")
+        for it in (items if isinstance(items, list) else [items]):
             lines.append(f"    - {it}")
     lines.append("")
     lines.append("MODALITY PRIORITIES:")
     for tier, items in thesis["modality_priorities"].items():
         lines.append(f"  {tier.upper()}: " + "; ".join(items))
+    lines.append("")
+    lines.append("EXIT THESIS: High probability-of-success exit = strong overlap with Top Pharma M&A/BD areas.")
+    lines.append("Preferred TAs map directly to where AbbVie, Ipsen, Sanofi, AstraZeneca, Pfizer, Roche, etc. actively acquire.")
     return "\n".join(lines)
 
 
@@ -42,27 +60,33 @@ def load_examples(max_examples: int = 3) -> str:
     return "\n\n".join(blocks)
 
 
-SYSTEM_TEMPLATE = """You are the LSB biopharma asset triage analyst. You screen \
-non-confidential assets (decks, public data) and produce a structured \
-asset-evaluation scorecard that is calibrated to the LSB investment thesis and \
-indistinguishable in voice and structure from the historical reports below.
+SYSTEM_TEMPLATE = """You are the asset triage analyst for LevelSet Bio (LSB), a \
+non-profit pharma company that licenses clinical-stage assets from universities \
+and pharma, forms single-asset Newcos, and drives each to a transactable \
+inflection point for pharma M&A / BD exit. You screen non-confidential materials \
+(decks, public data) and produce a structured asset-evaluation scorecard that is \
+calibrated exactly to the LSB investment thesis below and indistinguishable in \
+voice and structure from the historical reports provided.
 
 {thesis}
 
 OPERATING PRINCIPLES
-- Be a screen, not a sponsor. Separate sponsor-framed claims from \
-decision-grade evidence. Call out where the package is sponsor-framed rather \
-than independently verified.
-- Disease fit is the dominant hurdle. An off-priority disease usually caps the \
-overall rating at Deprioritize even when modality and mechanism are sound.
-- Only cite evidence you actually have (uploaded deck pages, or tool-retrieved \
-public records: ClinicalTrials.gov, PubMed, CMS, USPTO). Never invent page \
-numbers, NCT IDs, patent numbers, or data.
-- Conviction reflects how decision-grade the package is, not how exciting the \
-story is.
-- Match the historical report's calm, hedged, decision-oriented voice.
+1. Pre-screen first. Check the hard-filter criteria before scoring. A failed \
+hard filter (non-therapeutic, no COM patent, pre-IND with no IND path, wrong \
+modality, wrong stage) means Deprioritize regardless of other attributes.
+2. Disease fit is the dominant hurdle. An off-priority disease caps the overall \
+rating at Deprioritize even when modality and mechanism are excellent. Always \
+assess pharma M&A exit likelihood: would AbbVie, Ipsen, Sanofi, AZ, Pfizer, \
+Roche or peers plausibly acquire this asset?
+3. Be a screen, not a sponsor. Separate sponsor-framed claims from \
+decision-grade evidence. Explicitly call out gaps (no clinical data, stage \
+unclear, IP unconfirmed). Only cite evidence you actually retrieved (deck pages \
+or tool results). Never invent NCT IDs, patent numbers, or data.
+4. Conviction = package quality, not story excitement. Low conviction means the \
+evidence base is thin, not that the program is bad.
+5. Match the historical report voice: calm, hedged, decision-oriented, no hype.
 
-RATING VOCABULARY (use exactly)
+RATING VOCABULARY (use exactly these strings)
 - Overall rating: Acquire | Diligence | Deprioritize
 - Disease fit: Preferred | Adjacent | Off-priority
 - Modality fit: Preferred | Workable | Challenging
@@ -70,8 +94,8 @@ RATING VOCABULARY (use exactly)
 - Thesis gate read: On target | Plausible | Stretched | Not met
 - Evidence screen read: Positive | Mixed | Negative
 
-You will be asked to return a TriageScorecard as JSON matching the provided \
-schema. Populate every field. Keep prose tight and analyst-grade.
+You will call emit_scorecard exactly once with the complete TriageScorecard JSON. \
+Populate every field. Keep prose tight and analyst-grade — 1-3 sentences per cell.
 
 --- HISTORICAL CALIBRATION EXAMPLES ---
 {examples}

@@ -1,54 +1,92 @@
-# LSB investment thesis — calibration config for the triage agent.
+# LevelSet Bio (LSB) investment thesis — calibration config for the triage agent.
+# Sourced directly from LSB Asset Selection Criteria and Top Pharma M&A priority docs.
 # Edit these values to retune the screen without touching code.
 
-fund: LSB
+fund: LevelSet Bio (LSB)
 
-# Hard economic gates evaluated for every asset (rendered in the thesis-gate table).
+# ── Economic thesis gates ──────────────────────────────────────────────────
+# Evaluated for every asset; rated On target / Plausible / Stretched / Not met.
 thesis_gates:
-  - id: capital
-    label: "Capital <= $30M"
-    description: "Total capital to a material value inflection should stay at or under $30M."
-  - id: time_to_value
-    label: "Time to value <= 5 years"
-    description: "A material value-inflection event should be reachable within ~5 years."
-  - id: upfront_roi
-    label: "Upfront ROI >= 5x"
-    description: "Plausible return on the upfront/entry cost of at least 5x."
-  - id: tdv_roi
-    label: "TDV ROI >= 10x"
-    description: "Total deal value return potential of at least 10x in a good case."
+  - id: acquisition_cost
+    label: "Acquisition: Low/no upfront"
+    description: "Low or no upfront payment at licensing; available for full acquisition with IP rights transfer."
+  - id: time_to_inflection
+    label: "Time to value <= 3-5 years"
+    description: "No longer than 3-5 years to a transactable inflection point (pharma M&A / BD exit)."
+  - id: development_cost
+    label: "Dev cost <= $25M"
+    description: "Average development cost to transactable inflection point up to $25M."
+  - id: exit_fit
+    label: "High POS exit: pharma M&A/BD fit"
+    description: "Strong alignment with large-pharma BD/M&A strategies (Top Pharma M&A area overlap)."
 
-# Disease priorities. Assets in 'preferred' clusters clear the disease hurdle;
-# 'adjacent' are workable with a clear path; everything else is off-priority.
+# ── Pre-screen stage-gate criteria (hard filters before scoring) ───────────
+pre_screen_criteria:
+  - "Available for full licensing/acquisition with IP rights"
+  - "At least 10-year IP runway"
+  - "Composition-of-matter (COM) patent filed or granted"
+  - "Non-confidential briefing provided"
+  - "Fits priority modality"
+  - "Fits priority indication"
+  - "Fits priority stage of development (IND or clinical: Ph1 or Ph2-ready)"
+
+# ── Disease / therapeutic-area priorities ─────────────────────────────────
+# 'preferred' = core LSB TAs; 'adjacent' = workable with strong rationale;
+# 'off_priority' = outside current screen.
 disease_priorities:
   preferred:
-    - "Serious / life-threatening infection (incl. drug-resistant)"
-    - "Immunology & inflammation with clear unmet need"
-    - "CNS / neurodegeneration with tractable biology"
-    - "Rare/orphan disease with regulatory leverage"
+    - "Immunology & Inflammation (systemic delivery only): IBD (Crohn's, UC), RA, PsA, AS/axSpA,
+       atopic dermatitis, psoriasis, HS, SLE, Sjögren's, systemic sclerosis, CSU, alopecia areata,
+       vitiligo, sarcoidosis, GCA, interferonopathies, severe asthma (systemic/oral), chronic pruritus, OA"
+    - "Oncology – solid tumors: NSCLC, SCLC, CRC, gastric/GEA, pancreatic, ovarian, prostate, TNBC;
+       KRAS/EGFR-resistance/MYC/β-catenin/p53 driver subsets; biomarker-defined precision oncology"
+    - "Oncology – hematologic: multiple myeloma (BCMA, trispecifics), NHL, CLL, AML (R/R), next-gen immune cell engagers"
+    - "Oncology – platforms: ADCs (novel payloads/linkers), multispecific T-cell engagers, masked TCEs,
+       molecular glues/degraders, synthetic lethality (DDR), novel immunotherapies, tumor-selective killing"
+    - "Neuroscience / Neurodegeneration: neuroprotective MS, Alzheimer's (disease-modifying + symptomatic),
+       Parkinson's (motor & non-motor), ALS/FTD, Huntington's, FTD"
+    - "Neuroscience & Pain: migraine (novel MoAs beyond CGRP), neuropathic pain, non-opioid analgesics,
+       movement disorders (essential tremor, dystonia, dyskinesia)"
+    - "Pulmonary & Fibrosis: asthma, IPF, COPD, chronic rhinosinusitis, PAH, SSc-ILD"
+    - "Metabolic / Obesity: next-gen incretins, amylin analogs, oral peptides, combination regimens,
+       muscle-preserving weight loss, T2D (novel MoAs), hypertriglyceridemia, rare metabolic diseases"
+    - "Rare / orphan disease with regulatory leverage (e.g., MLD, lysosomal storage, rare neurological)"
   adjacent:
-    - "Metabolic disease overlapping core mechanisms"
-    - "Oncology where mechanism is differentiated and focused"
+    - "Cardio-Renal: Ph2-ready ONLY (HFrEF, HFpEF, HCM, ATTR amyloidosis, ADPKD, genetic renal) — Ph1 is off-priority"
+    - "Hearing loss / otologic with strong unmet need and regulatory path"
   off_priority:
-    - "Ophthalmology / ocular surface disease"
+    - "Tools, devices, diagnostics (not therapeutics)"
+    - "Ophthalmology / ocular surface (cornea, pterygium)"
     - "Dermatology cosmetic-adjacent"
     - "Consumer / wellness"
+    - "Cardio-Renal at Ph1 stage"
+    - "Any indication without pharma M&A precedent at scale"
 
-# Modality preferences.
+# ── Modality preferences ──────────────────────────────────────────────────
 modality_priorities:
   preferred:
-    - "Small molecule"
+    - "Small molecules"
+    - "Biologics: mAbs, bispecifics, ADCs"
     - "Repurposed / de-risked clinical-stage asset"
-    - "Peptide"
   workable:
-    - "Biologic / antibody"
-    - "Engineered protein"
+    - "RNA-targeted (if clear development path and manufacturing)"
+    - "Peptide (oral or injectable with precedent)"
+    - "Other modalities with established manufacturing and clear development path"
   challenging:
-    - "Gene therapy / complex CGT"
-    - "Novel delivery requiring new manufacturing"
+    - "Gene therapy / complex CGT without precedent path"
+    - "Novel delivery requiring novel manufacturing with no precedent"
 
-# How conviction maps to posture.
+# ── How conviction maps to recommended posture ────────────────────────────
 posture_by_rating:
-  Acquire: "Pursue actively; open diligence and engage the sponsor on terms."
+  Acquire: "Pursue actively; open diligence and engage the sponsor on terms — move toward LOI."
   Diligence: "Keep active for focused diligence; do not widen scope yet."
   Deprioritize: "Do not spend near-term effort beyond watch-listing."
+
+# ── Portfolio context ─────────────────────────────────────────────────────
+# Used to set expectations in agent reasoning.
+portfolio:
+  target_newcos: 20
+  horizon_years: 5
+  annual_asset_intake: "300+ triaged; 7-10 into full diligence; 1-2 NewCo-worthy"
+  partner: "Radyus Research (diligence & development planning execution)"
+  ownership_model: "Single-asset Newco per acquired asset; full IP ownership"

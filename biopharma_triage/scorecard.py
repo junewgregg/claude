@@ -90,7 +90,8 @@ class EvidenceRow(BaseModel):
 
 
 class ThesisGateRow(BaseModel):
-    gate: str  # "Capital <= $30M", "Time to value <= 5 years", "Upfront ROI >= 5x", "TDV ROI >= 10x"
+    gate: str  # "Acquisition: Low/no upfront", "Time to value <= 3-5 years",
+               # "Dev cost <= $25M", "High POS exit: pharma M&A/BD fit"
     read: GateRead
     commentary: str
     implication: str
