@@ -34,7 +34,9 @@ class ModalityFit(str, Enum):
 
 class Conviction(str, Enum):
     high = "High"
+    medium_high = "Medium-High"
     medium = "Medium"
+    medium_low = "Medium-Low"
     low = "Low"
 
 
