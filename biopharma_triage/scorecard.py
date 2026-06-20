@@ -28,6 +28,7 @@ class DiseaseFit(str, Enum):
 class ModalityFit(str, Enum):
     preferred = "Preferred"
     workable = "Workable"
+    acceptable = "Acceptable"
     challenging = "Challenging"
 
 
