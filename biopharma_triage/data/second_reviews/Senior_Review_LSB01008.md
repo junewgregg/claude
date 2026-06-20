@@ -1,0 +1,16 @@
+Cumulative Review of LSB-01-008 (IACS’918)
+CMC: Reviewer’s score of 5 is appropriate. CMC is well-developed to a stage-appropriate level.
+Regulatory: Reviewer’s score of 3 is appropriate, despite reviewer’s comment that Breakthrough Designation will be difficult to achieve. I would agree with that assessment if the indication were MS in general. However, treatments for Progressive MS remain limited and/or suboptimal. Therefore, significant clinical results could garner Breakthrough Designation, adding significant value to the program. Approval in Progressive MS as the initial indication may also have the potential to garner Orphan Designation.
+Clinical: No external Clinical review has been conducted at this time. However, from the information provided, it is possible to assign initial scores that can be confirmed later.
+Clinical Study Population: 4 – Study population easily identified by established clinical or laboratory diagnostics.
+Rationale: SOC is well established, however unmet medical need remains high.
+Clinical Study Endpoints: 4 - Well-established and accepted simple clinical endpoint(s) to measure efficacy with clear quick timeline to output.
+Rationale: Use of MRI for assessment of Paramagnetic Rim Lesions (PRLs) is a significant plus, as these represent active disease process and provide both visual and quantitative assessment of response.
+Clinical Study Logistics: 4- Experienced investigators in a smaller number of sites and competing for many clinical trials, study drug supply easily available and distributed, laboratory tests widely available and interpretable.
+Rationale: MS studies are conducted by highly experienced specialist centers, though competition for patients is high.
+Technical: No external Technical review has been conducted at this time. However, from the information provided, it is possible to assign initial scores that can be confirmed later. The target, RIPK1, is strongly implicated in the disease process, and the preclinical program demonstrates consistent and meaningful preclinical efficacy.
+Scientific Rationale = 4: Promising evidence documenting an association, based on strong genetic association between the target and condition.
+Level of Supporting Data = 3: Comprehensive preclinical package complete and demonstrates safety and efficacy. Noting that this refers to preclinical data.
+Commercial: The Commercial reviewer’s subdomain scores are well-considered and appropriate.
+Overall Cumulative Assessment: Overall, IACS’918 is a promising preclinical asset for treatment of progressive forms of MS (PMS). Studies in PMS patients with demonstrated PRLs further streamlines recruitment and analysis in early (Ph2a) clinical studies. The CMC program is well established for stage of development. This asset is well-positioned for entry into Ph1 within 12-24 months.  Assuming 12 months for Ph1 studies and early preparation for a Ph2a study, IACS’918 is within reach at least directional go/no-go clinical data in PMS patients with 4-5 years. However, getting to definitive, statistically significant P2b readout, which may be required for downstream transaction may be challenging within this timeframe.
+Prepared By: Eric Springman

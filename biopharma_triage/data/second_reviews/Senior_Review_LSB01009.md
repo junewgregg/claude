@@ -1,0 +1,10 @@
+Cumulative Review of LSB-01-009 (MBF-118)
+CMC: Reviewer’s score of 5 is appropriate. CMC is well-developed to a stage-appropriate level.
+Regulatory: Reviewer’s score of 2 is reasonable. However, it seems quite plausible that, given the gravity of fibrosis and strictures in Crohn’s disease, there is potential for Breakthrough Designation pending demonstration of clinical effect. Therefore, I recommend adjusting this score to 2.5, which is a compromise between my preferred score of 3 and the Regulatory Reviewer’s score of 2.
+Clinical: Reviewer’s subdomain score of 1 for Clinical Study Population is adjusted to:
+3 – Study population identification based on experimental modalities or modalities that are not accessible outside of tertiary care centers Non-standard of care biomarker or complicated logistics required to identify or treat patient population of interest.
+While it is true that measures for fibrosis are not standard clinical endpoints, this creates the opportunity for innovation in the clinical trial and treatment. At worst, it limits the clinical study to centers with advanced capabilities, and the subdomain score of 1 for Clinical Study Endpoints already accounts for the majority of this effect on feasibility.
+Technical: Technical reviewer’s scores are appropriate given the extent of preclinical and clinical data provided.
+Commercial: The Commercial reviewer’s scores are appropriately adjusted for the patient subset and market opportunity. Treating fibrosis is a critical unmet need in Crohn’s disease, as it is often the driver for surgery.
+Overall Cumulative Assessment: Overall, MBF-118 is a promising asset with directional Phase 2a data and a fast path to Phase 2. Innovation in clinical trial design will be paramount, especially with regard to clinical endpoint measures. With a carefully constructed Phase 2 clinical trial and a good readout, this asset has near-immediate upside.
+Prepared By: Eric Springman
