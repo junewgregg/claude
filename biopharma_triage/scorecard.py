@@ -23,12 +23,14 @@ class DiseaseFit(str, Enum):
     preferred = "Preferred"
     adjacent = "Adjacent"
     off_priority = "Off-priority"
+    non_core = "Non-core"  # observed in FLD201
 
 
 class ModalityFit(str, Enum):
     preferred = "Preferred"
     workable = "Workable"
     acceptable = "Acceptable"
+    adjacent = "Adjacent"   # observed in FLD103/FLD201
     challenging = "Challenging"
 
 
