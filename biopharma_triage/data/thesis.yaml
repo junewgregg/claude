@@ -1,0 +1,54 @@
+# LSB investment thesis — calibration config for the triage agent.
+# Edit these values to retune the screen without touching code.
+
+fund: LSB
+
+# Hard economic gates evaluated for every asset (rendered in the thesis-gate table).
+thesis_gates:
+  - id: capital
+    label: "Capital <= $30M"
+    description: "Total capital to a material value inflection should stay at or under $30M."
+  - id: time_to_value
+    label: "Time to value <= 5 years"
+    description: "A material value-inflection event should be reachable within ~5 years."
+  - id: upfront_roi
+    label: "Upfront ROI >= 5x"
+    description: "Plausible return on the upfront/entry cost of at least 5x."
+  - id: tdv_roi
+    label: "TDV ROI >= 10x"
+    description: "Total deal value return potential of at least 10x in a good case."
+
+# Disease priorities. Assets in 'preferred' clusters clear the disease hurdle;
+# 'adjacent' are workable with a clear path; everything else is off-priority.
+disease_priorities:
+  preferred:
+    - "Serious / life-threatening infection (incl. drug-resistant)"
+    - "Immunology & inflammation with clear unmet need"
+    - "CNS / neurodegeneration with tractable biology"
+    - "Rare/orphan disease with regulatory leverage"
+  adjacent:
+    - "Metabolic disease overlapping core mechanisms"
+    - "Oncology where mechanism is differentiated and focused"
+  off_priority:
+    - "Ophthalmology / ocular surface disease"
+    - "Dermatology cosmetic-adjacent"
+    - "Consumer / wellness"
+
+# Modality preferences.
+modality_priorities:
+  preferred:
+    - "Small molecule"
+    - "Repurposed / de-risked clinical-stage asset"
+    - "Peptide"
+  workable:
+    - "Biologic / antibody"
+    - "Engineered protein"
+  challenging:
+    - "Gene therapy / complex CGT"
+    - "Novel delivery requiring new manufacturing"
+
+# How conviction maps to posture.
+posture_by_rating:
+  Acquire: "Pursue actively; open diligence and engage the sponsor on terms."
+  Diligence: "Keep active for focused diligence; do not widen scope yet."
+  Deprioritize: "Do not spend near-term effort beyond watch-listing."
