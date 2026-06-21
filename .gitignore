@@ -1,6 +1,5 @@
-session.json
+# Generated triage outputs
+*_triage.docx
+*_triage.json
 __pycache__/
 *.pyc
-.venv/
-venv/
-.env
