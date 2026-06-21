@@ -55,6 +55,37 @@ class ScreenRead(str, Enum):
     negative = "Negative"
 
 
+# Panel determination — the committee-level output, distinct from the
+# analyst scorecard rating. Sourced from Wave 2 Cycle 2 compiled outcomes.
+class PanelDetermination(str, Enum):
+    prioritize = "Prioritize"
+    prioritize_tier2 = "Prioritize: Tier 2"
+    deprioritize = "Deprioritize"
+    hold = "Hold"
+    not_for_sale = "Not for sale"
+
+
+class PanelView(BaseModel):
+    determination: PanelDetermination = Field(
+        ...,
+        description=(
+            "Committee-level outcome. 'Prioritize' = move forward actively. "
+            "'Prioritize: Tier 2' = worthy but lower urgency than Tier 1. "
+            "'Hold' = interesting but blocked (e.g. not yet available). "
+            "'Not for sale' = asset not accessible. "
+            "'Deprioritize' = do not pursue at this time."
+        ),
+    )
+    rationale: str = Field(
+        ...,
+        description="1-3 sentences explaining the panel determination, especially where it diverges from the analyst scorecard rating.",
+    )
+    key_swing_factor: str = Field(
+        ...,
+        description="The single most decisive factor that drove the panel determination (positive or negative).",
+    )
+
+
 # --- Component models ------------------------------------------------------
 
 class RatingSummary(BaseModel):
@@ -138,6 +169,9 @@ class TriageScorecard(BaseModel):
     rating_movement: RatingMovement
     bottom_line: str
     date_prepared: str
+
+    # Panel-level determination (committee call, distinct from analyst rating)
+    panel: PanelView
 
     def gate_summary(self) -> str:
         return "  ".join(f"{g.gate}: {g.read.value}" for g in self.thesis_gates)

@@ -42,8 +42,10 @@ def main(argv=None):
     out = args.out or f"{safe}_triage.docx"
     render_docx(sc, out)
     print(f"\n=== {sc.asset_name} ===")
-    print(f"Overall: {sc.rating.overall_rating.value} | Disease: {sc.rating.disease_fit.value} | "
+    print(f"Analyst rating:     {sc.rating.overall_rating.value} | Disease: {sc.rating.disease_fit.value} | "
           f"Modality: {sc.rating.modality_fit.value} | Conviction: {sc.rating.conviction.value}")
+    print(f"Panel determination: {sc.panel.determination.value}")
+    print(f"Swing factor: {sc.panel.key_swing_factor}")
     print(f"Gates: {sc.gate_summary()}")
     print(f"Bottom line: {sc.bottom_line}")
     print(f"Report written: {out}")

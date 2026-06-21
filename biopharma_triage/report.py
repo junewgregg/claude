@@ -112,5 +112,11 @@ def render_docx(sc: TriageScorecard, out_path: str) -> str:
 
     doc.add_paragraph(f"Date prepared: {sc.date_prepared}")
 
+    # Panel determination section
+    _section(doc, "Panel determination")
+    _kv_table(doc, ["Panel determination", "Key swing factor"],
+              [[sc.panel.determination.value, sc.panel.key_swing_factor]])
+    doc.add_paragraph(sc.panel.rationale)
+
     doc.save(out_path)
     return out_path

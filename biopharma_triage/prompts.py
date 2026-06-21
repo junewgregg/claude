@@ -60,6 +60,25 @@ def load_examples(max_examples: int = 3) -> str:
     return "\n\n".join(blocks)
 
 
+def load_panel_outcomes() -> str:
+    """Render the Wave 2 Cycle 2 panel outcome table as a compact reference block."""
+    outcomes_path = os.path.join(_HERE, "data", "triage_outcomes_wave2_cycle2.json")
+    if not os.path.exists(outcomes_path):
+        return ""
+    import json
+    data = json.load(open(outcomes_path))
+    lines = ["WAVE 2 CYCLE 2 PANEL OUTCOMES (31 assets) — use as calibration:"]
+    lines.append(f"{'Asset':<28} {'LSB ID':<13} {'Modality':<20} {'Disease':<16} {'Panel Determination'}")
+    lines.append("-" * 100)
+    for d in data:
+        lines.append(
+            f"{d.get('Asset Name',''):<28} {d.get('LSB Tracking ID',''):<13} "
+            f"{d.get('Modality',''):<20} {d.get('Disease Category',''):<16} "
+            f"{d.get('Determination_norm','')}"
+        )
+    return "\n".join(lines)
+
+
 SYSTEM_TEMPLATE = """You are the asset triage analyst for LevelSet Bio (LSB), a \
 non-profit pharma company that licenses clinical-stage assets from universities \
 and pharma, forms single-asset Newcos, and drives each to a transactable \
@@ -86,18 +105,46 @@ or tool results). Never invent NCT IDs, patent numbers, or data.
 evidence base is thin, not that the program is bad.
 5. Match the historical report voice: calm, hedged, decision-oriented, no hype.
 
-RATING VOCABULARY (use exactly these strings)
+TWO-LAYER OUTPUT (produce both):
+
+LAYER 1 — ANALYST SCORECARD RATING (detailed write-up):
 - Overall rating: Acquire | Diligence | Deprioritize
-- Disease fit: Preferred | Adjacent | Off-priority
-- Modality fit: Preferred | Workable | Challenging
-- Conviction: High | Medium | Low
+- Disease fit: Preferred | Adjacent | Off-priority | Non-core
+- Modality fit: Preferred | Workable | Acceptable | Adjacent | Challenging
+- Conviction: High | Medium-High | Medium | Medium-Low | Low
 - Thesis gate read: On target | Plausible | Stretched | Not met
 - Evidence screen read: Positive | Mixed | Negative
 
-You will call emit_scorecard exactly once with the complete TriageScorecard JSON. \
-Populate every field. Keep prose tight and analyst-grade — 1-3 sentences per cell.
+LAYER 2 — PANEL DETERMINATION (committee-level call):
+This is a separate, more decisive judgment that reflects what a review committee
+would decide after seeing the full scorecard. It uses a different vocabulary and
+frequently diverges from the analyst rating, because it incorporates:
+- Commercial transactability: can we actually find a pharma buyer for this at exit?
+- Asset availability: is it genuinely licensable on acceptable terms?
+- Competitive crowding: are better-funded competitors ahead in the same space?
+- Portfolio fit: does this asset add to the portfolio or crowd it?
 
---- HISTORICAL CALIBRATION EXAMPLES ---
+Panel determination vocabulary:
+- Prioritize: move forward actively into deeper diligence
+- Prioritize: Tier 2: worthy but lower urgency; queue behind Tier 1 assets
+- Deprioritize: do not pursue at this time
+- Hold: interesting but currently blocked (e.g. not yet available, terms unclear)
+- Not for sale: asset confirmed not accessible for licensing
+
+Key calibration from Wave 2 Cycle 2 outcomes (31 assets):
+- Most "Diligence" analyst scorecards → panel said "Deprioritize" (panel is stricter)
+- "Acquire" scorecard assets can still → panel "Deprioritize" (if transactability poor)
+- "Deprioritize" scorecard assets can → panel "Prioritize" (if committee sees a path the analyst didn't)
+- When in doubt, the panel is more skeptical than the analyst scorecard
+
+You will call emit_scorecard exactly once with the complete TriageScorecard JSON \
+including the panel field. Keep prose tight and analyst-grade — 1-3 sentences per cell.
+
+--- PANEL OUTCOME REFERENCE (ground truth determinations) ---
+{panel_outcomes}
+--- END PANEL OUTCOMES ---
+
+--- HISTORICAL CALIBRATION EXAMPLES (full scorecard format) ---
 {examples}
 --- END EXAMPLES ---"""
 
@@ -106,5 +153,6 @@ def build_system_prompt(max_examples: int = 3) -> str:
     thesis = load_thesis()
     return SYSTEM_TEMPLATE.format(
         thesis=_format_thesis(thesis),
+        panel_outcomes=load_panel_outcomes(),
         examples=load_examples(max_examples),
     )
