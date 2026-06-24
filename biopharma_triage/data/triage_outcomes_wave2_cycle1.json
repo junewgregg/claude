@@ -1,0 +1,536 @@
+{
+  "batch": "Wave 2 Cycle 1",
+  "total_assets": 29,
+  "assets": [
+    {
+      "lsb_id": "LSB--01-007",
+      "asset_name": "A2342",
+      "company": "Ipsen",
+      "modality": "",
+      "stage": "",
+      "disease_category": "",
+      "indication": "",
+      "ryg": "Green",
+      "panel_determination": "Prioritize",
+      "rejection_reason": null,
+      "outcome_narrative": "Previously  prioritized",
+      "reviewer_comments": [],
+      "decision_raw": ""
+    },
+    {
+      "lsb_id": "LSB-02-008",
+      "asset_name": "S095042 – OX40",
+      "company": "Servier",
+      "modality": "mAb",
+      "stage": "IND-enabling",
+      "disease_category": "Immunology",
+      "indication": "Chronic spontaneous urticaria (CSU)",
+      "ryg": "Red",
+      "panel_determination": "Deprioritize",
+      "rejection_reason": "too competitive",
+      "outcome_narrative": "Previously eliminated because it is entering a crowded OX40/OX40L and CSU landscape too late, with approved competitors and an unattractive timeline and budget.",
+      "reviewer_comments": [
+        "Many companies have OX40 or OX40L mAbs in (late stage) clinical development. Sanofi mAb met primary endpoint in AD, but analysts claim it is inferior to the current blockbuster drug dupilumab (Sanofi/Regeneron) that will go off patent in 2029/2031 (opening the market for cheaper biosimilars). Dupilumab and Xolair are already approved in CSU. The development path that is proposed (HV followed by phase 2a brings it in 2029 with budget estimate of $50M does not make this attractive. ",
+        "Previously elminated"
+      ],
+      "decision_raw": "Determination : deprioritize"
+    },
+    {
+      "lsb_id": "LSB-02-009",
+      "asset_name": "S095041 – CD40",
+      "company": "Servier",
+      "modality": "mAb",
+      "stage": "IND approved (no trial started)",
+      "disease_category": "Immunology",
+      "indication": "Chronic spontaneous urticaria, Primary Sjögren syndrome",
+      "ryg": "Red",
+      "panel_determination": "Deprioritize",
+      "rejection_reason": "not sufficient support for MOA",
+      "outcome_narrative": "Previously eliminated because the rationale and positioning were weak, the materials were sloppy, and prior industry experience with CD40 in autoimmune disease was discouraging.",
+      "reviewer_comments": [
+        "I like the target (CD40, as I worked on it a lot myself in the past). However,  some of the statements in the pitch deck are not correct (there is another s.c. anti-CD40). Various pharma companies have explored CD40 in various AIDs and all pulled out. The presentation is sloppy (some slides read OX40).  Would be very lukewarm on this one, but it could be interesting to see the data and rationale to support development in chronic spontaneous urticaria (there OX40 mAb is also posioned in this clinical indication. CD could be explored.",
+        "Previously eliminated"
+      ],
+      "decision_raw": "Determination : deprioritize"
+    },
+    {
+      "lsb_id": "LSB-02-015",
+      "asset_name": "TAK-925 (Danavorexton)",
+      "company": "Takeda",
+      "modality": "Small molecule",
+      "stage": "Phase 1 data",
+      "disease_category": "Other",
+      "indication": "obstructive sleep apnea, idiopathic hypersomnia and narcolepsy",
+      "ryg": "Red",
+      "panel_determination": "Deprioritize",
+      "rejection_reason": "too competitive",
+      "outcome_narrative": "Rejected because, despite strong biology and clinical validation, its IV route and Takeda’s stronger oral follow-on asset make the remaining opportunity too niche.",
+      "reviewer_comments": [
+        "I like this project a lot. Strong scientific rationale, good pre-clinical (and clinical PoC). Huge market and significant medical need, can be developed for various clinical indications. What is very confusing and unclear to me is which of the Takeda Orexin receptor agonists they are outlicensing as one of them has completed Phase 3 for Narcolepsy type 1?",
+        "Danavorexton seems to be quite well validated clincially with significant effects in narcolepsy models and idiopathic hypersomnia, and it seems to be able to reverse opioid‑induced respiratory depression without blunting analgesia. It is a intravenous (IV) orexin‑2 receptor (OX2R) agonist. Takeda has shifted strategic focus to its oral OX2R agonist (TAK‑861/oveporexton), and terminated danavorexton for operational (not safety) reasons, so they say. The asset might benefit form a refocus on high‑acuity hospital settings (PACU/ICU, OIRD rescue, procedure‑related hypersomnolence), where on‑demand pharmacology is an advantage and oral competitors are less suited.  But this is only a niche poulation with lower commercial value.   They have complted 7 phase 1 studies but they stopped a ph2 study in high‑risk OSA patients post‑abdominal surgery due to enrollment and operational challenges.  They seem (with good reason) to be more focused on an oral OX2R agonist TAK‑861 whihc has positive Ph2b data and NEJM publication! ",
+        "TAK- 925 has limited oral bioavailability and is administered IV - not an ROA justifyable for any proposed indication. \n\nTAK 861 is years ahead and will eat TAK-925s lunch "
+      ],
+      "decision_raw": "Determination : deprioritize"
+    },
+    {
+      "lsb_id": "LSB-02-018",
+      "asset_name": "GM-60106",
+      "company": "JD Bioscience",
+      "modality": "Small molecule",
+      "stage": "Phase 1 data",
+      "disease_category": "Metabolic",
+      "indication": "MASH (Metabolic Dysfunction-Associated Steatohepatitis)",
+      "ryg": "Red",
+      "panel_determination": "Deprioritize",
+      "rejection_reason": "not sufficient support in data",
+      "outcome_narrative": "Rejected because the science is interesting but key efficacy, fibrosis, and translational safety questions remain unresolved for an early MASH asset.",
+      "reviewer_comments": [
+        "From the surface this looks attractive, but is selectivity on the receptor sufficient to get meaningfull clinical benefit? Important questions are not addressed in the presentation (is there brain penetration, what was the NOAEL in tox studies, why was there such a gap between end of Ph1 and start Ph2a). The major need in MASH is clear efficacy on fibrosis, but there seem not to be direcht antifibrotic activity.",
+        "Peripherally acting, oral 5‑HT2A (HTR2A) antagonist  for MASH (formerly NASH) with a dual rationale—direct antifibrotic activity via hepatic stellate cell (HSC) de‑activation and improvement of steatosis/inflammation through serotonin‑HTR2A pathway modulation. It completed Phase 1a/1b in Australia in healthy volunteers but they did see some activity in predictive markers for pateints! In 2025, received U.S. FDA clearance to initiate a Phase 2a, 12‑week POC trial (~90 patients).  Could be of interest to pharma's with a liver/metabolic footprint.  Key will be if early efficacy translates and CNS safety remains clean. The science is compelling, but the asset is early.  Combo strategies with GLp-1 could be of interest."
+      ],
+      "decision_raw": "Determination : deprioritize"
+    },
+    {
+      "lsb_id": "LSB-02-019",
+      "asset_name": "OM-202",
+      "company": "Omniamed",
+      "modality": "Small molecule",
+      "stage": "IND-enabling",
+      "disease_category": "Immunology",
+      "indication": "IBD",
+      "ryg": "Red",
+      "panel_determination": "Deprioritize",
+      "rejection_reason": "not sufficient support for MOA",
+      "outcome_narrative": "Rejected because the program is confusingly presented, very early, and did not appear competitive versus better-established and more selective JAK approaches.",
+      "reviewer_comments": [
+        "JAK kinase inhibitors of which Tofacitinib is the first generation in this drug class, all have serious side effects. Tofacitinib will go off patent in the next 5 years, so good for this project, but will also result in generic competition in this drug class. Tofacitinib will will be regarded less interesting by pharma is my believe: (i) generic competition, (ii) still concerns about side effect and (iii) availabilty of newer (preceived more selective JAK inhibitors). There are also other technologies being explored to achieve tissue specific activation. I can’t comment on the solidity of the chemistry and don’t know if the mouse data can be translated to the human situation.",
+        "The compnay presentaiotn is confusing.  There seems to be multiple OM202 programs.  MOA operates within nitric‑oxide pathway modulation, either as NO donors (for cancer cell death) or NO scavengers (reducing excessive inflammation). NO metabolism is a validated yet complex immunoregulatory axis in cancer and inflammatory diseases. That said, OM202 represents a mechanistically differentiated early‑stage platform in oncology and chronic inflammatory disease. Very early - lack of clinical data.  They do have some MTD tox and so could be close to IND!  Worth further investigaiton.",
+        "I am going to chime in here because my Phd is on novel JAK 1 inhibitors and I have spent too much of my time with Tofa. I would have concerns regarding the GI stability of the NO linker. Tofa has a terrible halflife 0.6-3hrs in human plasma and requires BID dosing. There are better JAK inhibitors with lower toxicity concerns. NO is also diffuses through tissues rapidly and I would be concerned with unpredictable heterogenous drug release. Finally, the Tofa is a P-gp substrate and the NO would not aid in intracellular delivery just release. You can overcome this with dose escallation but now you're back to the toxicity issue. There are better JAK options out there!"
+      ],
+      "decision_raw": "Determination : deprioritize"
+    },
+    {
+      "lsb_id": "LSB-02-020",
+      "asset_name": "OBX02-011",
+      "company": "ONCOBIX Co.",
+      "modality": "Small molecule",
+      "stage": "IND approved (no trial started)",
+      "disease_category": "Oncology",
+      "indication": "Non-small cell lung cancer with complex resistance_x000D_\nmechanisms after first-line therapy Tagrisso",
+      "ryg": "Red",
+      "panel_determination": "Deprioritize",
+      "rejection_reason": "too competitive",
+      "outcome_narrative": "Rejected because it appears late to a rapidly evolving osimertinib-resistant NSCLC market and would need clear superiority to overcome strong competition.",
+      "reviewer_comments": [
+        "Superficial information about capabilites -- kinases, ADCs, degraders, etc.  Lead agent is a kinase targeting EGFR T790 mutants and osimertinib resistance.   Lead is in pre-IND stage.  Over last 2 years, several agents/combinaitons have been approved in osimertinib resistant space including amavatinib (EGFR-MET bispecific)/plat-based chemo (JNJ) and TROP2 ADC (Daiichi) -- at least 4-5 years ahead of this lead.  Furthermore, amavatinib/LAZ combo has demonstrated superior efficacy than osimertinib in first-line, possibly rendering T790 as less relevant.      ",
+        " Is a dual‑target ALK + EGFR tyrosine kinase inhibitor (TKI) aimed at overcoming resistance mutations that limit current 3rd‑generation TKIs. Osimertanib resistance focused - will that still be the market in 5 years time?  Good preclicnial - studies show OBX02‑011 inhibited a broad panel of resistant ALK and EGFR mutations and tumor regression in vivo.  If validated clinically, OBX02‑011 could meaningfully differentiate itself in a crowded EGFR TKI market dominated by large‑cap players (AstraZeneca, Takeda, Johnson & Johnson).  But competiton is high and this asset will be a late entrant so it will have to be demonstrable superior.  Needs an FDA strategy. I think worth assessing more - be interested in Rowinsky's opinion."
+      ],
+      "decision_raw": "Determination : deprioritize"
+    },
+    {
+      "lsb_id": "LSB-02-064",
+      "asset_name": "ProAgio",
+      "company": "ProDa BioTech LLC",
+      "modality": "Peptide/Protein/Enzyme",
+      "stage": "IND approved (no trial started)",
+      "disease_category": "Oncology",
+      "indication": "Pancreatic Ductal Adenocarcinoma",
+      "ryg": "Red",
+      "panel_determination": "Deprioritize",
+      "rejection_reason": "not sufficient support for MOA",
+      "outcome_narrative": "Rejected because the anti-fibrosis/CAF concept lacks convincing clinical support and the Phase 1 PDAC signal is too weak for confidence.",
+      "reviewer_comments": [
+        "Preclinical data look strong, but there is no comparison with other drugs targeting CAF / tissue fibrosis. Other drugs targeting/killing aVb3 did not show much clinical benefit. What is the IP runway? No clear description of what the actual drug is (peptide?). What about immunogenicity and manufacturing. ",
+        "Peptide targeting cancer associated fibroblasts (CAF) with the intent of reducing fibrosis in several types of cancers based on the \"belief\" that fibrosis impedes drug delivery.  Preclinical studies generally indicateaugmented tumor growth delay in PDX and orthotopic models, but no demonstrable/robust tumor regression.  A phase 1 study demonstrated safety, tolerability of the single agent but doesnt seem like an optimal dose was demonstrated.  Will require randomized studies of Peptide + SOC vs SOC.  Further, the focus in PDAC has been greatly disrupted by \"disruptive\" KRASm inhibitors which are highly active despite impeding \"fibrosis\".  I dont see a clear, focused direction nor supportive signals.   Doubt the foundational concept.",
+        "ProAgio is an αvβ3 integrin‑targeted cytotoxic biologic (pegylated peptide cytotoxin) for solid tumors, with a primary focus on PDAC and TNBC.  Unique MOA - targets the tumor microenvironment specifically cancer‑associated fibroblasts (CAFs) and angiogenic endothelial cells. displays synergy with chemotherapy and checkpoint inhibitors in preclinical models.  28 pt phase 1 in PDAC saw only a few pts achieve stable disease which is an insufficient signal in this indicaiton which is a novel therapyy graveyard"
+      ],
+      "decision_raw": "Determination : deprioritize"
+    },
+    {
+      "lsb_id": "LSB-02-065",
+      "asset_name": "Syntera-MetPEG",
+      "company": "Synetra Automations",
+      "modality": "Small molecule",
+      "stage": "IND-enabling",
+      "disease_category": "Metabolic",
+      "indication": "PCOS, insulin-resistant metabolic disease, ovarian cancer-associated metabolic_x000D_\ndysregulation, and endocrine-related metabolic disorders",
+      "ryg": "Red",
+      "panel_determination": "Deprioritize",
+      "rejection_reason": "too competitive",
+      "outcome_narrative": "Rejected because it looks like an incremental reformulation with limited differentiation against cheap metformin and dominant GLP-1 therapies.",
+      "reviewer_comments": [
+        "No data to look at ",
+        "MetPEG™ is a once‑weekly, injectable PEGylated metformin depot formulation to counter that gastro side effects of dialy oral.  It’s a 505(b)(2) regulatory pathway which supports a faster, lower-risk development route.  IP will be important here.  Clinical differentiation necessary on tolerability and persistence which might complicate clinical studies. Positioning against GLP‑1 class dominance and cheap MET generics is also a barrier.  PCOS initial inidcaiton is small but has an unmet need for MET intolerance.  This is not a blockbuster play but has incremental potenital if can demonstrate superiority and a way to compete with GLPs which I think is too high a bar."
+      ],
+      "decision_raw": "Determination : deprioritize"
+    },
+    {
+      "lsb_id": "LSB-02-074",
+      "asset_name": "JNT-517",
+      "company": "Jnana Therapeutics",
+      "modality": "oral combination SLC6A19i and GLP-1Ra",
+      "stage": "Phase 1 data",
+      "disease_category": "Metabolic",
+      "indication": "Obesity",
+      "ryg": "Red",
+      "panel_determination": "Deprioritize",
+      "rejection_reason": "not sufficient support in data",
+      "outcome_narrative": "Rejected because the obesity strategy is not well substantiated and the asset appears more credibly aligned with PKU than the offered opportunity.",
+      "reviewer_comments": [
+        "Totally unclear what the deal is here. The asset holder is moving the asset in Phase 3 for PKU. No data on any of their follow-up compounds. ",
+        "Oral, small‑molecule allosteric inhibitor acts at a cryptic allosteric site on SLC6A19 and reduces plasma phenylalanine by increasing urinary excretion rather than altering metabolism. Treatment with JNT-517 (repinatrabit) in healthy volunteers and individuals with PKU has been well tolerated when dosed for up to 28 days and at doses of up to 150 mg BID with no SAEs observed to date.  They seemingly have a PKU program with the same asset so this is a co-license?  I am not convinced that they have enough to substantiate an obesity strategy.  For PKU that looks very promising but that does not seem to be on offer whcih raises the issue of co-licensing the asset.  I am a red."
+      ],
+      "decision_raw": "Determination : deprioritize"
+    },
+    {
+      "lsb_id": "LSB-02-077",
+      "asset_name": "LNS8801",
+      "company": "U Penn",
+      "modality": "Small molecule",
+      "stage": "Phase 2 On-going",
+      "disease_category": "Oncology",
+      "indication": "refractory, unresectable cutaneous melanoma patients who are homozygous for the consensus GPER protein-coding amino acid sequence (C/C) and have progressed on prior immune checkpoint inhibitor therapy, including an anti-PD-1 therapy",
+      "ryg": "Green",
+      "panel_determination": "Prioritize",
+      "rejection_reason": null,
+      "outcome_narrative": "Kept for further analysis because the melanoma data, biomarker strategy, and ongoing clinical development suggest a plausible differentiated path forward.",
+      "reviewer_comments": [
+        "Much longer review available in review folder.  Agent in phase 1-2 clinical investigations with quite intriguing clinical safety, efficacy results with emerging biomarkers/genomic guidance for subsequent clinical trials in melaoma.  There is a pathway forward in R/R melanoma patietnts with concensus GPER C/C in R/R disease and early disease.   ",
+        "I am seeing only an abstract in here for LNS8801 by Linnaeus\nTherapeutics - an oral, selective, small molecule agonist of the G-protein coupled estrogen receptor (GPER) developed primarily for treatment‑refractory cutaneous melanoma.  Novel oncologic signaling axis with no prior approvals; class risk is non‑trivial.  Early clicnial data looks impressive with target - myc- engagement and control rates in subpopulations.  looks like a 135 pt phase 2b/3 trial ongoing in combo with pembro.  Worth looking at in more detial.  "
+      ],
+      "decision_raw": "Green\nES confirmed"
+    },
+    {
+      "lsb_id": "LSB-02-084",
+      "asset_name": "RT-1002",
+      "company": "ReMed",
+      "modality": "Peptide/Protein/Enzyme",
+      "stage": "IND-enabling",
+      "disease_category": "Immunology",
+      "indication": "Acute Pancreatitis",
+      "ryg": "Yellow - ES 3rd ",
+      "panel_determination": "Hold",
+      "rejection_reason": "too early",
+      "outcome_narrative": "Needs more information because the biology may be differentiated and the unmet need is high, but stronger benchmark and translational data are still needed.",
+      "reviewer_comments": [
+        "potentially interesting, but need to see data in relevant models against gold standard benchmark. What is drug PK/PD? Time to IND just within the gating filter. Are they interested to sell the asset as there is a whole team on the slides.",
+        "RT‑1002 is a renalase pathway agonist initially for acute pancreatitis but with broader platform implications across inflammation and oncology.  Not a near‑term clinical‑proof asset, but rather an option on a new acute‑inflammation class - pipleine in a product if early human data validate the biology. RT‑1002 works via Cytoprotective (blunting cell damage), Anti‑inflammatory & Repair‑promoting, rmechnaisms whic may be differentiating.  High unmet need.  Looks ot be 12 months- 18 months to IND.  Worth looking at."
+      ],
+      "decision_raw": "Yellow \nES to fo 3rd "
+    },
+    {
+      "lsb_id": "LSB-02-092",
+      "asset_name": "Immuno3R",
+      "company": "Onco3R",
+      "modality": "Small molecule",
+      "stage": "IND-enabling",
+      "disease_category": "Immunology",
+      "indication": "Psoriasis",
+      "ryg": "Yellow - ES 3rd ",
+      "panel_determination": "Hold",
+      "rejection_reason": "not sufficient support in data",
+      "outcome_narrative": "Needs more information because the SIK3 concept is interesting but toxicity, sponsor quality, and lack of psoriasis-specific validation warrant caution pending more data.",
+      "reviewer_comments": [
+        "SIK3 is a relatively limited explored drug target for inflammatory diseases (Galapagos seems to be the only source). On the surface it has some clear selectivity advantages in immune suppression over other inhibiting other kinases. But SIK3 is also involved in other biology that can couse tox concerns: (i) impaired bone formation, possible osteoporosis, (ii) altered glucose or lipid homeostasis and, (iii) weight gain or metabolic disruption. I would also have some non-scientific concerns: (i) Galapagos small molecule development track record is not very good and, (ii) why would they let their lead program go? The latter implies that they must have talked to many VCs and so far have not been able to get tracktion and get a series A done.",
+        "What a mess of a presentaiton to sort through!  O3R‑5671, is a selective oral inhibitor of SIK3.  in phase 1A. SIK pathway is clinically and biologically validated, but earlier SIK inhibitors failed largely due to off‑target toxicity, particularly SIK1/2 inhibition. these guys are in the midst of a tox program with more to do!  Seems to have a relatively clean tox so far.  Seems to suppress TNF - so could translate to efficacy.  No animal data in psoriais models which would have bene nice - its in UC.  planning a psorisias 1b this year - that should be tellign and I would wait for the result sof that to go forward.,",
+        "Tie breaker "
+      ],
+      "decision_raw": "Green - prioritize"
+    },
+    {
+      "lsb_id": "LSB-02-156",
+      "asset_name": "Cantius Therapeutics",
+      "company": "U Penn",
+      "modality": "Peptide/Protein/Enzyme",
+      "stage": "IND approved (no trial started)",
+      "disease_category": "Oncology",
+      "indication": "cachexia and block nausea/emesis",
+      "ryg": "Red",
+      "panel_determination": "Deprioritize",
+      "rejection_reason": "too early",
+      "outcome_narrative": "Rejected because the cachexia mechanism is interesting but the program is too early, based on dated materials, and lacks a selected lead and near-term IND readiness.",
+      "reviewer_comments": [
+        "The GD-15/GFRAL pathway is scientifically well validated (by these inventors and others). But this project presentation dates from 4 or 5 years ago. Peptides are not a preferred drug modality for chronic treatment use. Assets are by far not within 18 months from the clinic and mAb competition at big pharma is in phase 2",
+        "Cantus Therapeutics spun out of Penn is focussing on Growth differentiation factor 15 (GDF15), also known as MIC-1 that is a stress response protein cytokine that shows increased expression (up to 1000-fold) and rise in blood concentration in response to obesity, diabetes, pregnancy, cancer and chemotherapy (and can indicate poor+H2.   GDF15 specifically targets the GFRAL-Ret receptor complex, that is shown to be only expressed in the area postrema (AP) and nucleus tractus solitarius (NTS) of the brainstem – two nuclei essential for the control of energy balance and nausea/emesis.  Preclinical data with antagonists of this pathway support further work in cancer cachexia, a great unmet medical need with few, if any, relevant clincial competitors.  However, a lead has not been selected and therefore IND enabling studies have not been performed.  Risks to lead idetnification and clinical development compound the lack fo clinical validation.   Nevertheless, high reward, if successful.",
+        "GFANT‑05 is a preclinical peptide antagonist of the GDF15–GFRAL–RET axis, developed by Cantius Therapeutics as part of its GRASP™ platform targeting cachexia, nausea, and emesis. Investor presentaiton is old - derives from 2020/2021 - what has happened since then?  Stated as needing $2 mill to perform a pre-clincial plan to support IND. Limited preclincial data on GFANT‑05 - I saw just one expt.  This needs a lot of work to get to IND and thus is probably too early."
+      ],
+      "decision_raw": "Determination : deprioritize"
+    },
+    {
+      "lsb_id": "LSB-02-166",
+      "asset_name": "Ruxotemitide (LTX-315)",
+      "company": "Lytix Biopharma",
+      "modality": "Peptide/Protein/Enzyme",
+      "stage": "Phase 2 On-going",
+      "disease_category": "Oncology",
+      "indication": "PD-1/PD-L1_x000D_\nrefractory melanoma_x000D_\npatients, Basal cell carcinoma, Neoadjuvant_x000D_\nresectable melanoma_x000D_\npatients",
+      "ryg": "Yellow - MB 3rd",
+      "panel_determination": "Hold",
+      "rejection_reason": "not sufficient support in data",
+      "outcome_narrative": "Needs more information because one review was skeptical of mechanism and registration path while another saw encouraging Phase 2 activity worth deeper review.",
+      "reviewer_comments": [
+        "I like the idea of turning cold tumors hot and do believe that you need to be in the tumor for that. But is a bit unclear what the deal is here. What are we buying? Who will own the core CoM patent. Seem they have already given some kind of license to other company. This will for sure complicate appetite to pharma buyers. How do they determine dose? Injection of multiple visible tumor lesions? Development plan seems very expensive and who is going to buy this asset. No preclinical data to look at. Also unclear what the design of their ongoing phase 2 is. I would pass on this one.",
+        "Despite a Nobel laruet scientific advisor, no mechnaims is disclosed for the agent.  No clinical data presented.  Intratumoral delivery depends on a robust abscopal response, which, to date, has not been achieved with any agent.   The development pathway, neoadjuvant therapy of melanoma (combined with PD-1) has left the station.   Several agents have recently become standard of care (PD1, PD1/CTLA4) in first line and their effects on EFS are quite robust.  Phase 3 studies would require hundreds of patients --- and difficult to defend committeing such resources without highly supportive foundational data, which do not appear to exist. ",
+        "A synthetic cationic oncolytic peptide (9 aa = non-complex CMC)administered via local intratumoral injection that may be an advantage to PD-L1's since does not does not require PD‑L1 expression, functions independently of tumor genotype and converts immunologically “cold” tumors into inflamed ones.  Phase 2 results in BCC showed a 97% ORR, 51% complete histologic clearance and favorable tolerability.  Also being tested in melanoma.  In phase 2 with Keytruda.  Would like to get Rowinsky to take a look at this one"
+      ],
+      "decision_raw": "Determination : deprioritize"
+    },
+    {
+      "lsb_id": "LSB-02-167",
+      "asset_name": "LTX-401",
+      "company": "Lytix Biopharma",
+      "modality": "Small molecule",
+      "stage": "IND-enabling",
+      "disease_category": "Oncology",
+      "indication": "Solid tumors (deep_x000D_\nseated lesions in liver and lung)",
+      "ryg": "Red",
+      "panel_determination": "Deprioritize",
+      "rejection_reason": "too early",
+      "outcome_narrative": "Rejected because it is too early, with limited preclinical validation and no sufficiently mature IND-enabling package.",
+      "reviewer_comments": [
+        "Apparently, a 25-amino acid component (Lactoferricin) of lactoferrin, which has been demonstrated to be involved in immunoprotection.  Only 1 study is disclosed in which the claim is that treatment induced complete resposnes but the model is an injection model that measures overall survival.   No validation of mechanim nor IND enabling studies.   High risks from many prospectives.",
+        "TX‑401 is an oncolytic compound that induces immunogenic cancer cell death via Golgi apparatus disruption, a mechanism distinct from the membrane‑lytic necrosis seen with LTX‑315.  This is an advance of the above that does not require intra tumor injection and thus a broader indication potential. They have limited pre-clincial data.  Seems too early."
+      ],
+      "decision_raw": "Determination : deprioritize"
+    },
+    {
+      "lsb_id": "LSB-02-171",
+      "asset_name": "IACS-56750",
+      "company": "MD Anderson",
+      "modality": "Small molecule",
+      "stage": "IND-enabling",
+      "disease_category": "Oncology",
+      "indication": "AML and solid tumors",
+      "ryg": "Red",
+      "panel_determination": "Deprioritize",
+      "rejection_reason": "too early",
+      "outcome_narrative": "Rejected because the NRAS G12D strategy is very early, targets a very small market, and lacks enough biological and development validation.",
+      "reviewer_comments": [
+        "Group has selected a lead inhibitor of NRASG12D, which is rare in AML, solid tumors, and melanoma with incidences of XX, YY, ZZ%, respectively.   Nevertheless, given broad availabiltiy of next genomic sequencing in malignancies in which NRAS mutations are relevant, development plan can be efficient with POC in phase 1 or 2.  IND enabling studies to be completed in 2H2027 with noncomplex trias in both AML and solid cancers.  To date, studies of lead compound in relevant models show favorable activity.    ",
+        "NRAS‑G12D is not a prevalent or well‑characterized oncogenic mutation, any therapeutic program targeting it would be highly speculative, with no clinical precedents. In contrast to KRAS‑G12D inhibitors, there are no known clinical NRAS‑G12D programs, which means a novel inhibitor would face zero direct competition and could establish early category leadership. Potential for orphan if NRAS‑G12D is discovered in niche tumor subsets of CRC, AML or myeloma.  On the con side; program is ver early - not within 18 month - 2years of an IND.  As well - Lack of Biological Validation - no documented prevalence of NRAS‑G12D as a meaningful oncogenic driver; No clinical precedents to guide drug design; Limited commercial market - mutational subset; all translates to high scientific and financial uncertainty.",
+        "NRAS G12D inhibitor that decreases viability of cells harboring the mutaiton.  Preclicnila data in AML and Melanoma.  Dog toxicity completed.  Looks like they are planning to evaluate the drug in a phase 1 basket trial but state that they still need to do GLP tox.? 2 IND's planned in solid tumors and aML.  Very limited data tyo support this program - not IND ready = too early.",
+        "Very. Small. Market!! Early program no tox yet, trial recruitment would take long; Like that they’re open to MDS "
+      ],
+      "decision_raw": "Determination : deprioritize"
+    },
+    {
+      "lsb_id": "LSB-02-172",
+      "asset_name": "CCNB1/HLA-A2 TCE (OBT-221)",
+      "company": "MD Anderson",
+      "modality": "mAb",
+      "stage": "IND-enabling (planned)",
+      "disease_category": "Oncology",
+      "indication": "Multiple HLA-A02+ solid tumors (CRC, PDAC, lung, breast, ovarian, gastric)",
+      "ryg": "Red",
+      "panel_determination": "Deprioritize",
+      "rejection_reason": "too early",
+      "outcome_narrative": "Rejected as too early because the platform is interesting but still lacks enough in vivo, CMC, and IND-enabling maturity for near-term advancement.",
+      "reviewer_comments": [
+        "Concept of targeting HLA-expressed tumor antigen-derived peptides is not new. One approved drug Tebentafusp (ImmTAC‑gp100 for HLA‑A*02:01⁺ uveal melanoma). Strong competition from conventional TCE including tri-specific formats (co-targeting co-stimulatory receptors or checkpoint inhibitors). Would need to see more details on CMC package to judge if this is truly <18 months to the clinic.",
+        "MD Anderson group developing a platform of T cell receprot (TCR) antibodiy engagers that are HLA-A02 dependent.  The presentation focuses on a single potential lead (OBT-221) of the platform targeting CCNB1, a mitotic motor protein.  CCNB1 and similar proteins are overexpressed by a range of solid cancer cells, particularly TNBC and PDAC.  CCNB1 is degraded and presented by HLA-A02 in tumors.    Nonconfidental materials confirm specific binding affinity to CCNB1 protein but not to HLA-A02 which is a CCNB1 presenter.  In vitro studies confirm cytotoxicity and IFN-gamma release that is HLA-A02 dependent and copy number dependent.   No in vivo studies performed to date and validation is problematic not only because of new platform but TCE bispecifics in solid tumors.  Only Amgen's platform validated with DLL3 in small cell lung cancer, albeit very robust.  Issue of lack of validation of other TCEs in solid tumors likely relates to activation prior to tissue penetration.  Other issue may be race dependent HLA-A02 expression. ",
+        "A CCNB1/HLA‑A2 TCE would be designed to redirect T cells to tumor cells presenting CCNB1‑derived peptides in the context of HLA‑A2, an approach conceptually similar to existing TCR‑mimic (TCRm) TCEs targeting intracellular peptides such as Cathepsin‑G/HLA‑A2 or PRAME/HLA‑A2.  CCNB1 Is a strong, validated Cancer‑Associated Antigen since CCNB1 (cyclin B1) is highly expressed across many cancers. Targeting via HLA‑A2 Is validated.  Potential for differentiation since no known CCNB1/HLA‑A2 TCE exists publicly.  Pre-clicnial data seems compelling.  But - CCNB1 Is a Critical Cell‑Cycle Protein which leads to tox/safety concerns - tox studies will be critical here. HLA‑A2 restriction limits the market size.  Very early with CMC and IND enabling studies planned - too early?",
+        " OBT‑221 is a HLA‑A02:01‑restricted T‑cell engager targeting a cyclin B1 (CCNB1)–derived peptide. Cyclin B1 (CCNB1), a G2/M cell‑cycle regulator that is consistently overexpressed across many solid tumors and associated with poor prognosis. High prevalence of HLA‑A2 in Western populations. Epitope density on tumor cells is the big question. What is heterogeniety of that?  Needs CMC and IND enabling studies.  Have quite a bit of preclincial data and tox in mice.  Phase1/2 studies designed.  Probably too ealry but need more info"
+      ],
+      "decision_raw": "Determination : deprioritize"
+    },
+    {
+      "lsb_id": "LSB-02-173",
+      "asset_name": "IACS-16559 (CBP/P300 inhibitor)",
+      "company": "MD Anderson",
+      "modality": "Small molecule",
+      "stage": "IND-enabling complete",
+      "disease_category": "Oncology",
+      "indication": "AML, multiple myeloma, DLBCL, and solid tumors",
+      "ryg": "Green",
+      "panel_determination": "Prioritize",
+      "rejection_reason": null,
+      "outcome_narrative": "Kept for further work because it is comparatively advanced, biomarker-driven, tox and CMC appear solid, and there is a credible AML-focused development strategy.",
+      "reviewer_comments": [
+        "CBP/P300 inhibition is an emerging, but also competitive field. Competition for IACS-16559 is not only other compounds in clinical testing, but also from PROTAC / degraders. Therapeutic window will be a concern. They base their superiority over inobrodib based on in vitro selectivity. I would like to see a head-to-head study in relevant model. Wil IACS-16559 show (sufficient) monotherapy efficacy? What clinical studies would be needed to create pharma appetite? I suggest to consider this for an option deal and do a few preclinical models including head-to-head against inobrodib and map out clinical strategy and dig into market size.",
+        "IACS-16559 is a specific inhibitor of the p300-CBP coactivator family in humans is composed of two closely related transcriptional co-activating proteins.    It has much higher BRD4 and P300 selectivity over other agents in development such as Inobrodib (Cell Centric) which is in early clinical development.  Although the nonconfidential materials state that inobrodib/ mechanism is validated, studies have been in combination and nonrandomized.   At this juncture, BR4 transcriptional targeting has not been validated in the clinic and epigenic modifyers have had modest-negligible single agent activity outisde of AML with menin/K2AT abberrations.   Rat and dog 28-day GLP tox studies, as well as an initial tranche of manufacturing, have been completed.  Synergy/additive activity has been demonstrated when the agent is combined with approved menin inhibitors, which the investigators see as a route forward.  At this juncture, the overall development plan is somewhat unclear.   Likely development will be focused on combinaiton studies in AML with relevant menin/KG2AT aberrations, which will require somewhat protracted development time.   IND enabling studies nearly finished.",
+        "IACS‑16559 is a highly selective small‑molecule inhibitor targeting the CBP/EP300 bromodomains.  Stated as Clinically ready with clicnial supplies. Tox completed. combination synergy/activity in pre-clicnial assessments.  This mechanism targets a known oncogenic dependency in leukemogenesis i.e., AML, DLBCL, MM.  Preclicnial data identifies highly responsive AML subtypes -specificity which increases the probability of targeted success and may support a biomarker‑driven development strategy.  Cons - BP/P300 inhibitors as a class may be associated with hematotoxicity. Safety could limit therapeutic window in AML patients who already have fragile marrow reserve. Competitive environment - EP300/CBP inhibitors are in advanced clicnial devleopment. Promising but early‑stage.",
+        "IACS‑16559 is a preclinical, oral small‑molecule inhibitor of the CBP/EP300 bromodomains, designed to disrupt oncogenic transcription programs in genetically defined subsets of AML.  Disrupts enhancer‑driven oncogenic transcription (e.g., MYC/MYB networks) .  Oral, once daily dosing.  IND written.  Probably looking at an add on therpay with menin‑MLL inhibitors versus monotherpay (= regulaotry challenges) - preclincial synergy seen.  CMC well advanced for clinical supplies.  Market maybe limited to subsets of AML - DLBCL.  But worth cheking in to.",
+        "MD Anderson expertise in AML, 1 site trial 14 months for Ph1, IND submission in 3 months, CMC done at Wuxi, biomarker driven trial, highly selective compound, oral daily delivery, closest competitor CellCentric (Inobrodib) good Ph2 data at ASH; good indications, clean tox (no herg/CYP signal unlike competitor)"
+      ],
+      "decision_raw": "Green\n"
+    },
+    {
+      "lsb_id": "LSB-02-174",
+      "asset_name": "B7H3 × 4-1BB T-cell engager (OBT-210)",
+      "company": "MD Anderson",
+      "modality": "mAb",
+      "stage": "IND-enabling (planned)",
+      "disease_category": "Oncology",
+      "indication": "B7H3+ solid tumors",
+      "ryg": "Red",
+      "panel_determination": "Deprioritize",
+      "rejection_reason": "too competitive",
+      "outcome_narrative": "Rejected because the concept is interesting but the field is crowded, safety remains a major question, and timing appears longer than desired.",
+      "reviewer_comments": [
+        "OBT-210 is one of several engineered T cell engagers (TCE) from a very prolific antibody engineering group at MD Anderson that are beign developed similarly.  This TCE claims to have proprietary components of antibodies with high affinity binding to B7H3, which has been validated as a ADC target, and an agonist antibody to the T cell activator 41BB.  The agent has demonstrated cytotoxicity in relevant cancer cell lines with IFN-g release and is in IND enabling studies -- stated to be in a monkey dose finding study.   Despite its advancement issues include: 1) General validating issues with TCE in human tumors due to activation prior to tissue penetration (except DLL3 using a BiTE format; 2) no target validating except using B7H3 in ADCs  in which cytotoxicity is due to binding to B7H3 and internalization/release of a cytotoxic payload; 3) absolutely no validation of a relevant degree TCE/activation and antitumor activity via 41BB as a T cell activator.  Also worried that the group is using similar technology to create a CAR T cell format of the same targeting moiety and T cell activator.   ",
+        "B7‑H3 is rare in normal tissues but highly overexpressed across many solid tumors. 4‑1BB (CD137) is a potent T‑cell costimulatory receptor, but systemic 4‑1BB agonists have historically caused dose‑limiting toxicities. They do have a cyno monkey tox study ongoing - would like to see this! There is a scientific rationale here with strong preclinical anti‑tumor activity across models supporting monotherapy activity. Combination studies show synergistic anti‑tumor effects when combined with anti‑PD‑1 therapy which provides for optionality for future clinical expansion and partnerships.  But - Tox concerns - vascular inflammation, delayed irAEs (checkpoint like); manufacturing and pharmacology challenges to maintain balance of effectiveness with safety.",
+        "OBT‑210 is a tumor‑targeted, costimulatory T‑cell engager designed to activate 4‑1BB signaling selectively within B7‑H3–positive tumors.  On the plus side is validated solid‑tumor target (B7‑H3) with broad expression; mechanistically differentiated vs CD3‑based TCEs but we have a preclinical asset with no disclosed human data; a crowded B7‑H3 landscape (ADCs, CAR‑T, NK engagers) and no discernable cellular translation for tumor‑restricted 4‑1BB biology.  The timelines for IND seems to be > 18 months."
+      ],
+      "decision_raw": "Determination : deprioritize"
+    },
+    {
+      "lsb_id": "LSB-02-175",
+      "asset_name": "Masitinib",
+      "company": "AB Science",
+      "modality": "Small molecule",
+      "stage": "Phase 2 data",
+      "disease_category": "Neuro/CNS",
+      "indication": "ALS, AD, Progressive MS",
+      "ryg": "Red",
+      "panel_determination": "Deprioritize",
+      "rejection_reason": "not sufficient support in data",
+      "outcome_narrative": "Rejected because of serious credibility, trial design, and data integrity concerns, alongside unconvincing evidence to support further late-stage investment.",
+      "reviewer_comments": [
+        "The concept of activity on mast cells and microglia cells is scientifically interesting, but they show no data to support this MoA of masitinib. It is important to know that the company developing masitinib has a very controversial reputation. The drug was repeatedly rejected by EMA based on issues found in trial design and missing data concerns. Also, the drug primary endpoints in ALS were missed.  I have serious doubt that their phase 2 data truly support starting phase 3 study. If there would have been compelling phase 2 data in any of the tested indications pharma would have licensed the drug or bought the company. In general, it is also a potential red flag if one drug can have activity in multiple indications with quite different disease pathology. Finally, licensing a drug for only one specific indication is very unattractive and mostly a no go for pharma buyers.",
+        "Did not review because of Team decision 3-11-26"
+      ],
+      "decision_raw": "Determination : deprioritize"
+    },
+    {
+      "lsb_id": "LSB-02-181",
+      "asset_name": "BA3142",
+      "company": "BioAtla",
+      "modality": "mAb",
+      "stage": "IND-enabling",
+      "disease_category": "Oncology",
+      "indication": "melanoma and other solid tumors",
+      "ryg": "Yellow - ES 3rd ",
+      "panel_determination": "Hold",
+      "rejection_reason": "too competitive",
+      "outcome_narrative": "Needs more information because the CAB-enabled B7-H3 bispecific is differentiated and preclinically encouraging, but company and market risks are substantial.",
+      "reviewer_comments": [
+        "It would be an interesting idea to see if would be highly synergistic with ABBV-291 in hard-to-treat MYC-driven DLBCL.",
+        "Bioalta is currently repositioning its entire program, announcing a focus on its ADC platform that was placed in a special purpose vehicle.  The focus for the current transaction is an antibody targetign B7H3 (see above -- no clinical anticancer validation outside of a ADC) that was constructed using Bioalta's conditionally activie biology (CAB) which takes advantage of the acidity of the cancer cell TME for activation, another nonvalidated aspect of the overall asset.   Although in-life program of a monkey tox study is stated to be ongoing, there are also concerns about timing and status of IND enabling studies and manufacturing.",
+        "BA3142 is a conditionally active, tetravalent bispecific T‑cell engager (TCE) targeting B7‑H3 (CD276) on tumor cells and CD3 on T‑cells.  Impressive advisors with Steinman and Allison on their panels! BA3142 was well-tolerated in non-human primates at 25 mg/kg; MTD not reached​. cGMP manufacturing completed​.  Preclinical showed cytotoxicity in B7‑H3–expressing tumor cell lines and tumor regression in vivo. Pros:  Supportive scientific rationale & high‑value target; potential differentiation via CAB Technology; encouraging preclinical safety profile; Tolerance at high non‑human primate doses (up to 25 mg/kg); broad solid tumor applicability; all collectively adds up to material de-risking event for early investment.  But this asset is at a early development stage with no human data yet available and the competitve environment is hot esp with B7H3.  Worth a deepr analysis."
+      ],
+      "decision_raw": "Yellow Hold"
+    },
+    {
+      "lsb_id": "LSB-02-185",
+      "asset_name": "APH03621",
+      "company": "ApicHope Pharmaceutical",
+      "modality": "PROTAC",
+      "stage": "IND approved (no trial started)",
+      "disease_category": "Women's Health",
+      "indication": "infertility, uterine fibroids,_x000D_\nendometriosis, and prostate cancer",
+      "ryg": "Yellow - ES 3rd ",
+      "panel_determination": "Hold",
+      "rejection_reason": "too competitive",
+      "outcome_narrative": "Needs more information because the target is validated and commercially relevant, but the program is early, highly competitive, and carries meaningful execution risk.",
+      "reviewer_comments": [
+        "Not a new drug concept, so certainly not first in class. Good scientific rationale and well clinical validated target for the disease indications. Significant market and significant medical need, can be developed for various clinical indications. Question is how strong the differentiation is from approved drugs  and in late stage development in the same drug class. If (strong if) can clearly outcompete these other drug there is a $ 1B sales opportunity.",
+        "APH03621 is an oral, non‑peptide small‑molecule GnRH receptor antagonist (GnRHR antagonist). Endometriosis, a chronic, estrogen‑dependent gynecological disorder with substantial unmet need. High risk - not least becasue a China compnay - do we look at this as a China only investment for that market or for US and Global?.  Early development program with significant unknowns. Mechanistic rationale has scientifc support. and a strategic position in a major unmet‑need segment.  But - needs first‑in‑human safety and PK data, dose‑response estrogen suppression data.  Plus there is high competitive activity in this category form global pharma compnaies.  I am going with too high risk and China.\n"
+      ],
+      "decision_raw": "Yellow Hold"
+    },
+    {
+      "lsb_id": "LSB-02-240",
+      "asset_name": "PH-101",
+      "company": "Phileas Pharma",
+      "modality": "",
+      "stage": "",
+      "disease_category": "",
+      "indication": "",
+      "ryg": "Red",
+      "panel_determination": "Deprioritize",
+      "rejection_reason": "too competitive",
+      "outcome_narrative": "Rejected because gene therapy sentiment, regulatory and manufacturing concerns, uncertain timelines, and lack of visible financing traction make the program too risky.",
+      "reviewer_comments": [],
+      "decision_raw": ""
+    },
+    {
+      "lsb_id": "LSB-02-258",
+      "asset_name": "Myc cofactor WDR5",
+      "company": "Vanderbilt",
+      "modality": "Vanderbilt",
+      "stage": "IND-enabling",
+      "disease_category": "Oncology",
+      "indication": "Heme malignancies, combination therapy for CRC",
+      "ryg": "Red",
+      "panel_determination": "Deprioritize",
+      "rejection_reason": "too early",
+      "outcome_narrative": "Rejected as too early because the biology is interesting but lead optimization is still ongoing and the program is not yet ready for this process.",
+      "reviewer_comments": [
+        "WDR5 acts as a cofactor, helping MYC bind chromatin and activate transcription. Inhibiting the WDR5–MYC interaction can selectively disrupt MYC-driven transcription. Is there a therapeutic window for these compounds given to role of WDR5 in normal cells? Also potential resistance should be adressed. Competition in the space comes from PROTACs. Project is relatively early stage in my opinion and relatively high risk.",
+        "WDR5 is one of the most scientifically validated indirect targets for MYC‑driven cancers, functioning as a chromatin adaptor essential for MYC recruitment to transcriptionally active loci.  High competition with: Menin inhibitors (already FDA‑approved in KMT2A leukemias), BET inhibitors & CDK9 / transcriptional CDKs.  Lead candidate optimization being done.  Not convinced they have a lead asset.  Way to early for our program."
+      ],
+      "decision_raw": "Determination : deprioritize"
+    },
+    {
+      "lsb_id": "LSB-02-259",
+      "asset_name": "MDL-001",
+      "company": "Model Medicines",
+      "modality": "",
+      "stage": "",
+      "disease_category": "",
+      "indication": "",
+      "ryg": "Yellow - ES 3rd ",
+      "panel_determination": "Hold",
+      "rejection_reason": "not sufficient support in data",
+      "outcome_narrative": "Needs more information because the broad antiviral thesis is intriguing and early safety is supportive, but human efficacy and positioning still need validation.",
+      "reviewer_comments": [],
+      "decision_raw": ""
+    },
+    {
+      "lsb_id": "LSB-02-260",
+      "asset_name": "",
+      "company": "",
+      "modality": "Model Medicines",
+      "stage": "IND-enabling",
+      "disease_category": "Infectious",
+      "indication": null,
+      "ryg": "",
+      "panel_determination": "Deprioritize",
+      "rejection_reason": "",
+      "outcome_narrative": "",
+      "reviewer_comments": [
+        "MDL-001 is a non-nucleoside polymerase inhibitor. Its activity on the Thumb-1 site of NS5B from HCV. For HCV there were several Thumb-1 inhibitors in development, but these were abandoned and replaced by nucleoside polymerases that are more potent, have broader genotype coverage and have stronger resistance barriers. The fact that MDL-001 is said to have also strong activity against other virusses in surprising / unexpected (but also not well documented in the presentation). Is the potency that is reported sufficient to make it to the market for other virusses as for HCV there are already cures.",
+        "DL‑001 is an oral, direct‑acting, non‑nucleoside antiviral.  Differential MOA to antivirals like remdesevir which aims to reduce off‑target toxicity and lower resistance risk. Demonstrated in vivo antiviral activity in multiple animal models, including SARS‑CoV‑2, HCV, HBV, with viral load reductions comparable to or exceeding remdesivir, sofosbuvir, and nirmatrelvir. Early clinical exposure indicates oral MDL‑001 is safe and well tolerated.  Limited efficacy data in humans.  Potential as pandemic prepardeness in naitonal stockpiles = big market.  Already in clinic worth a deeper look."
+      ],
+      "decision_raw": "Determination : deprioritize"
+    },
+    {
+      "lsb_id": "LSB-02-263",
+      "asset_name": "ENB-003",
+      "company": "ENB Therapeutics",
+      "modality": "ENB Therapeutics",
+      "stage": "Phase 1 On-going",
+      "disease_category": "Onc",
+      "indication": "platinum_x000D_\nrefractory/primary platinum resistant_x000D_\novarian cancer",
+      "ryg": "Red",
+      "panel_determination": "Deprioritize",
+      "rejection_reason": "not sufficient support in data",
+      "outcome_narrative": "Rejected because the mechanism is interesting but the clinical data are weak, the biomarker strategy is not well aligned, and differentiation in ovarian cancer appears insufficient.",
+      "reviewer_comments": [
+        "Totally unclear what the compound is, and no data or clues provided about PK/PD, a lot of bla bla on the market and what not very little background (hence I had to dig and learn the info above). They claim first and best in class single agent activity, but don’t think I have seen any single agent activity. The histology shown on T-cell infiltration is interesting, but is/was this n=1? Anyway, T-cell infiltration does not mean they are actively killing cancer cells, it almost more look like anergic or even Treg cells. Next to getting T cells in the TME would be to overcome suppression by MDSCs. Ovarian cancer is notorious for that.",
+        "It is difficult to state that ENB-003 lacks activity but the results presented do not seem to support a large phase 2 study of a combination in a milieu of excitement in this disease and the recent approval of several agents such as the ADC mirvetuximab soravtansine-gynx, the recent approval of pembrolizumab combined with a taxane, as well as seriously high objective activity of other ADCs targeting the alpha folate receptor and other novel targets.   I do not recommend moving forward based on the mechanism and history of targeting the endothelin axis in cancer and the lack of robust data with ENB-003 observed to date.",
+        "ENB‑003 is a small‑molecule endothelin B receptor (ETBR) antagonist designed to overcome resistance to immune checkpoint inhibitors by reprogramming the tumor microenvironment. ETBR is highly expressed on tumor endothelial cells and inhibits T‑cell infiltration; ENB‑003 restores ICAM‑1 expression, potentially converting “cold” tumors into immunologically responsive ones. The mechanism is different to PD‑1/PD‑L1 or CTLA‑4 strategies; so in that regard its interesting.  In the phase 1 trial, they saw responses for ETBR-Hi patients but not low ETBR; however the phase 2 design does not seem to focus on this population for reasons I don’t quite understand.  I think the phase 2 needs to demonstrate that ENB‑003 + anti‑PD‑1 improves ORR versus anti‑PD‑1 alone in ETBR‑High tumors that are typically non‑responsive to PD‑1 therapy/ PD-L1 low, probably in ovarian first.  All that said, the response rates seemed pretty low to me so the question here is whether there is enough of a signal to evaluate in more detail.  These are hard to treat conditions so I am inclined to say lets move it forward as a Amber – need more info; but will easily defer to those with more knowledge in this area."
+      ],
+      "decision_raw": "Determination : deprioritize"
+    },
+    {
+      "lsb_id": "LSB-240",
+      "asset_name": "",
+      "company": "",
+      "modality": "LNP/Gene therapy",
+      "stage": "IND-enabling",
+      "disease_category": "Opthamology",
+      "indication": "Leber Congenital Amaurosis type 6 (LCA6)",
+      "ryg": "",
+      "panel_determination": "Deprioritize",
+      "rejection_reason": "",
+      "outcome_narrative": "",
+      "reviewer_comments": [
+        "AAV has generated major concerns lately at both regulatory agencies and pharma buyers (several pharma’s are pulling out). More robust safety and manufacturing data is requested by regulators. There seems to be a shift to next gen vectors (this is probably not given to development history). Preclinical data looks strong. Projected timelines are underestimated given the above and it is not guaranteed that accelerated approval can be obtained with the phase 1/2 study they propose. It is also unclear to me how active this program is. Getting a PRV is not guaranteed. Why is it not picked up by VCs in the last 3-4 years? ",
+        "No",
+        "No"
+      ],
+      "decision_raw": "Determination : deprioritize"
+    }
+  ]
+}

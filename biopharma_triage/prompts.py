@@ -61,20 +61,22 @@ def load_examples(max_examples: int = 3) -> str:
 
 
 def load_panel_outcomes() -> str:
-    """Render the Wave 2 Cycle 2 panel outcome table as a compact reference block."""
-    outcomes_path = os.path.join(_HERE, "data", "triage_outcomes_wave2_cycle2.json")
+    """Render the Wave 2 Cycle 1 panel outcome table as a compact reference block."""
+    outcomes_path = os.path.join(_HERE, "data", "triage_outcomes_wave2_cycle1.json")
     if not os.path.exists(outcomes_path):
         return ""
     import json
     data = json.load(open(outcomes_path))
-    lines = ["WAVE 2 CYCLE 2 PANEL OUTCOMES (31 assets) — use as calibration:"]
-    lines.append(f"{'Asset':<28} {'LSB ID':<13} {'Modality':<20} {'Disease':<16} {'Panel Determination'}")
-    lines.append("-" * 100)
-    for d in data:
+    assets = data.get("assets", data) if isinstance(data, dict) else data
+    lines = [f"WAVE 2 CYCLE 1 PANEL OUTCOMES ({len(assets)} assets) — use as calibration:"]
+    lines.append(f"{'Asset':<32} {'LSB ID':<14} {'Modality':<20} {'Disease':<18} {'Panel':<20} {'Rejection reason'}")
+    lines.append("-" * 115)
+    for d in assets:
+        reason = d.get("rejection_reason") or ""
         lines.append(
-            f"{d.get('Asset Name',''):<28} {d.get('LSB Tracking ID',''):<13} "
-            f"{d.get('Modality',''):<20} {d.get('Disease Category',''):<16} "
-            f"{d.get('Determination_norm','')}"
+            f"{d.get('asset_name',''):<32} {d.get('lsb_id',''):<14} "
+            f"{d.get('modality',''):<20} {d.get('disease_category',''):<18} "
+            f"{d.get('panel_determination',''):<20} {reason}"
         )
     return "\n".join(lines)
 
@@ -131,10 +133,10 @@ Panel determination vocabulary:
 - Hold: interesting but currently blocked (e.g. not yet available, terms unclear)
 - Not for sale: asset confirmed not accessible for licensing
 
-Key calibration from Wave 2 Cycle 2 outcomes (31 assets):
-- Most "Diligence" analyst scorecards → panel said "Deprioritize" (panel is stricter)
-- "Acquire" scorecard assets can still → panel "Deprioritize" (if transactability poor)
-- "Deprioritize" scorecard assets can → panel "Prioritize" (if committee sees a path the analyst didn't)
+Key calibration from Wave 2 Cycle 1 outcomes (29 assets — 3 Prioritize, 6 Hold, 20 Deprioritize):
+- Panel is significantly stricter than analyst scorecards: ~69% of assets deprioritized
+- "Hold" (not "Deprioritize") when asset is interesting but blocked by availability, timing, or IP
+- Prioritized assets share: clear first-in-class or best-in-class position, strong pharma M&A exit fit, validated target, confirmed IP runway
 - When in doubt, the panel is more skeptical than the analyst scorecard
 
 You will call emit_scorecard exactly once with the complete TriageScorecard JSON \
