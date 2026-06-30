@@ -114,6 +114,198 @@ def cms_spending(drug_name: str, max_results: int = 5) -> List[Dict]:
     return rows[:max_results]
 
 
+# --- Analytical lenses (competitive / SoC / commercial / deal flow) --------
+
+_PHASE_RANK = {
+    "EARLY_PHASE1": 0, "PHASE1": 1, "PHASE1/PHASE2": 1.5, "PHASE2": 2,
+    "PHASE2/PHASE3": 2.5, "PHASE3": 3, "PHASE4": 4, "NA": -1,
+}
+_ACTIVE_STATUSES = {"RECRUITING", "ACTIVE_NOT_RECRUITING", "ENROLLING_BY_INVITATION",
+                    "NOT_YET_RECRUITING", "AVAILABLE"}
+
+
+@_safe
+def competitive_landscape(target_or_drug: str, indication: str = "",
+                          max_results: int = 100) -> Dict:
+    """Build a competitive-intensity read for a target/mechanism in an indication.
+
+    Pulls ClinicalTrials.gov interventional studies for the target (and optional
+    indication) and aggregates: how many programs are in development, their phase
+    distribution, the most-advanced competitor, and the most active sponsors.
+    This directly informs the 'too competitive' rejection pattern.
+    """
+    url = "https://clinicaltrials.gov/api/v2/studies"
+    params = {
+        "query.intr": target_or_drug,
+        "pageSize": min(max_results, 200),
+        "filter.advanced": "AREA[StudyType]INTERVENTIONAL",
+        "fields": "NCTId,BriefTitle,Phase,OverallStatus,Condition,"
+                  "LeadSponsorName,StartDate",
+    }
+    if indication:
+        params["query.cond"] = indication
+    r = requests.get(url, params=params, headers=_UA, timeout=_TIMEOUT)
+    r.raise_for_status()
+    studies = r.json().get("studies", [])
+
+    phase_counts: Dict[str, int] = {}
+    sponsor_counts: Dict[str, int] = {}
+    active = 0
+    most_advanced = {"rank": -2, "phase": "NA", "nct_id": None,
+                     "title": None, "sponsor": None, "status": None}
+    examples = []
+    for s in studies:
+        p = s.get("protocolSection", {})
+        phases = p.get("designModule", {}).get("phases") or ["NA"]
+        phase = phases[-1]
+        phase_counts[phase] = phase_counts.get(phase, 0) + 1
+        sponsor = (p.get("sponsorCollaboratorsModule", {})
+                   .get("leadSponsor", {}).get("name", "Unknown"))
+        sponsor_counts[sponsor] = sponsor_counts.get(sponsor, 0) + 1
+        status = p.get("statusModule", {}).get("overallStatus", "")
+        if status in _ACTIVE_STATUSES:
+            active += 1
+        rank = _PHASE_RANK.get(phase.upper().replace(" ", ""), -1)
+        if rank > most_advanced["rank"]:
+            idm = p.get("identificationModule", {})
+            most_advanced = {
+                "rank": rank, "phase": phase, "nct_id": idm.get("nctId"),
+                "title": idm.get("briefTitle"), "sponsor": sponsor, "status": status,
+            }
+        if len(examples) < 8:
+            idm = p.get("identificationModule", {})
+            examples.append({
+                "nct_id": idm.get("nctId"), "phase": phase,
+                "status": status, "sponsor": sponsor,
+                "title": idm.get("briefTitle"),
+            })
+    top_sponsors = sorted(sponsor_counts.items(), key=lambda kv: -kv[1])[:6]
+    intensity = ("crowded" if (phase_counts.get("PHASE3", 0)
+                 + phase_counts.get("PHASE2/PHASE3", 0)) >= 3
+                 else "moderate" if len(studies) >= 8 else "sparse")
+    most_advanced.pop("rank", None)
+    return {
+        "target_or_drug": target_or_drug,
+        "indication": indication or "(any)",
+        "total_programs": len(studies),
+        "active_programs": active,
+        "phase_distribution": phase_counts,
+        "most_advanced_competitor": most_advanced,
+        "top_sponsors": [{"sponsor": s, "trials": n} for s, n in top_sponsors],
+        "competitive_intensity": intensity,
+        "examples": examples,
+    }
+
+
+@_safe
+def standard_of_care(indication: str, max_results: int = 10) -> List[Dict]:
+    """Identify the approved standard of care for an indication via openFDA labels.
+
+    Returns FDA-approved drugs whose labeling covers the indication — i.e. the
+    benchmark a new asset must beat. Use to frame differentiation and the
+    'what must be true clinically' bar.
+    """
+    url = "https://api.fda.gov/drug/label.json"
+    params = {
+        "search": f'indications_and_usage:"{indication}"',
+        "limit": min(max_results, 25),
+    }
+    r = requests.get(url, params=params, headers=_UA, timeout=_TIMEOUT)
+    r.raise_for_status()
+    results = r.json().get("results", [])
+    out = []
+    seen = set()
+    for rec in results:
+        openfda = rec.get("openfda", {})
+        brand = (openfda.get("brand_name") or ["?"])[0]
+        if brand in seen:
+            continue
+        seen.add(brand)
+        usage = (rec.get("indications_and_usage") or [""])[0]
+        out.append({
+            "brand_name": brand,
+            "generic_name": (openfda.get("generic_name") or [""])[0],
+            "manufacturer": (openfda.get("manufacturer_name") or [""])[0],
+            "route": (openfda.get("route") or [""])[0],
+            "pharm_class": (openfda.get("pharm_class_epc") or []),
+            "indication_snippet": usage[:400],
+        })
+        if len(out) >= max_results:
+            break
+    return out
+
+
+@_safe
+def commercial_cms(drug_name: str, max_results: int = 3) -> Dict:
+    """Size the commercial/reimbursement footprint of a comparator via CMS Part D.
+
+    Aggregates Medicare Part D 'Spending by Drug' fields (total spend, beneficiary
+    count, spend-per-beneficiary, and year-over-year trend) so a comparator's
+    real-world payer footprint can anchor market-size and pricing assumptions.
+    """
+    dataset = ("https://data.cms.gov/data-api/v1/dataset/"
+               "7e0b4365-fd63-4a29-8f5e-e0ac9f66a81b/data")
+    r = requests.get(dataset, params={
+        "filter[Brnd_Name]": drug_name, "size": max_results,
+    }, headers=_UA, timeout=_TIMEOUT)
+    r.raise_for_status()
+    rows = r.json()
+    if isinstance(rows, dict):
+        rows = rows.get("data", [])
+    rows = rows[:max_results]
+    summaries = []
+    for row in rows:
+        spend = {k: v for k, v in row.items() if k.startswith("Tot_Spndng")}
+        benes = {k: v for k, v in row.items() if k.startswith("Tot_Benes")}
+        per_bene = {k: v for k, v in row.items() if k.startswith("Avg_Spnd_Per_Bene")}
+        years = sorted(k.rsplit("_", 1)[-1] for k in spend if k.rsplit("_", 1)[-1].isdigit())
+        trend = None
+        if len(years) >= 2:
+            try:
+                first = float(row.get(f"Tot_Spndng_{years[0]}") or 0)
+                last = float(row.get(f"Tot_Spndng_{years[-1]}") or 0)
+                if first:
+                    trend = round((last - first) / first * 100, 1)
+            except (TypeError, ValueError):
+                trend = None
+        summaries.append({
+            "brand_name": row.get("Brnd_Name"),
+            "generic_name": row.get("Gnrc_Name"),
+            "years_covered": years,
+            "total_spending_by_year": spend,
+            "beneficiaries_by_year": benes,
+            "spend_per_beneficiary_by_year": per_bene,
+            "spend_trend_pct_first_to_last": trend,
+        })
+    return {"drug_name": drug_name, "matches": summaries}
+
+
+@_safe
+def deal_flow(query: str, max_results: int = 10) -> List[Dict]:
+    """Surface recent biopharma deal activity (licensing / M&A) via SEC EDGAR.
+
+    Runs an EDGAR full-text search for a company, target, or modality and returns
+    recent filings (8-K, license/collaboration agreements, etc.) that signal
+    partnership or acquisition activity — a proxy for 'recent deal flow' comps.
+    """
+    url = "https://efts.sec.gov/LATEST/search-index"
+    params = {"q": f'"{query}"', "forms": "8-K", "dateRange": "custom"}
+    r = requests.get(url, params={"q": f'"{query}"'},
+                     headers={**_UA, "Accept": "application/json"}, timeout=_TIMEOUT)
+    r.raise_for_status()
+    hits = (r.json().get("hits", {}) or {}).get("hits", [])
+    out = []
+    for h in hits[:max_results]:
+        src = h.get("_source", {})
+        out.append({
+            "company": (src.get("display_names") or ["?"])[0],
+            "form_type": src.get("file_type") or src.get("root_form"),
+            "filed_date": src.get("file_date"),
+            "doc": (h.get("_id") or "").split(":")[0],
+        })
+    return out
+
+
 # Tool registry exposed to the Claude agent loop ---------------------------
 
 TOOL_FUNCS = {
@@ -121,6 +313,10 @@ TOOL_FUNCS = {
     "pubmed": pubmed,
     "uspto_patents": uspto_patents,
     "cms_spending": cms_spending,
+    "competitive_landscape": competitive_landscape,
+    "standard_of_care": standard_of_care,
+    "commercial_cms": commercial_cms,
+    "deal_flow": deal_flow,
 }
 
 TOOL_SCHEMAS = [
@@ -174,6 +370,64 @@ TOOL_SCHEMAS = [
                 "max_results": {"type": "integer", "default": 5},
             },
             "required": ["drug_name"],
+        },
+    },
+    {
+        "name": "competitive_landscape",
+        "description": "COMPETITIVE ANALYSIS. Aggregate ClinicalTrials.gov to gauge how crowded a "
+                       "target/mechanism is in an indication: program count, phase distribution, "
+                       "most-advanced competitor, and most active sponsors. Use to test the "
+                       "'too competitive / window closed' risk before scoring.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "target_or_drug": {"type": "string", "description": "Target, mechanism, or drug name (intervention)"},
+                "indication": {"type": "string", "description": "Optional disease/condition to scope the landscape"},
+                "max_results": {"type": "integer", "default": 100},
+            },
+            "required": ["target_or_drug"],
+        },
+    },
+    {
+        "name": "standard_of_care",
+        "description": "STANDARD-OF-CARE ANALYSIS. Return FDA-approved drugs (openFDA labels) whose "
+                       "labeling covers an indication — the benchmark a new asset must beat. Use to "
+                       "frame the differentiation bar and 'what must be true clinically'.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "indication": {"type": "string", "description": "Disease/condition, e.g. 'chronic spontaneous urticaria'"},
+                "max_results": {"type": "integer", "default": 10},
+            },
+            "required": ["indication"],
+        },
+    },
+    {
+        "name": "commercial_cms",
+        "description": "COMMERCIAL ANALYSIS. Aggregate Medicare Part D 'Spending by Drug' for a "
+                       "comparator/SoC: total spend, beneficiaries, spend-per-beneficiary, and "
+                       "multi-year trend. Use to anchor market-size and pricing assumptions.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "drug_name": {"type": "string", "description": "Brand name of a comparator/SoC drug"},
+                "max_results": {"type": "integer", "default": 3},
+            },
+            "required": ["drug_name"],
+        },
+    },
+    {
+        "name": "deal_flow",
+        "description": "RECENT DEAL FLOW. Search SEC EDGAR filings for a company, target, or modality "
+                       "to surface recent licensing/collaboration/M&A activity as transactability "
+                       "comps. Use to test pharma BD/M&A appetite and exit plausibility.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "Company, target, mechanism, or modality"},
+                "max_results": {"type": "integer", "default": 10},
+            },
+            "required": ["query"],
         },
     },
 ]

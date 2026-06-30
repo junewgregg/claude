@@ -110,6 +110,22 @@ def render_docx(sc: TriageScorecard, out_path: str) -> str:
     br = bl.add_run(f"Bottom line: {sc.bottom_line}")
     br.bold = True
 
+    # Market intelligence section (competitive / SoC / commercial / deal flow)
+    if sc.market_intel is not None:
+        mi = sc.market_intel
+        _section(doc, "Market intelligence: competitive, standard of care, commercial, deal flow")
+        _kv_table(doc, ["Lens", "Read"], [
+            ["Competitive landscape", mi.competitive_landscape],
+            ["Competitive intensity", mi.competitive_intensity.value],
+            ["Standard of care", mi.standard_of_care],
+            ["Commercial context (CMS)", mi.commercial_context],
+            ["Recent deal flow", mi.recent_deal_flow],
+        ])
+        if mi.exit_acquirer_shortlist:
+            doc.add_paragraph("Likely exit acquirers:").bold = True
+            for a in mi.exit_acquirer_shortlist:
+                doc.add_paragraph(a, style="List Bullet")
+
     doc.add_paragraph(f"Date prepared: {sc.date_prepared}")
 
     # Panel determination section

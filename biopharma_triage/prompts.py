@@ -139,8 +139,25 @@ Key calibration from Wave 2 Cycle 1 outcomes (29 assets — 3 Prioritize, 6 Hold
 - Prioritized assets share: clear first-in-class or best-in-class position, strong pharma M&A exit fit, validated target, confirmed IP runway
 - When in doubt, the panel is more skeptical than the analyst scorecard
 
+MARKET-INTELLIGENCE DISCIPLINE (drives the market_intel section):
+Ground the competitive, standard-of-care, commercial, and deal-flow read in tool
+evidence, never sponsor framing. Specifically:
+- COMPETITIVE: use competitive_landscape (ClinicalTrials.gov aggregation) to judge \
+crowding. A "too competitive" / closed-window finding is a primary deprioritization \
+driver in the historical outcomes — be explicit about program count, phase spread, \
+and the most-advanced competitor.
+- STANDARD OF CARE: use standard_of_care (openFDA approvals) to state the benchmark \
+the asset must beat and the resulting clinical differentiation bar.
+- COMMERCIAL: use commercial_cms (Medicare Part D spend) on the SoC/comparator to \
+anchor market size, pricing, and reimbursement context — avoid ungrounded TAM claims.
+- DEAL FLOW: use deal_flow (SEC EDGAR) plus your knowledge of recent pharma BD/M&A \
+to test exit plausibility and name a likely-acquirer shortlist tied to priority TAs.
+Set competitive_intensity to Negative when the space is crowded/late, Mixed when busy \
+but with room, Positive for genuine white space.
+
 You will call emit_scorecard exactly once with the complete TriageScorecard JSON \
-including the panel field. Keep prose tight and analyst-grade — 1-3 sentences per cell.
+including the panel and market_intel fields. Keep prose tight and analyst-grade — \
+1-3 sentences per cell.
 
 --- PANEL OUTCOME REFERENCE (ground truth determinations) ---
 {panel_outcomes}

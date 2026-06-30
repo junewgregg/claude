@@ -138,6 +138,44 @@ class RatingMovement(BaseModel):
     move_to_deprioritize_if: List[str] = Field(default_factory=list)
 
 
+# --- Market intelligence (competitive / SoC / commercial / deal flow) ------
+
+class MarketIntelligence(BaseModel):
+    """Evidence-grounded market read built from public-data tool calls.
+
+    Each field should be a tight, sourced synthesis — cite what the tools
+    returned (program counts, approved comparators, CMS spend, EDGAR deals),
+    not sponsor framing. Leave a field empty only if no data could be retrieved.
+    """
+    competitive_landscape: str = Field(
+        ...,
+        description="Competitive intensity from ClinicalTrials.gov: # programs, phase spread, "
+                    "most-advanced competitor, and whether the window is open or closed.",
+    )
+    competitive_intensity: ScreenRead = Field(
+        ...,
+        description="Positive = white space / differentiated; Mixed = busy but room; "
+                    "Negative = crowded, late, window closing.",
+    )
+    standard_of_care: str = Field(
+        ...,
+        description="Approved SoC for the lead indication (openFDA) and the clinical bar the asset must beat.",
+    )
+    commercial_context: str = Field(
+        ...,
+        description="Market/reimbursement read anchored on CMS spend for the SoC/comparator "
+                    "(total spend, beneficiaries, trend) and implied opportunity size.",
+    )
+    recent_deal_flow: str = Field(
+        ...,
+        description="Recent licensing/M&A comps (EDGAR / known deals) testing pharma BD/M&A appetite and exit plausibility.",
+    )
+    exit_acquirer_shortlist: List[str] = Field(
+        default_factory=list,
+        description="Named pharma most likely to acquire at inflection, tied to their stated priority TAs and recent deals.",
+    )
+
+
 # --- Top-level scorecard ---------------------------------------------------
 
 class TriageScorecard(BaseModel):
@@ -169,6 +207,11 @@ class TriageScorecard(BaseModel):
     rating_movement: RatingMovement
     bottom_line: str
     date_prepared: str
+
+    # Market intelligence: competitive / SoC / commercial / deal-flow read.
+    # Optional for backward-compatibility with scorecards generated before this
+    # section existed; the live agent should always populate it.
+    market_intel: Optional[MarketIntelligence] = None
 
     # Panel-level determination (committee call, distinct from analyst rating)
     panel: PanelView
