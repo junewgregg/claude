@@ -116,10 +116,46 @@ html, body {
 
 /* ---------- Match HUD ---------- */
 .match-hud { position: absolute; inset: 0; pointer-events: none; }
-.hud-topinfo {
+.hud-top {
   position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
-  background: #000a; padding: 6px 16px; border-radius: 8px; font-size: 0.9rem; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 6px; max-width: 96vw;
 }
+.hud-timer {
+  background: #000c; padding: 4px 22px; border-radius: 10px;
+  font-size: 1.9rem; font-weight: 700; line-height: 1.15;
+  font-variant-numeric: tabular-nums; letter-spacing: 0.04em;
+}
+.hud-timer.urgent { color: #ff6b4f; animation: pulse-timer 1s ease-in-out infinite; }
+@keyframes pulse-timer { 50% { opacity: 0.55; } }
+@media (prefers-reduced-motion: reduce) { .hud-timer.urgent { animation: none; } }
+.hud-topinfo {
+  background: #000a; padding: 4px 14px; border-radius: 8px; font-size: 0.8rem;
+  text-align: center; color: #aab;
+}
+.hud-scores { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.score-chip {
+  background: #000c; border-radius: 8px; padding: 4px 12px; font-size: 0.85rem;
+  display: flex; gap: 8px; align-items: baseline; border-left: 3px solid var(--team, #888);
+}
+.score-chip.mine { background: #122a3ad9; font-weight: 700; }
+.score-chip .sc { font-variant-numeric: tabular-nums; font-weight: 700; }
+.hud-respawn {
+  position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%);
+  background: #000000cc; padding: 18px 34px; border-radius: 14px; text-align: center;
+  font-size: 1.4rem; font-weight: 700; border: 1px solid #333c4a;
+}
+.hud-respawn .rs-count { font-size: 3rem; color: #ff6b4f; font-variant-numeric: tabular-nums; }
+.results-standings {
+  margin: 0 auto 18px; max-width: 420px; display: flex; flex-direction: column; gap: 5px;
+  text-align: left;
+}
+.results-row {
+  display: flex; justify-content: space-between; gap: 14px; background: #12161d;
+  border-radius: 8px; padding: 8px 14px; font-size: 0.9rem;
+  border-left: 3px solid var(--team, #888);
+}
+.results-row.mine { background: #16283a; font-weight: 700; }
+.results-row .rk { font-variant-numeric: tabular-nums; }
 .hud-killfeed {
   position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 4px; align-items: flex-end;
   font-size: 0.78rem;
@@ -262,7 +298,12 @@ html, body {
   <!-- MATCH HUD -->
   <section id="screen-match" class="screen">
     <div class="match-hud">
-      <div id="hud-topinfo" class="hud-topinfo"></div>
+      <div class="hud-top">
+        <div id="hud-timer" class="hud-timer">2:00</div>
+        <div id="hud-topinfo" class="hud-topinfo"></div>
+        <div id="hud-scores" class="hud-scores"></div>
+      </div>
+      <div id="hud-respawn" class="hud-respawn" hidden></div>
       <div id="hud-killfeed" class="hud-killfeed"></div>
       <div class="hud-bottom">
         <div class="hud-healthbar-wrap">
@@ -279,6 +320,7 @@ html, body {
     <div class="menu-panel">
       <h1 id="results-title" class="game-title">VICTORY</h1>
       <p id="results-sub" class="game-subtitle"></p>
+      <div id="results-standings" class="results-standings"></div>
       <button class="btn btn-primary" id="btn-results-continue">Continue</button>
     </div>
   </section>
@@ -884,7 +926,12 @@ class InputController {
     window.addEventListener('keydown', e => this.onKeyDown(e));
     window.addEventListener('keyup', e => this.keys.delete(e.code));
     canvas.addEventListener('mousemove', e => this.onMouseMove(e));
-    canvas.addEventListener('mousedown', e => { if (e.button === 0) this.mouse.down = true; });
+    // Each click is one basic attack — holding the button does not auto-repeat.
+    canvas.addEventListener('mousedown', e => {
+      if (e.button !== 0) return;
+      this.mouse.down = true;
+      this.pendingActions.add('attack');
+    });
     window.addEventListener('mouseup', () => { this.mouse.down = false; });
     canvas.addEventListener('contextmenu', e => e.preventDefault());
 
@@ -1004,9 +1051,14 @@ class InputController {
     return { x: this.mouse.x, y: this.mouse.y, active: true };
   }
 
-  isFiring() {
-    if (this.aimJoystick) { const dx = this.aimJoystick.x - this.aimJoystick.originX; const dy = this.aimJoystick.y - this.aimJoystick.originY; return Math.hypot(dx, dy) > 8; }
-    return this.mouse.down;
+  // Touch players hold the aim stick to keep swinging; tapping repeatedly on a
+  // phone would be miserable. Mouse players get one attack per click instead,
+  // queued through pendingActions as 'attack'.
+  isTouchFiring() {
+    if (!this.aimJoystick) return false;
+    const dx = this.aimJoystick.x - this.aimJoystick.originX;
+    const dy = this.aimJoystick.y - this.aimJoystick.originY;
+    return Math.hypot(dx, dy) > 8;
   }
 
   consumePending(name) {
@@ -1036,9 +1088,12 @@ class Entity {
     this.maxShield = this.maxHp * 0.6;
     this.shield = 0;
     this.alive = true;
+    this.respawnAt = null;
     this.team = sheet.team;
     this.isAI = sheet.isAI;
     this.kills = 0;
+    this.deaths = 0;
+    this.spawnX = x; this.spawnY = y;
     this.statuses = {}; // type -> { until, ...extra }
     this.buffs = {}; // stat -> { until, amount }
     this.cooldowns = sheet.abilities.map(a => ({ id: a.id, remaining: 0, max: a.maxCooldown }));
@@ -1149,8 +1204,30 @@ class Entity {
     this.attackCooldownRemaining = Math.max(0, this.attackCooldownRemaining - dt * mult);
   }
 
+  // Brought back to life at (x, y) after the respawn timer elapses. Ability
+  // cooldowns reset, but the ultimate keeps ticking so dying isn't a way to
+  // refresh it. A short spell of intangibility prevents spawn camping.
+  respawnNow(x, y, world) {
+    this.x = x; this.y = y;
+    this.vx = 0; this.vy = 0;
+    this.hp = this.maxHp;
+    this.shield = 0;
+    this.alive = true;
+    this.respawnAt = null;
+    this.statuses = {};
+    this.buffs = {};
+    this.lastDamagedAt = -999;
+    this.combatStartedAt = null;
+    this.stealthUntil = -1;
+    this.attackCooldownRemaining = 0;
+    for (const cd of this.cooldowns) cd.remaining = 0;
+    this.applyStatus('intangible', 1.5, world.time);
+    this.aiState = null;
+  }
+
   update(dt, world) {
-    if (!this.alive) return;
+    // Cooldowns keep recovering while dead so respawns aren't dead weight.
+    if (!this.alive) { this.tickCooldowns(dt); return; }
     this.tickStatuses(dt, world);
     this.tickCooldowns(dt);
     const passive = this.sheet.passive;
@@ -1258,7 +1335,42 @@ function clampToMap(x, y, world) {
 
 function dealDamageTo(target, amount, source, world) {
   const dmg = amount * (source.damageMultiplier || 1);
-  return target.takeDamage(dmg, source, world);
+  const applied = target.takeDamage(dmg, source, world);
+  if (applied > 0) {
+    spawnEffect(world, {
+      type: 'hitspark', x: target.x, y: target.y, life: 0.28,
+      color: (source.sheet && source.sheet.color) || '#ffffff'
+    });
+    // Damage numbers only for hits the player is part of, so the screen stays readable.
+    const pe = world.playerEntity;
+    if (pe && (source === pe || target === pe)) {
+      spawnEffect(world, {
+        type: 'damagetext', x: target.x + (Math.random() - 0.5) * 16, y: target.y - 16,
+        text: String(Math.round(applied)), life: 0.9,
+        color: source === pe ? '#ffd24f' : '#ff7a6b'
+      });
+    }
+  }
+  return applied;
+}
+
+// Every ability and ultimate gets a visible tell: an expanding ring at the
+// caster, plus a floating name so you can read what just went off. Enemy
+// ability names are left off to avoid burying the screen in text, but their
+// ultimates still announce themselves.
+function spawnCastVfx(entity, ability, world, isUltimate) {
+  const color = isUltimate ? '#f4c542' : entity.sheet.color;
+  spawnEffect(world, {
+    type: 'castring', x: entity.x, y: entity.y, color,
+    radius: isUltimate ? 130 : 52, life: isUltimate ? 0.75 : 0.4
+  });
+  const isPlayer = world.playerEntity === entity;
+  if (isPlayer || isUltimate) {
+    spawnEffect(world, {
+      type: 'casttext', x: entity.x, y: entity.y - 40,
+      text: ability.name || ability.base, color, life: 1.3, big: isUltimate
+    });
+  }
 }
 
 // ---------------- basic attack ----------------
@@ -1274,16 +1386,21 @@ function useBasicAttack(entity, aimX, aimY, world) {
 
   if (entity.sheet.attackType === 'melee') {
     const target = nearestEnemy(entity, world, range);
+    // The swing always shows, hit or miss, so an attack never feels swallowed.
+    spawnEffect(world, {
+      type: 'slash', x: entity.x, y: entity.y, angle: entity.facing,
+      life: 0.25, color: entity.sheet.color, reach: range
+    });
     if (target) dealDamageTo(target, dmg, entity, world);
-    spawnEffect(world, { type: 'slash', x: entity.x, y: entity.y, angle: entity.facing, life: 0.15, color: entity.sheet.color });
     return true;
   }
   // ranged / heal basic attacks both fire a small projectile
   const ang = Math.atan2(aimY - entity.y, aimX - entity.x);
+  spawnEffect(world, { type: 'muzzle', x: entity.x, y: entity.y, angle: ang, color: entity.sheet.color, life: 0.14 });
   world.projectiles.push({
     x: entity.x, y: entity.y, vx: Math.cos(ang) * entity.sheet.stats.projectileSpeed,
     vy: Math.sin(ang) * entity.sheet.stats.projectileSpeed, damage: dmg, owner: entity,
-    radius: 6, traveled: 0, maxRange: range, color: entity.sheet.color, basic: true
+    radius: 7, traveled: 0, maxRange: range, color: entity.sheet.color, basic: true
   });
   return true;
 }
@@ -1310,6 +1427,7 @@ const ABILITY_HANDLERS = {
   },
   projectile(entity, ab, aimX, aimY, world) {
     const ang = Math.atan2(aimY - entity.y, aimX - entity.x);
+    spawnEffect(world, { type: 'muzzle', x: entity.x, y: entity.y, angle: ang, color: entity.sheet.color, life: 0.18, big: true });
     world.projectiles.push({
       x: entity.x, y: entity.y, vx: Math.cos(ang) * entity.sheet.stats.projectileSpeed * 1.1,
       vy: Math.sin(ang) * entity.sheet.stats.projectileSpeed * 1.1, damage: ab.damage, owner: entity,
@@ -1319,6 +1437,7 @@ const ABILITY_HANDLERS = {
   },
   projectile_slow(entity, ab, aimX, aimY, world) {
     const ang = Math.atan2(aimY - entity.y, aimX - entity.x);
+    spawnEffect(world, { type: 'muzzle', x: entity.x, y: entity.y, angle: ang, color: '#8ecbff', life: 0.18, big: true });
     world.projectiles.push({
       x: entity.x, y: entity.y, vx: Math.cos(ang) * entity.sheet.stats.projectileSpeed,
       vy: Math.sin(ang) * entity.sheet.stats.projectileSpeed, damage: ab.damage, owner: entity,
@@ -1452,7 +1571,11 @@ const ABILITY_HANDLERS = {
   },
   mark(entity, ab, aimX, aimY, world) {
     const target = nearestEnemy(entity, world, ab.range);
-    if (target) target.applyStatus('mark', ab.duration, world.time, { amount: ab.amount });
+    if (target) {
+      target.applyStatus('mark', ab.duration, world.time, { amount: ab.amount });
+      spawnEffect(world, { type: 'beam', x1: entity.x, y1: entity.y, x2: target.x, y2: target.y, color: '#ff6b4f', life: 0.4 });
+      spawnEffect(world, { type: 'castring', x: target.x, y: target.y, color: '#ff6b4f', radius: 40, life: 0.5 });
+    }
     return true;
   },
   mark_and_strike(entity, ab, aimX, aimY, world) {
@@ -1493,7 +1616,10 @@ function useAbility(entity, index, aimX, aimY, world) {
   const handler = ABILITY_HANDLERS[ab.type];
   if (!handler) return false;
   const ok = handler(entity, ab, aimX, aimY, world);
-  if (ok) cd.remaining = cd.max;
+  if (ok) {
+    cd.remaining = cd.max;
+    spawnCastVfx(entity, ab, world, false);
+  }
   return ok;
 }
 
@@ -1504,7 +1630,10 @@ function useUltimate(entity, aimX, aimY, world) {
   const handler = ABILITY_HANDLERS[ab.type];
   if (!handler) return false;
   const ok = handler(entity, ab, aimX, aimY, world);
-  if (ok) entity.ultCooldown.remaining = entity.ultCooldown.max;
+  if (ok) {
+    entity.ultCooldown.remaining = entity.ultCooldown.max;
+    spawnCastVfx(entity, ab, world, true);
+  }
   return ok;
 }
 
@@ -1724,10 +1853,10 @@ function updateAI(entity, world, dt) {
 // Game mode configuration and match/tournament setup.
 
 const GAME_MODES = {
-  ffa8: { id: 'ffa8', name: '8-Player Free-for-All', teamSize: 1, teamCount: 8, zone: false, desc: 'Every fighter for themself. Last one standing wins.' },
-  br4v4: { id: 'br4v4', name: '4v4 Battle Royale', teamSize: 4, teamCount: 2, zone: true, desc: 'Two squads of four. The storm closes in — last team standing wins.' },
-  br2222: { id: 'br2222', name: '2v2v2v2 Battle Royale', teamSize: 2, teamCount: 4, zone: true, desc: 'Four duos fight it out as the storm shrinks the arena.' },
-  tournament: { id: 'tournament', name: '4v4 16-Team Tournament', teamSize: 4, teamCount: 2, zone: true, desc: 'A single-elimination bracket of sixteen 4-player teams. Keep your squad together all the way to the final.' }
+  ffa8: { id: 'ffa8', name: '8-Player Free-for-All', teamSize: 1, teamCount: 8, zone: false, duration: 120, respawnDelay: 5, desc: 'Every fighter for themself. Whoever has the most kills when the 2-minute clock runs out wins. Fall in battle and you respawn a few seconds later.' },
+  br4v4: { id: 'br4v4', name: '4v4 Battle Royale', teamSize: 4, teamCount: 2, zone: true, duration: 120, respawnDelay: 5, desc: 'Two squads of four. The storm closes in — the team with the most kills after 2 minutes wins. Fallen fighters respawn a few seconds later.' },
+  br2222: { id: 'br2222', name: '2v2v2v2 Battle Royale', teamSize: 2, teamCount: 4, zone: true, duration: 120, respawnDelay: 5, desc: 'Four duos fight it out as the storm shrinks the arena. Most team kills when the 2-minute clock hits zero takes it. You respawn a few seconds after going down.' },
+  tournament: { id: 'tournament', name: '4v4 16-Team Tournament', teamSize: 4, teamCount: 2, zone: true, duration: 120, respawnDelay: 5, desc: 'A single-elimination bracket of sixteen 4-player teams. Each round is a 2-minute, most-kills-wins match with respawns. Keep your squad together all the way to the final.' }
 };
 
 // Builds the list of character sheets (with team ids assigned) for a single match.
@@ -1745,13 +1874,29 @@ function buildMatchRoster(mode, playerSheet, opponentTeams = null) {
   } else {
     for (let t = 1; t < mode.teamCount; t++) {
       for (let i = 0; i < mode.teamSize; i++) {
-        roster.push(randomCharacterSheet(`${teamLabel(t)} ${i + 1}`, true, t));
+        // In a free-for-all there are no squads, so rivals go by their own
+        // affinity/teknik name (the default) instead of a squad label.
+        const name = mode.teamSize === 1 ? null : `${teamLabel(t)} ${i + 1}`;
+        roster.push(randomCharacterSheet(name, true, t));
       }
     }
   }
   // FFA: everyone is their own team so "allies" collapses to self.
-  if (mode.teamSize === 1) roster.forEach((s, i) => { s.team = i; });
+  if (mode.teamSize === 1) {
+    roster.forEach((s, i) => { s.team = i; });
+    dedupeNames(roster);
+  }
   return roster;
+}
+
+// Two "Faerie Archer"s in one free-for-all are confusing on the scoreboard.
+function dedupeNames(roster) {
+  const seen = {};
+  for (const sheet of roster) {
+    const base = sheet.displayName;
+    seen[base] = (seen[base] || 0) + 1;
+    if (seen[base] > 1) sheet.displayName = `${base} ${seen[base]}`;
+  }
 }
 
 function teamLabel(t) {
@@ -1841,7 +1986,12 @@ function resolvePlayerMatchAndAdvance(tourney, playerWon) {
 
 // ==== js/game/engine.js ====
 // Drives a single match: owns the world, steps AI/physics/combat each frame,
-// tracks the shrinking storm zone for battle-royale modes, and the camera.
+// tracks the match clock, kill scores, respawns, the shrinking storm zone for
+// battle-royale modes, and the camera.
+//
+// Match rules: every mode is a timed deathmatch. The clock runs down from
+// mode.duration; whoever has the most kills when it hits zero wins. Nobody is
+// ever eliminated for good — fallen fighters respawn after mode.respawnDelay.
 
 function clampNum(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
@@ -1856,6 +2006,10 @@ class MatchEngine {
     this.ended = false;
     this.camera = { x: 0, y: 0 };
 
+    this.duration = mode.duration || 120;
+    this.timeRemaining = this.duration;
+    this.respawnDelay = mode.respawnDelay || 5;
+
     this.world = {
       time: 0, map, entities: [], projectiles: [], turrets: [], effects: [],
       onDeath: (entity, killer) => this.handleDeath(entity, killer)
@@ -1864,12 +2018,26 @@ class MatchEngine {
     assignSpawnPositions(roster, map, mode);
     this.world.entities = roster.map(sheet => new Entity(sheet, sheet.x, sheet.y, this.world));
     this.playerEntity = this.world.entities.find(e => e.sheet === playerSheet);
+    // Combat VFX uses this to decide which damage numbers are worth showing.
+    this.world.playerEntity = this.playerEntity;
+
+    // Kill/death tallies per team, and a readable name for each team.
+    this.scores = {};
+    this.deaths = {};
+    this.teamNames = {};
+    for (const e of this.world.entities) {
+      if (this.scores[e.team] === undefined) { this.scores[e.team] = 0; this.deaths[e.team] = 0; }
+      if (!this.teamNames[e.team]) {
+        if (e.team === this.playerEntity.team) this.teamNames[e.team] = mode.teamSize === 1 ? 'You' : 'Your Team';
+        else this.teamNames[e.team] = mode.teamSize === 1 ? e.sheet.displayName : e.sheet.displayName.replace(/\s+\d+$/, '');
+      }
+    }
 
     this.zone = mode.zone ? {
       cx: map.width / 2, cy: map.height / 2,
       startRadius: Math.max(map.width, map.height) * 0.72,
       radius: Math.max(map.width, map.height) * 0.72,
-      endRadius: 240, duration: 150, elapsed: 0, nextDamageTick: 1
+      endRadius: 320, duration: this.duration, elapsed: 0, nextDamageTick: 1
     } : null;
 
     this._lastPlayerX = this.playerEntity.x;
@@ -1879,17 +2047,19 @@ class MatchEngine {
   update(dt) {
     if (this.ended) return;
     this.world.time += dt;
+    this.timeRemaining = Math.max(0, this.timeRemaining - dt);
     this.updateCamera();
     this.handlePlayerInput(dt);
     for (const e of this.world.entities) {
       if (e.isAI && e.alive) updateAI(e, this.world, dt);
     }
     for (const e of this.world.entities) e.update(dt, this.world);
+    this.updateRespawns();
     updateProjectiles(this.world, dt);
     updateTurrets(this.world, dt);
     updateEffects(this.world);
     if (this.zone) this.updateZone(dt);
-    this.checkWinCondition();
+    if (this.timeRemaining <= 0) this.endMatch();
   }
 
   handlePlayerInput(dt) {
@@ -1903,12 +2073,42 @@ class MatchEngine {
     this.lastAim = worldAim;
     pe.facing = Math.atan2(worldAim.y - pe.y, worldAim.x - pe.x);
 
-    if (this.input.isFiring()) useBasicAttack(pe, worldAim.x, worldAim.y, this.world);
+    // One click, one swing. Touch players hold the aim stick to keep attacking.
+    if (this.input.consumePending('attack') || this.input.isTouchFiring()) {
+      useBasicAttack(pe, worldAim.x, worldAim.y, this.world);
+    }
     for (let i = 0; i < 4; i++) {
       if (this.input.consumePending('ability' + (i + 1))) useAbility(pe, i, worldAim.x, worldAim.y, this.world);
     }
     if (this.input.consumePending('ultimate')) useUltimate(pe, worldAim.x, worldAim.y, this.world);
     this.input.clearFrame();
+  }
+
+  updateRespawns() {
+    for (const e of this.world.entities) {
+      if (e.alive || e.respawnAt === null) continue;
+      if (this.world.time >= e.respawnAt) {
+        const p = this.safeSpawnPoint(e);
+        e.respawnNow(p.x, p.y, this.world);
+        spawnEffect(this.world, { type: 'spawnring', x: p.x, y: p.y, color: e.sheet.color, life: 0.8 });
+      }
+    }
+  }
+
+  // Respawn on the fighter's original spawn point, unless the storm has already
+  // swallowed it — then drop them somewhere safe inside the circle instead.
+  safeSpawnPoint(entity) {
+    let x = entity.spawnX, y = entity.spawnY;
+    if (this.zone) {
+      const d = Math.hypot(x - this.zone.cx, y - this.zone.cy);
+      if (d > this.zone.radius * 0.8) {
+        const ang = Math.random() * Math.PI * 2;
+        const r = this.zone.radius * 0.55 * Math.random();
+        x = this.zone.cx + Math.cos(ang) * r;
+        y = this.zone.cy + Math.sin(ang) * r;
+      }
+    }
+    return clampToMapBounds(x, y, this.world);
   }
 
   updateZone(dt) {
@@ -1936,18 +2136,41 @@ class MatchEngine {
   }
 
   handleDeath(entity, killer) {
+    entity.respawnAt = this.world.time + this.respawnDelay;
+    entity.deaths++;
+    this.deaths[entity.team] = (this.deaths[entity.team] || 0) + 1;
+    // Storm and self-inflicted deaths don't feed anyone's score.
+    if (killer && killer.team !== undefined && killer.team !== entity.team) {
+      this.scores[killer.team] = (this.scores[killer.team] || 0) + 1;
+    }
     this.onKillFeed(entity, killer);
   }
 
-  checkWinCondition() {
+  // Teams ranked by kills, then by fewest deaths, then by team id so there is
+  // always exactly one winner.
+  getStandings() {
+    return Object.keys(this.scores)
+      .map(t => ({ team: Number(t), name: this.teamNames[t], kills: this.scores[t], deaths: this.deaths[t] }))
+      .sort((a, b) => b.kills - a.kills || a.deaths - b.deaths || a.team - b.team);
+  }
+
+  endMatch() {
     if (this.ended) return;
-    const aliveTeams = new Set(this.world.entities.filter(e => e.alive).map(e => e.team));
-    if (aliveTeams.size <= 1) {
-      this.ended = true;
-      const winnerTeam = aliveTeams.size === 1 ? [...aliveTeams][0] : null;
-      const playerWon = winnerTeam !== null && winnerTeam === this.playerEntity.team;
-      this.onEnd({ playerWon, winnerTeam });
-    }
+    this.ended = true;
+    const standings = this.getStandings();
+    const winner = standings[0];
+    const playerTeam = this.playerEntity.team;
+    const playerStanding = standings.find(s => s.team === playerTeam);
+    const tiedOnKills = standings.filter(s => s.kills === winner.kills).length > 1;
+    this.onEnd({
+      playerWon: winner.team === playerTeam,
+      wonOnTiebreak: winner.team === playerTeam && tiedOnKills,
+      lostOnTiebreak: winner.team !== playerTeam && playerStanding.kills === winner.kills,
+      winnerTeam: winner.team,
+      standings,
+      playerKills: this.playerEntity.kills,
+      playerDeaths: this.playerEntity.deaths
+    });
   }
 }
 
@@ -2097,10 +2320,30 @@ function drawEntity(ctx, entity, camera, viewerTeam, isPlayer) {
 function drawProjectiles(ctx, world, camera) {
   for (const pr of world.projectiles) {
     const p = worldToScreen(pr.x, pr.y, camera);
+    const speed = Math.hypot(pr.vx, pr.vy) || 1;
+    const trailLen = Math.min(34, speed * 0.05);
+    ctx.save();
+    // motion trail so fast shots read as movement, not a floating dot
+    ctx.strokeStyle = pr.color || '#fff';
+    ctx.globalAlpha = 0.45;
+    ctx.lineWidth = pr.radius * 1.4;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+    ctx.lineTo(p.x - (pr.vx / speed) * trailLen, p.y - (pr.vy / speed) * trailLen);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.shadowColor = pr.color || '#fff';
+    ctx.shadowBlur = 12;
     ctx.beginPath();
     ctx.arc(p.x, p.y, pr.radius, 0, Math.PI * 2);
     ctx.fillStyle = pr.color || '#fff';
     ctx.fill();
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, Math.max(2, pr.radius * 0.45), 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+    ctx.restore();
   }
 }
 
@@ -2125,17 +2368,98 @@ function drawEffects(ctx, world, camera) {
     ctx.globalAlpha = alpha;
     if (fx.type === 'blast') {
       const p = worldToScreen(fx.x, fx.y, camera);
+      const r = fx.radius * (fx.ring ? 1 : (0.35 + t * 0.65));
+      ctx.shadowColor = fx.color || '#fff';
+      ctx.shadowBlur = 18;
+      if (!fx.ring) {
+        ctx.globalAlpha = alpha * 0.45;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+        ctx.fillStyle = fx.color || '#fff';
+        ctx.fill();
+        ctx.globalAlpha = alpha;
+      }
       ctx.beginPath();
-      ctx.arc(p.x, p.y, fx.radius * (fx.ring ? 1 : (0.3 + t * 0.7)), 0, Math.PI * 2);
-      if (fx.ring) { ctx.strokeStyle = fx.color || '#fff'; ctx.lineWidth = 3; ctx.stroke(); }
-      else { ctx.fillStyle = fx.color || '#fff'; ctx.fill(); }
+      ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+      ctx.strokeStyle = fx.color || '#fff';
+      ctx.lineWidth = 4;
+      ctx.stroke();
     } else if (fx.type === 'slash') {
+      // Arc sweeps through the swing so the attack reads as a motion.
+      const p = worldToScreen(fx.x, fx.y, camera);
+      const reach = fx.reach || (fx.big ? 46 : 34);
+      const sweep = 1.5;
+      const mid = fx.angle - sweep / 2 + sweep * t;
+      ctx.strokeStyle = fx.color || '#fff';
+      ctx.lineWidth = fx.big ? 8 : 6;
+      ctx.lineCap = 'round';
+      ctx.shadowColor = fx.color || '#fff';
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, reach * 0.85, mid - 0.45, mid + 0.45);
+      ctx.stroke();
+    } else if (fx.type === 'muzzle') {
+      const p = worldToScreen(fx.x, fx.y, camera);
+      const len = (fx.big ? 40 : 26) * (1 - t * 0.4);
+      ctx.fillStyle = fx.color || '#fff';
+      ctx.shadowColor = fx.color || '#fff';
+      ctx.shadowBlur = 14;
+      ctx.beginPath();
+      ctx.moveTo(p.x + Math.cos(fx.angle) * len, p.y + Math.sin(fx.angle) * len);
+      ctx.lineTo(p.x + Math.cos(fx.angle + 2.4) * 12, p.y + Math.sin(fx.angle + 2.4) * 12);
+      ctx.lineTo(p.x + Math.cos(fx.angle - 2.4) * 12, p.y + Math.sin(fx.angle - 2.4) * 12);
+      ctx.closePath();
+      ctx.fill();
+    } else if (fx.type === 'castring' || fx.type === 'spawnring') {
+      const p = worldToScreen(fx.x, fx.y, camera);
+      const r = (fx.radius || 46) * (0.25 + t * 0.9);
+      ctx.strokeStyle = fx.color || '#fff';
+      ctx.lineWidth = 4 * (1 - t) + 1;
+      ctx.shadowColor = fx.color || '#fff';
+      ctx.shadowBlur = 16;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (fx.type === 'hitspark') {
       const p = worldToScreen(fx.x, fx.y, camera);
       ctx.strokeStyle = fx.color || '#fff';
-      ctx.lineWidth = fx.big ? 5 : 3;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, fx.big ? 40 : 28, fx.angle - 0.6, fx.angle + 0.6);
-      ctx.stroke();
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2 + fx.createdAt;
+        const inner = 8 + t * 12, outer = inner + 9 * (1 - t);
+        ctx.beginPath();
+        ctx.moveTo(p.x + Math.cos(a) * inner, p.y + Math.sin(a) * inner);
+        ctx.lineTo(p.x + Math.cos(a) * outer, p.y + Math.sin(a) * outer);
+        ctx.stroke();
+      }
+    } else if (fx.type === 'beam') {
+      const a = worldToScreen(fx.x1, fx.y1, camera), b = worldToScreen(fx.x2, fx.y2, camera);
+      ctx.strokeStyle = fx.color || '#fff';
+      ctx.lineWidth = 4 * (1 - t) + 1;
+      ctx.shadowColor = fx.color || '#fff';
+      ctx.shadowBlur = 12;
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    } else if (fx.type === 'casttext') {
+      const p = worldToScreen(fx.x, fx.y, camera);
+      ctx.font = fx.big ? 'bold 20px sans-serif' : 'bold 14px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = '#000000cc';
+      ctx.fillStyle = fx.color || '#fff';
+      const y = p.y - t * 26;
+      ctx.strokeText(fx.text, p.x, y);
+      ctx.fillText(fx.text, p.x, y);
+    } else if (fx.type === 'damagetext') {
+      const p = worldToScreen(fx.x, fx.y, camera);
+      ctx.font = 'bold 17px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = '#000000cc';
+      ctx.fillStyle = fx.color || '#fff';
+      const y = p.y - t * 34;
+      ctx.strokeText(fx.text, p.x, y);
+      ctx.fillText(fx.text, p.x, y);
     } else if (fx.type === 'shieldpop') {
       const p = worldToScreen(fx.x, fx.y, camera);
       ctx.beginPath();
@@ -2396,11 +2720,34 @@ function updateMatchHud(engine, elapsed) {
   shieldFill.style.width = Math.min(100, (pe.shield / pe.maxShield) * 100) + '%';
   hpText.textContent = `${Math.max(0, Math.round(pe.hp))} / ${pe.maxHp} HP${pe.shield > 0 ? ` (+${Math.round(pe.shield)} shield)` : ''}`;
 
-  const aliveTeams = new Set(engine.world.entities.filter(e => e.alive).map(e => e.team)).size;
-  const aliveCount = engine.world.entities.filter(e => e.alive).length;
-  const zoneInfo = engine.zone ? ` · Storm radius: ${Math.round(engine.zone.radius)}` : '';
+  // Match clock
+  const timerEl = document.getElementById('hud-timer');
+  const secs = Math.ceil(engine.timeRemaining);
+  timerEl.textContent = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
+  timerEl.classList.toggle('urgent', secs <= 30);
+
   document.getElementById('hud-topinfo').textContent =
-    `${engine.mode.name} · ${aliveTeams > 1 ? aliveTeams + ' teams left' : ''} ${aliveCount} fighters left${zoneInfo}`;
+    `${engine.mode.name} · most kills wins · you: ${pe.kills} K / ${pe.deaths} D`;
+
+  // Live scoreboard: the player's team always shows, plus the top rivals.
+  const standings = engine.getStandings();
+  const mine = standings.find(s => s.team === pe.team);
+  const shown = standings.slice(0, 4);
+  if (mine && !shown.includes(mine)) { shown.pop(); shown.push(mine); }
+  document.getElementById('hud-scores').innerHTML = shown.map(s =>
+    `<div class="score-chip${s.team === pe.team ? ' mine' : ''}" style="--team:${TEAM_COLORS[s.team % TEAM_COLORS.length]}">
+       <span>${s.name}</span><span class="sc">${s.kills}</span>
+     </div>`).join('');
+
+  // Respawn countdown while the player is down
+  const respawnEl = document.getElementById('hud-respawn');
+  if (!pe.alive && pe.respawnAt !== null) {
+    const left = Math.max(0, Math.ceil(pe.respawnAt - engine.world.time));
+    respawnEl.hidden = false;
+    respawnEl.innerHTML = `You were taken down<div class="rs-count">${left}</div>Respawning...`;
+  } else {
+    respawnEl.hidden = true;
+  }
 
   const abRoot = document.getElementById('hud-abilities');
   if (abRoot.childElementCount !== pe.sheet.abilities.length + 1) {
@@ -2424,6 +2771,14 @@ function updateMatchHud(engine, elapsed) {
   const ultOverlay = abRoot.children[pe.cooldowns.length].querySelector('.cd-overlay');
   if (pe.ultCooldown.remaining > 0.05) { ultOverlay.style.display = 'flex'; ultOverlay.textContent = Math.ceil(pe.ultCooldown.remaining); }
   else ultOverlay.style.display = 'none';
+}
+
+function renderResultsStandings(container, result, playerTeam) {
+  container.innerHTML = result.standings.map((s, i) =>
+    `<div class="results-row${s.team === playerTeam ? ' mine' : ''}" style="--team:${TEAM_COLORS[s.team % TEAM_COLORS.length]}">
+       <span>${i + 1}. ${s.name}</span>
+       <span class="rk">${s.kills} kills · ${s.deaths} deaths</span>
+     </div>`).join('');
 }
 
 function pushKillFeed(text) {
@@ -2617,11 +2972,23 @@ function handleMatchEnd(result) {
   setTimeout(() => showResults(result), 1000);
 }
 
+function plural(n, word) { return `${n} ${word}${n === 1 ? '' : 's'}`; }
+
 function showResults(result) {
   document.getElementById('results-title').textContent = result.playerWon ? 'VICTORY' : 'DEFEAT';
-  document.getElementById('results-sub').textContent = result.playerWon
-    ? 'Your side stood alone when the dust settled.'
-    : 'You were eliminated. The island remains — try again.';
+  const tally = `${plural(result.playerKills, 'kill')} and ${plural(result.playerDeaths, 'death')}`;
+  let sub;
+  if (result.playerWon) {
+    sub = result.wonOnTiebreak
+      ? `Level on kills — you took it on the tiebreak. You finished on ${tally}.`
+      : `Most kills when the clock ran out. You finished on ${tally}.`;
+  } else {
+    sub = result.lostOnTiebreak
+      ? `Level on kills, but you lost the tiebreak on deaths. You finished on ${tally}.`
+      : `Outscored this time. You finished on ${tally}.`;
+  }
+  document.getElementById('results-sub').textContent = sub;
+  renderResultsStandings(document.getElementById('results-standings'), result, matchEngine.playerEntity.team);
   setScreen('screen-results');
 }
 

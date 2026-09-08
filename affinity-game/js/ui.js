@@ -138,11 +138,34 @@ function updateMatchHud(engine, elapsed) {
   shieldFill.style.width = Math.min(100, (pe.shield / pe.maxShield) * 100) + '%';
   hpText.textContent = `${Math.max(0, Math.round(pe.hp))} / ${pe.maxHp} HP${pe.shield > 0 ? ` (+${Math.round(pe.shield)} shield)` : ''}`;
 
-  const aliveTeams = new Set(engine.world.entities.filter(e => e.alive).map(e => e.team)).size;
-  const aliveCount = engine.world.entities.filter(e => e.alive).length;
-  const zoneInfo = engine.zone ? ` · Storm radius: ${Math.round(engine.zone.radius)}` : '';
+  // Match clock
+  const timerEl = document.getElementById('hud-timer');
+  const secs = Math.ceil(engine.timeRemaining);
+  timerEl.textContent = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
+  timerEl.classList.toggle('urgent', secs <= 30);
+
   document.getElementById('hud-topinfo').textContent =
-    `${engine.mode.name} · ${aliveTeams > 1 ? aliveTeams + ' teams left' : ''} ${aliveCount} fighters left${zoneInfo}`;
+    `${engine.mode.name} · most kills wins · you: ${pe.kills} K / ${pe.deaths} D`;
+
+  // Live scoreboard: the player's team always shows, plus the top rivals.
+  const standings = engine.getStandings();
+  const mine = standings.find(s => s.team === pe.team);
+  const shown = standings.slice(0, 4);
+  if (mine && !shown.includes(mine)) { shown.pop(); shown.push(mine); }
+  document.getElementById('hud-scores').innerHTML = shown.map(s =>
+    `<div class="score-chip${s.team === pe.team ? ' mine' : ''}" style="--team:${TEAM_COLORS[s.team % TEAM_COLORS.length]}">
+       <span>${s.name}</span><span class="sc">${s.kills}</span>
+     </div>`).join('');
+
+  // Respawn countdown while the player is down
+  const respawnEl = document.getElementById('hud-respawn');
+  if (!pe.alive && pe.respawnAt !== null) {
+    const left = Math.max(0, Math.ceil(pe.respawnAt - engine.world.time));
+    respawnEl.hidden = false;
+    respawnEl.innerHTML = `You were taken down<div class="rs-count">${left}</div>Respawning...`;
+  } else {
+    respawnEl.hidden = true;
+  }
 
   const abRoot = document.getElementById('hud-abilities');
   if (abRoot.childElementCount !== pe.sheet.abilities.length + 1) {
@@ -166,6 +189,14 @@ function updateMatchHud(engine, elapsed) {
   const ultOverlay = abRoot.children[pe.cooldowns.length].querySelector('.cd-overlay');
   if (pe.ultCooldown.remaining > 0.05) { ultOverlay.style.display = 'flex'; ultOverlay.textContent = Math.ceil(pe.ultCooldown.remaining); }
   else ultOverlay.style.display = 'none';
+}
+
+function renderResultsStandings(container, result, playerTeam) {
+  container.innerHTML = result.standings.map((s, i) =>
+    `<div class="results-row${s.team === playerTeam ? ' mine' : ''}" style="--team:${TEAM_COLORS[s.team % TEAM_COLORS.length]}">
+       <span>${i + 1}. ${s.name}</span>
+       <span class="rk">${s.kills} kills · ${s.deaths} deaths</span>
+     </div>`).join('');
 }
 
 function pushKillFeed(text) {

@@ -104,10 +104,30 @@ function drawEntity(ctx, entity, camera, viewerTeam, isPlayer) {
 function drawProjectiles(ctx, world, camera) {
   for (const pr of world.projectiles) {
     const p = worldToScreen(pr.x, pr.y, camera);
+    const speed = Math.hypot(pr.vx, pr.vy) || 1;
+    const trailLen = Math.min(34, speed * 0.05);
+    ctx.save();
+    // motion trail so fast shots read as movement, not a floating dot
+    ctx.strokeStyle = pr.color || '#fff';
+    ctx.globalAlpha = 0.45;
+    ctx.lineWidth = pr.radius * 1.4;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+    ctx.lineTo(p.x - (pr.vx / speed) * trailLen, p.y - (pr.vy / speed) * trailLen);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.shadowColor = pr.color || '#fff';
+    ctx.shadowBlur = 12;
     ctx.beginPath();
     ctx.arc(p.x, p.y, pr.radius, 0, Math.PI * 2);
     ctx.fillStyle = pr.color || '#fff';
     ctx.fill();
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, Math.max(2, pr.radius * 0.45), 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+    ctx.restore();
   }
 }
 
@@ -132,17 +152,98 @@ function drawEffects(ctx, world, camera) {
     ctx.globalAlpha = alpha;
     if (fx.type === 'blast') {
       const p = worldToScreen(fx.x, fx.y, camera);
+      const r = fx.radius * (fx.ring ? 1 : (0.35 + t * 0.65));
+      ctx.shadowColor = fx.color || '#fff';
+      ctx.shadowBlur = 18;
+      if (!fx.ring) {
+        ctx.globalAlpha = alpha * 0.45;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+        ctx.fillStyle = fx.color || '#fff';
+        ctx.fill();
+        ctx.globalAlpha = alpha;
+      }
       ctx.beginPath();
-      ctx.arc(p.x, p.y, fx.radius * (fx.ring ? 1 : (0.3 + t * 0.7)), 0, Math.PI * 2);
-      if (fx.ring) { ctx.strokeStyle = fx.color || '#fff'; ctx.lineWidth = 3; ctx.stroke(); }
-      else { ctx.fillStyle = fx.color || '#fff'; ctx.fill(); }
+      ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+      ctx.strokeStyle = fx.color || '#fff';
+      ctx.lineWidth = 4;
+      ctx.stroke();
     } else if (fx.type === 'slash') {
+      // Arc sweeps through the swing so the attack reads as a motion.
+      const p = worldToScreen(fx.x, fx.y, camera);
+      const reach = fx.reach || (fx.big ? 46 : 34);
+      const sweep = 1.5;
+      const mid = fx.angle - sweep / 2 + sweep * t;
+      ctx.strokeStyle = fx.color || '#fff';
+      ctx.lineWidth = fx.big ? 8 : 6;
+      ctx.lineCap = 'round';
+      ctx.shadowColor = fx.color || '#fff';
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, reach * 0.85, mid - 0.45, mid + 0.45);
+      ctx.stroke();
+    } else if (fx.type === 'muzzle') {
+      const p = worldToScreen(fx.x, fx.y, camera);
+      const len = (fx.big ? 40 : 26) * (1 - t * 0.4);
+      ctx.fillStyle = fx.color || '#fff';
+      ctx.shadowColor = fx.color || '#fff';
+      ctx.shadowBlur = 14;
+      ctx.beginPath();
+      ctx.moveTo(p.x + Math.cos(fx.angle) * len, p.y + Math.sin(fx.angle) * len);
+      ctx.lineTo(p.x + Math.cos(fx.angle + 2.4) * 12, p.y + Math.sin(fx.angle + 2.4) * 12);
+      ctx.lineTo(p.x + Math.cos(fx.angle - 2.4) * 12, p.y + Math.sin(fx.angle - 2.4) * 12);
+      ctx.closePath();
+      ctx.fill();
+    } else if (fx.type === 'castring' || fx.type === 'spawnring') {
+      const p = worldToScreen(fx.x, fx.y, camera);
+      const r = (fx.radius || 46) * (0.25 + t * 0.9);
+      ctx.strokeStyle = fx.color || '#fff';
+      ctx.lineWidth = 4 * (1 - t) + 1;
+      ctx.shadowColor = fx.color || '#fff';
+      ctx.shadowBlur = 16;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (fx.type === 'hitspark') {
       const p = worldToScreen(fx.x, fx.y, camera);
       ctx.strokeStyle = fx.color || '#fff';
-      ctx.lineWidth = fx.big ? 5 : 3;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, fx.big ? 40 : 28, fx.angle - 0.6, fx.angle + 0.6);
-      ctx.stroke();
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2 + fx.createdAt;
+        const inner = 8 + t * 12, outer = inner + 9 * (1 - t);
+        ctx.beginPath();
+        ctx.moveTo(p.x + Math.cos(a) * inner, p.y + Math.sin(a) * inner);
+        ctx.lineTo(p.x + Math.cos(a) * outer, p.y + Math.sin(a) * outer);
+        ctx.stroke();
+      }
+    } else if (fx.type === 'beam') {
+      const a = worldToScreen(fx.x1, fx.y1, camera), b = worldToScreen(fx.x2, fx.y2, camera);
+      ctx.strokeStyle = fx.color || '#fff';
+      ctx.lineWidth = 4 * (1 - t) + 1;
+      ctx.shadowColor = fx.color || '#fff';
+      ctx.shadowBlur = 12;
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    } else if (fx.type === 'casttext') {
+      const p = worldToScreen(fx.x, fx.y, camera);
+      ctx.font = fx.big ? 'bold 20px sans-serif' : 'bold 14px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = '#000000cc';
+      ctx.fillStyle = fx.color || '#fff';
+      const y = p.y - t * 26;
+      ctx.strokeText(fx.text, p.x, y);
+      ctx.fillText(fx.text, p.x, y);
+    } else if (fx.type === 'damagetext') {
+      const p = worldToScreen(fx.x, fx.y, camera);
+      ctx.font = 'bold 17px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = '#000000cc';
+      ctx.fillStyle = fx.color || '#fff';
+      const y = p.y - t * 34;
+      ctx.strokeText(fx.text, p.x, y);
+      ctx.fillText(fx.text, p.x, y);
     } else if (fx.type === 'shieldpop') {
       const p = worldToScreen(fx.x, fx.y, camera);
       ctx.beginPath();

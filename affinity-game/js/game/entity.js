@@ -14,9 +14,12 @@ class Entity {
     this.maxShield = this.maxHp * 0.6;
     this.shield = 0;
     this.alive = true;
+    this.respawnAt = null;
     this.team = sheet.team;
     this.isAI = sheet.isAI;
     this.kills = 0;
+    this.deaths = 0;
+    this.spawnX = x; this.spawnY = y;
     this.statuses = {}; // type -> { until, ...extra }
     this.buffs = {}; // stat -> { until, amount }
     this.cooldowns = sheet.abilities.map(a => ({ id: a.id, remaining: 0, max: a.maxCooldown }));
@@ -127,8 +130,30 @@ class Entity {
     this.attackCooldownRemaining = Math.max(0, this.attackCooldownRemaining - dt * mult);
   }
 
+  // Brought back to life at (x, y) after the respawn timer elapses. Ability
+  // cooldowns reset, but the ultimate keeps ticking so dying isn't a way to
+  // refresh it. A short spell of intangibility prevents spawn camping.
+  respawnNow(x, y, world) {
+    this.x = x; this.y = y;
+    this.vx = 0; this.vy = 0;
+    this.hp = this.maxHp;
+    this.shield = 0;
+    this.alive = true;
+    this.respawnAt = null;
+    this.statuses = {};
+    this.buffs = {};
+    this.lastDamagedAt = -999;
+    this.combatStartedAt = null;
+    this.stealthUntil = -1;
+    this.attackCooldownRemaining = 0;
+    for (const cd of this.cooldowns) cd.remaining = 0;
+    this.applyStatus('intangible', 1.5, world.time);
+    this.aiState = null;
+  }
+
   update(dt, world) {
-    if (!this.alive) return;
+    // Cooldowns keep recovering while dead so respawns aren't dead weight.
+    if (!this.alive) { this.tickCooldowns(dt); return; }
     this.tickStatuses(dt, world);
     this.tickCooldowns(dt);
     const passive = this.sheet.passive;

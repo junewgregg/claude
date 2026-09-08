@@ -98,7 +98,12 @@
   <!-- MATCH HUD -->
   <section id="screen-match" class="screen">
     <div class="match-hud">
-      <div id="hud-topinfo" class="hud-topinfo"></div>
+      <div class="hud-top">
+        <div id="hud-timer" class="hud-timer">2:00</div>
+        <div id="hud-topinfo" class="hud-topinfo"></div>
+        <div id="hud-scores" class="hud-scores"></div>
+      </div>
+      <div id="hud-respawn" class="hud-respawn" hidden></div>
       <div id="hud-killfeed" class="hud-killfeed"></div>
       <div class="hud-bottom">
         <div class="hud-healthbar-wrap">
@@ -115,6 +120,7 @@
     <div class="menu-panel">
       <h1 id="results-title" class="game-title">VICTORY</h1>
       <p id="results-sub" class="game-subtitle"></p>
+      <div id="results-standings" class="results-standings"></div>
       <button class="btn btn-primary" id="btn-results-continue">Continue</button>
     </div>
   </section>

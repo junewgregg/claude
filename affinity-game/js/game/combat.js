@@ -49,7 +49,42 @@ function clampToMap(x, y, world) {
 
 function dealDamageTo(target, amount, source, world) {
   const dmg = amount * (source.damageMultiplier || 1);
-  return target.takeDamage(dmg, source, world);
+  const applied = target.takeDamage(dmg, source, world);
+  if (applied > 0) {
+    spawnEffect(world, {
+      type: 'hitspark', x: target.x, y: target.y, life: 0.28,
+      color: (source.sheet && source.sheet.color) || '#ffffff'
+    });
+    // Damage numbers only for hits the player is part of, so the screen stays readable.
+    const pe = world.playerEntity;
+    if (pe && (source === pe || target === pe)) {
+      spawnEffect(world, {
+        type: 'damagetext', x: target.x + (Math.random() - 0.5) * 16, y: target.y - 16,
+        text: String(Math.round(applied)), life: 0.9,
+        color: source === pe ? '#ffd24f' : '#ff7a6b'
+      });
+    }
+  }
+  return applied;
+}
+
+// Every ability and ultimate gets a visible tell: an expanding ring at the
+// caster, plus a floating name so you can read what just went off. Enemy
+// ability names are left off to avoid burying the screen in text, but their
+// ultimates still announce themselves.
+function spawnCastVfx(entity, ability, world, isUltimate) {
+  const color = isUltimate ? '#f4c542' : entity.sheet.color;
+  spawnEffect(world, {
+    type: 'castring', x: entity.x, y: entity.y, color,
+    radius: isUltimate ? 130 : 52, life: isUltimate ? 0.75 : 0.4
+  });
+  const isPlayer = world.playerEntity === entity;
+  if (isPlayer || isUltimate) {
+    spawnEffect(world, {
+      type: 'casttext', x: entity.x, y: entity.y - 40,
+      text: ability.name || ability.base, color, life: 1.3, big: isUltimate
+    });
+  }
 }
 
 // ---------------- basic attack ----------------
@@ -65,16 +100,21 @@ function useBasicAttack(entity, aimX, aimY, world) {
 
   if (entity.sheet.attackType === 'melee') {
     const target = nearestEnemy(entity, world, range);
+    // The swing always shows, hit or miss, so an attack never feels swallowed.
+    spawnEffect(world, {
+      type: 'slash', x: entity.x, y: entity.y, angle: entity.facing,
+      life: 0.25, color: entity.sheet.color, reach: range
+    });
     if (target) dealDamageTo(target, dmg, entity, world);
-    spawnEffect(world, { type: 'slash', x: entity.x, y: entity.y, angle: entity.facing, life: 0.15, color: entity.sheet.color });
     return true;
   }
   // ranged / heal basic attacks both fire a small projectile
   const ang = Math.atan2(aimY - entity.y, aimX - entity.x);
+  spawnEffect(world, { type: 'muzzle', x: entity.x, y: entity.y, angle: ang, color: entity.sheet.color, life: 0.14 });
   world.projectiles.push({
     x: entity.x, y: entity.y, vx: Math.cos(ang) * entity.sheet.stats.projectileSpeed,
     vy: Math.sin(ang) * entity.sheet.stats.projectileSpeed, damage: dmg, owner: entity,
-    radius: 6, traveled: 0, maxRange: range, color: entity.sheet.color, basic: true
+    radius: 7, traveled: 0, maxRange: range, color: entity.sheet.color, basic: true
   });
   return true;
 }
@@ -101,6 +141,7 @@ const ABILITY_HANDLERS = {
   },
   projectile(entity, ab, aimX, aimY, world) {
     const ang = Math.atan2(aimY - entity.y, aimX - entity.x);
+    spawnEffect(world, { type: 'muzzle', x: entity.x, y: entity.y, angle: ang, color: entity.sheet.color, life: 0.18, big: true });
     world.projectiles.push({
       x: entity.x, y: entity.y, vx: Math.cos(ang) * entity.sheet.stats.projectileSpeed * 1.1,
       vy: Math.sin(ang) * entity.sheet.stats.projectileSpeed * 1.1, damage: ab.damage, owner: entity,
@@ -110,6 +151,7 @@ const ABILITY_HANDLERS = {
   },
   projectile_slow(entity, ab, aimX, aimY, world) {
     const ang = Math.atan2(aimY - entity.y, aimX - entity.x);
+    spawnEffect(world, { type: 'muzzle', x: entity.x, y: entity.y, angle: ang, color: '#8ecbff', life: 0.18, big: true });
     world.projectiles.push({
       x: entity.x, y: entity.y, vx: Math.cos(ang) * entity.sheet.stats.projectileSpeed,
       vy: Math.sin(ang) * entity.sheet.stats.projectileSpeed, damage: ab.damage, owner: entity,
@@ -243,7 +285,11 @@ const ABILITY_HANDLERS = {
   },
   mark(entity, ab, aimX, aimY, world) {
     const target = nearestEnemy(entity, world, ab.range);
-    if (target) target.applyStatus('mark', ab.duration, world.time, { amount: ab.amount });
+    if (target) {
+      target.applyStatus('mark', ab.duration, world.time, { amount: ab.amount });
+      spawnEffect(world, { type: 'beam', x1: entity.x, y1: entity.y, x2: target.x, y2: target.y, color: '#ff6b4f', life: 0.4 });
+      spawnEffect(world, { type: 'castring', x: target.x, y: target.y, color: '#ff6b4f', radius: 40, life: 0.5 });
+    }
     return true;
   },
   mark_and_strike(entity, ab, aimX, aimY, world) {
@@ -284,7 +330,10 @@ function useAbility(entity, index, aimX, aimY, world) {
   const handler = ABILITY_HANDLERS[ab.type];
   if (!handler) return false;
   const ok = handler(entity, ab, aimX, aimY, world);
-  if (ok) cd.remaining = cd.max;
+  if (ok) {
+    cd.remaining = cd.max;
+    spawnCastVfx(entity, ab, world, false);
+  }
   return ok;
 }
 
@@ -295,7 +344,10 @@ function useUltimate(entity, aimX, aimY, world) {
   const handler = ABILITY_HANDLERS[ab.type];
   if (!handler) return false;
   const ok = handler(entity, ab, aimX, aimY, world);
-  if (ok) entity.ultCooldown.remaining = entity.ultCooldown.max;
+  if (ok) {
+    entity.ultCooldown.remaining = entity.ultCooldown.max;
+    spawnCastVfx(entity, ab, world, true);
+  }
   return ok;
 }
 

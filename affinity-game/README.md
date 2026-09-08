@@ -15,12 +15,22 @@ python3 -m http.server 8080
 
 ## Controls
 
-**Desktop:** WASD to move, mouse to aim, left-click to attack, 1-4 for
-abilities, R (or Space) for your ultimate, E to interact with hub portals.
+**Desktop:** WASD to move, mouse to aim, left-click to attack (one click, one
+swing), 1-4 for abilities, R (or Space) for your ultimate, E to interact with
+hub portals.
 
 **Mobile/touch:** left half of the screen is a virtual movement joystick,
-right half is an aim-and-attack joystick, with ability/ultimate/interact
-buttons docked in the corner.
+right half is an aim-and-attack joystick (hold it to keep swinging), with
+ability/ultimate/interact buttons docked in the corner.
+
+## Match rules
+
+Every mode is a **2-minute timed deathmatch**. The team with the **most kills**
+when the clock hits zero wins — a tie is broken by fewest deaths. Nobody is
+eliminated for good: fall in battle and you **respawn 5 seconds later** with a
+brief spell of spawn protection, your ability cooldowns reset (your ultimate
+keeps its own timer running). In the battle-royale modes a storm circle still
+closes in over the match, herding everyone toward the middle for the endgame.
 
 ## What's here
 

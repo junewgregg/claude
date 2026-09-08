@@ -1,10 +1,10 @@
 // Game mode configuration and match/tournament setup.
 
 const GAME_MODES = {
-  ffa8: { id: 'ffa8', name: '8-Player Free-for-All', teamSize: 1, teamCount: 8, zone: false, desc: 'Every fighter for themself. Last one standing wins.' },
-  br4v4: { id: 'br4v4', name: '4v4 Battle Royale', teamSize: 4, teamCount: 2, zone: true, desc: 'Two squads of four. The storm closes in — last team standing wins.' },
-  br2222: { id: 'br2222', name: '2v2v2v2 Battle Royale', teamSize: 2, teamCount: 4, zone: true, desc: 'Four duos fight it out as the storm shrinks the arena.' },
-  tournament: { id: 'tournament', name: '4v4 16-Team Tournament', teamSize: 4, teamCount: 2, zone: true, desc: 'A single-elimination bracket of sixteen 4-player teams. Keep your squad together all the way to the final.' }
+  ffa8: { id: 'ffa8', name: '8-Player Free-for-All', teamSize: 1, teamCount: 8, zone: false, duration: 120, respawnDelay: 5, desc: 'Every fighter for themself. Whoever has the most kills when the 2-minute clock runs out wins. Fall in battle and you respawn a few seconds later.' },
+  br4v4: { id: 'br4v4', name: '4v4 Battle Royale', teamSize: 4, teamCount: 2, zone: true, duration: 120, respawnDelay: 5, desc: 'Two squads of four. The storm closes in — the team with the most kills after 2 minutes wins. Fallen fighters respawn a few seconds later.' },
+  br2222: { id: 'br2222', name: '2v2v2v2 Battle Royale', teamSize: 2, teamCount: 4, zone: true, duration: 120, respawnDelay: 5, desc: 'Four duos fight it out as the storm shrinks the arena. Most team kills when the 2-minute clock hits zero takes it. You respawn a few seconds after going down.' },
+  tournament: { id: 'tournament', name: '4v4 16-Team Tournament', teamSize: 4, teamCount: 2, zone: true, duration: 120, respawnDelay: 5, desc: 'A single-elimination bracket of sixteen 4-player teams. Each round is a 2-minute, most-kills-wins match with respawns. Keep your squad together all the way to the final.' }
 };
 
 // Builds the list of character sheets (with team ids assigned) for a single match.
@@ -22,13 +22,29 @@ function buildMatchRoster(mode, playerSheet, opponentTeams = null) {
   } else {
     for (let t = 1; t < mode.teamCount; t++) {
       for (let i = 0; i < mode.teamSize; i++) {
-        roster.push(randomCharacterSheet(`${teamLabel(t)} ${i + 1}`, true, t));
+        // In a free-for-all there are no squads, so rivals go by their own
+        // affinity/teknik name (the default) instead of a squad label.
+        const name = mode.teamSize === 1 ? null : `${teamLabel(t)} ${i + 1}`;
+        roster.push(randomCharacterSheet(name, true, t));
       }
     }
   }
   // FFA: everyone is their own team so "allies" collapses to self.
-  if (mode.teamSize === 1) roster.forEach((s, i) => { s.team = i; });
+  if (mode.teamSize === 1) {
+    roster.forEach((s, i) => { s.team = i; });
+    dedupeNames(roster);
+  }
   return roster;
+}
+
+// Two "Faerie Archer"s in one free-for-all are confusing on the scoreboard.
+function dedupeNames(roster) {
+  const seen = {};
+  for (const sheet of roster) {
+    const base = sheet.displayName;
+    seen[base] = (seen[base] || 0) + 1;
+    if (seen[base] > 1) sheet.displayName = `${base} ${seen[base]}`;
+  }
 }
 
 function teamLabel(t) {

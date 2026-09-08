@@ -152,11 +152,23 @@ function handleMatchEnd(result) {
   setTimeout(() => showResults(result), 1000);
 }
 
+function plural(n, word) { return `${n} ${word}${n === 1 ? '' : 's'}`; }
+
 function showResults(result) {
   document.getElementById('results-title').textContent = result.playerWon ? 'VICTORY' : 'DEFEAT';
-  document.getElementById('results-sub').textContent = result.playerWon
-    ? 'Your side stood alone when the dust settled.'
-    : 'You were eliminated. The island remains — try again.';
+  const tally = `${plural(result.playerKills, 'kill')} and ${plural(result.playerDeaths, 'death')}`;
+  let sub;
+  if (result.playerWon) {
+    sub = result.wonOnTiebreak
+      ? `Level on kills — you took it on the tiebreak. You finished on ${tally}.`
+      : `Most kills when the clock ran out. You finished on ${tally}.`;
+  } else {
+    sub = result.lostOnTiebreak
+      ? `Level on kills, but you lost the tiebreak on deaths. You finished on ${tally}.`
+      : `Outscored this time. You finished on ${tally}.`;
+  }
+  document.getElementById('results-sub').textContent = sub;
+  renderResultsStandings(document.getElementById('results-standings'), result, matchEngine.playerEntity.team);
   setScreen('screen-results');
 }
 

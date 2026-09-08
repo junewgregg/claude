@@ -17,7 +17,12 @@ class InputController {
     window.addEventListener('keydown', e => this.onKeyDown(e));
     window.addEventListener('keyup', e => this.keys.delete(e.code));
     canvas.addEventListener('mousemove', e => this.onMouseMove(e));
-    canvas.addEventListener('mousedown', e => { if (e.button === 0) this.mouse.down = true; });
+    // Each click is one basic attack — holding the button does not auto-repeat.
+    canvas.addEventListener('mousedown', e => {
+      if (e.button !== 0) return;
+      this.mouse.down = true;
+      this.pendingActions.add('attack');
+    });
     window.addEventListener('mouseup', () => { this.mouse.down = false; });
     canvas.addEventListener('contextmenu', e => e.preventDefault());
 
@@ -137,9 +142,14 @@ class InputController {
     return { x: this.mouse.x, y: this.mouse.y, active: true };
   }
 
-  isFiring() {
-    if (this.aimJoystick) { const dx = this.aimJoystick.x - this.aimJoystick.originX; const dy = this.aimJoystick.y - this.aimJoystick.originY; return Math.hypot(dx, dy) > 8; }
-    return this.mouse.down;
+  // Touch players hold the aim stick to keep swinging; tapping repeatedly on a
+  // phone would be miserable. Mouse players get one attack per click instead,
+  // queued through pendingActions as 'attack'.
+  isTouchFiring() {
+    if (!this.aimJoystick) return false;
+    const dx = this.aimJoystick.x - this.aimJoystick.originX;
+    const dy = this.aimJoystick.y - this.aimJoystick.originY;
+    return Math.hypot(dx, dy) > 8;
   }
 
   consumePending(name) {

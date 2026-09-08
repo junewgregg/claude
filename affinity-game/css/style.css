@@ -114,10 +114,46 @@ html, body {
 
 /* ---------- Match HUD ---------- */
 .match-hud { position: absolute; inset: 0; pointer-events: none; }
-.hud-topinfo {
+.hud-top {
   position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
-  background: #000a; padding: 6px 16px; border-radius: 8px; font-size: 0.9rem; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 6px; max-width: 96vw;
 }
+.hud-timer {
+  background: #000c; padding: 4px 22px; border-radius: 10px;
+  font-size: 1.9rem; font-weight: 700; line-height: 1.15;
+  font-variant-numeric: tabular-nums; letter-spacing: 0.04em;
+}
+.hud-timer.urgent { color: #ff6b4f; animation: pulse-timer 1s ease-in-out infinite; }
+@keyframes pulse-timer { 50% { opacity: 0.55; } }
+@media (prefers-reduced-motion: reduce) { .hud-timer.urgent { animation: none; } }
+.hud-topinfo {
+  background: #000a; padding: 4px 14px; border-radius: 8px; font-size: 0.8rem;
+  text-align: center; color: #aab;
+}
+.hud-scores { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.score-chip {
+  background: #000c; border-radius: 8px; padding: 4px 12px; font-size: 0.85rem;
+  display: flex; gap: 8px; align-items: baseline; border-left: 3px solid var(--team, #888);
+}
+.score-chip.mine { background: #122a3ad9; font-weight: 700; }
+.score-chip .sc { font-variant-numeric: tabular-nums; font-weight: 700; }
+.hud-respawn {
+  position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%);
+  background: #000000cc; padding: 18px 34px; border-radius: 14px; text-align: center;
+  font-size: 1.4rem; font-weight: 700; border: 1px solid #333c4a;
+}
+.hud-respawn .rs-count { font-size: 3rem; color: #ff6b4f; font-variant-numeric: tabular-nums; }
+.results-standings {
+  margin: 0 auto 18px; max-width: 420px; display: flex; flex-direction: column; gap: 5px;
+  text-align: left;
+}
+.results-row {
+  display: flex; justify-content: space-between; gap: 14px; background: #12161d;
+  border-radius: 8px; padding: 8px 14px; font-size: 0.9rem;
+  border-left: 3px solid var(--team, #888);
+}
+.results-row.mine { background: #16283a; font-weight: 700; }
+.results-row .rk { font-variant-numeric: tabular-nums; }
 .hud-killfeed {
   position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 4px; align-items: flex-end;
   font-size: 0.78rem;
