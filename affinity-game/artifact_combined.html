@@ -1,0 +1,2757 @@
+<title>Affinity</title>
+<style>
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0; width: 100%; height: 100%;
+  background: #0a0c10; color: #eee;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  overflow: hidden; overscroll-behavior: none; touch-action: none;
+  -webkit-user-select: none; user-select: none;
+}
+#app { position: relative; width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; }
+
+#game-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; background: #000; display: none; }
+#game-canvas.visible { display: block; }
+
+.screen {
+  position: absolute; inset: 0; display: none; z-index: 1;
+  flex-direction: column; align-items: center; background: transparent;
+}
+.screen.active { display: flex; }
+.screen.solid { background: #0a0c10; }
+
+/* ---------- Menu / Results ---------- */
+.menu-panel {
+  margin: auto; text-align: center; padding: 20px; max-width: 560px;
+}
+.game-title {
+  font-size: 4.2rem; letter-spacing: 0.35em; margin: 0 0 6px 0;
+  background: linear-gradient(90deg,#8ecbff,#ff7ad9,#f4c542,#3fae4a);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  text-shadow: 0 0 40px rgba(255,255,255,0.15);
+}
+.game-subtitle { color: #aab; margin: 0 0 28px 0; font-size: 1.05rem; }
+.menu-hint { color: #778; font-size: 0.8rem; margin-top: 28px; line-height: 1.5; }
+
+.btn {
+  background: #1c212b; color: #eee; border: 1px solid #333c4a; border-radius: 10px;
+  padding: 12px 26px; font-size: 1rem; margin: 6px; cursor: pointer;
+  transition: all .15s ease; min-width: 140px;
+}
+.btn:hover:not(:disabled) { background: #262d3b; border-color: #4fd1ff; transform: translateY(-1px); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-primary { background: linear-gradient(90deg,#3b6fe0,#7a3be0); border: none; font-weight: 600; }
+.btn-primary:hover:not(:disabled) { filter: brightness(1.15); }
+.btn-small { padding: 6px 14px; min-width: unset; font-size: 0.85rem; }
+
+/* ---------- Wizard (affinity/teknik/summary) ---------- */
+.wizard-header { text-align: center; margin: 18px 12px 6px; }
+.wizard-header h2 { margin: 0 0 6px; font-size: 1.6rem; }
+.wizard-sub { color: #99a; max-width: 700px; margin: 0 auto; font-size: 0.92rem; }
+.card-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px; padding: 14px 20px; overflow-y: auto; flex: 1; width: 100%; max-width: 1100px; align-content: start;
+}
+.pick-card {
+  border: 2px solid #2a2f3a; border-radius: 12px; padding: 14px 10px; text-align: center;
+  cursor: pointer; background: #12161d; transition: all .12s ease;
+}
+.pick-card:hover { border-color: #667; transform: translateY(-2px); }
+.pick-card.selected { border-color: var(--accent, #4fd1ff); box-shadow: 0 0 16px var(--accent, #4fd1ff); }
+.pick-card .glyph { font-size: 2rem; display: block; margin-bottom: 6px; }
+.pick-card .pname { font-weight: 600; }
+.pick-card .prole { font-size: 0.75rem; color: #9aa; margin-top: 2px; }
+
+.role-tabs { display: flex; gap: 8px; padding: 10px 20px 0; flex-wrap: wrap; justify-content: center; }
+.role-tab {
+  padding: 8px 16px; border-radius: 20px; border: 1px solid #333c4a; background: #12161d;
+  cursor: pointer; font-size: 0.9rem;
+}
+.role-tab.active { background: #2a3550; border-color: #4fd1ff; }
+
+.wizard-footer {
+  display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
+  padding: 10px 20px 18px; width: 100%; max-width: 1100px;
+}
+.detail-box { flex: 1; min-width: 220px; color: #bcd; font-size: 0.85rem; background: #12161d; border-radius: 8px; padding: 10px 14px; }
+.name-input {
+  background: #12161d; border: 1px solid #333c4a; color: #eee; border-radius: 8px; padding: 10px 12px; font-size: 1rem;
+}
+
+.summary-content { flex: 1; overflow-y: auto; width: 100%; max-width: 900px; padding: 10px 20px; }
+.summary-header { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
+.summary-avatar {
+  width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 2rem; border: 3px solid #fff2;
+}
+.summary-stats { display: flex; gap: 18px; flex-wrap: wrap; margin: 10px 0 16px; font-size: 0.85rem; color: #bcd; }
+.ability-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: 10px; }
+.ability-card { background: #12161d; border: 1px solid #2a2f3a; border-radius: 10px; padding: 10px 12px; }
+.ability-card.ult { border-color: #f4c542; background: #1d1a10; }
+.ability-card .aname { font-weight: 600; font-size: 0.92rem; }
+.ability-card .adesc { color: #9aa; font-size: 0.78rem; margin-top: 4px; }
+
+/* ---------- Hub ---------- */
+.hub-topbar {
+  position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; align-items: center;
+  pointer-events: none;
+}
+.hub-topbar > * { pointer-events: auto; }
+.hub-tag { background: #000a; padding: 8px 14px; border-radius: 8px; font-size: 0.9rem; }
+
+/* ---------- Mode select / tournament modal ---------- */
+.modal-screen { background: rgba(5,7,10,0.92); z-index: 20; }
+.modal-panel { margin: auto; max-width: 900px; width: 92%; max-height: 88vh; display: flex; flex-direction: column; padding: 20px; }
+.modal-panel.wide { max-width: 1000px; }
+.modal-panel h2 { text-align: center; margin: 0 0 4px; }
+.map-card-img { width: 100%; height: 70px; border-radius: 8px; margin-bottom: 6px; }
+
+.tournament-status { text-align: center; font-weight: 600; color: #f4c542; min-height: 1.2em; }
+.tournament-current { flex: 1; overflow-y: auto; padding: 10px 0; }
+.bracket-round { margin-bottom: 10px; }
+.bracket-round h4 { margin: 6px 0; color: #8ab; }
+.matchup { display: flex; justify-content: space-between; background: #12161d; border-radius: 8px; padding: 8px 12px; margin-bottom: 6px; font-size: 0.85rem; }
+.matchup.player { border: 1px solid #4fd1ff; }
+.matchup.done { opacity: 0.6; }
+
+/* ---------- Match HUD ---------- */
+.match-hud { position: absolute; inset: 0; pointer-events: none; }
+.hud-topinfo {
+  position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+  background: #000a; padding: 6px 16px; border-radius: 8px; font-size: 0.9rem; text-align: center;
+}
+.hud-killfeed {
+  position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 4px; align-items: flex-end;
+  font-size: 0.78rem;
+}
+.hud-killfeed div { background: #000a; padding: 4px 10px; border-radius: 6px; }
+.hud-bottom {
+  position: absolute; bottom: 14px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 8px;
+  pointer-events: auto;
+}
+.hud-healthbar-wrap { width: min(420px, 90vw); }
+.hud-healthbar { position: relative; height: 18px; background: #1c212b; border-radius: 9px; overflow: hidden; border: 1px solid #333c4a; }
+.hud-hp-fill { position: absolute; inset: 0; background: #4fd15a; width: 100%; transition: width .1s linear; }
+.hud-shield-fill { position: absolute; top: -6px; left: 0; height: 4px; background: #6fc9ff; width: 0%; }
+.hud-hp-text { text-align: center; font-size: 0.75rem; color: #bcd; margin-top: 2px; }
+.hud-abilities { display: flex; gap: 8px; }
+.hud-ab {
+  width: 54px; height: 54px; border-radius: 12px; background: #12161dcc; border: 2px solid #333c4a;
+  display: flex; align-items: center; justify-content: center; font-size: 0.75rem; position: relative; color: #eee;
+  text-align: center;
+}
+.hud-ab.ult { border-color: #f4c542; }
+.hud-ab .cd-overlay {
+  position: absolute; inset: 0; background: rgba(0,0,0,0.72); border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.95rem;
+}
+
+/* ---------- Mobile touch controls (rendered by input.js) ---------- */
+#hud-mobile-root { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+.mobile-buttons {
+  position: absolute; bottom: 90px; right: 14px; display: none; gap: 10px; pointer-events: none;
+  flex-wrap: wrap; width: 240px; justify-content: flex-end;
+}
+.ab-btn, .ult-btn, .interact-btn {
+  pointer-events: auto; width: 50px; height: 50px; border-radius: 50%; border: 2px solid #556;
+  background: #12161dcc; color: #fff; font-weight: 700; font-size: 0.9rem;
+}
+.ult-btn { border-color: #f4c542; background: #3a300ecc; }
+.interact-btn { position: absolute; top: -120px; right: 90px; width: 60px; height: 60px; border-color: #4fd1ff; }
+
+@media (pointer: coarse) {
+  .mobile-buttons { display: flex; }
+}
+
+/* Small screens: shrink title & grids */
+@media (max-width: 640px) {
+  .game-title { font-size: 2.6rem; }
+  .card-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+}
+
+</style>
+
+<div id="app">
+  <canvas id="game-canvas"></canvas>
+
+  <!-- MAIN MENU -->
+  <section id="screen-menu" class="screen solid active">
+    <div class="menu-panel">
+      <h1 class="game-title">AFFINITY</h1>
+      <p class="game-subtitle">Ten origins. Twelve fighting styles. One island.</p>
+      <button class="btn btn-primary" id="btn-new-game">New Character</button>
+      <button class="btn" id="btn-continue" style="display:none;">Continue</button>
+      <p class="menu-hint">Desktop: WASD to move, mouse to aim, click to attack, 1-4 for abilities, R for ultimate, E to interact.<br>Mobile: left stick to move, right stick to aim &amp; attack, buttons for abilities.</p>
+    </div>
+  </section>
+
+  <!-- AFFINITY SELECT -->
+  <section id="screen-affinity" class="screen solid">
+    <div class="wizard-header">
+      <h2>Choose Your Affinity</h2>
+      <p class="wizard-sub">Your affinity is the origin of your power. It shapes your look, your passive trait, and the flavor of every ability you'll use.</p>
+    </div>
+    <div id="affinity-grid" class="card-grid"></div>
+    <div class="wizard-footer">
+      <div id="affinity-detail" class="detail-box">Select an affinity to see its trait.</div>
+      <button class="btn btn-primary" id="btn-affinity-next" disabled>Next: Choose Teknik</button>
+    </div>
+  </section>
+
+  <!-- TEKNIK SELECT -->
+  <section id="screen-teknik" class="screen solid">
+    <div class="wizard-header">
+      <h2>Choose Your Teknik</h2>
+      <p class="wizard-sub">Your teknik is how you fight — it sets your role, your base attack, and your four abilities plus ultimate.</p>
+    </div>
+    <div class="role-tabs" id="role-tabs"></div>
+    <div id="teknik-grid" class="card-grid"></div>
+    <div class="wizard-footer">
+      <div id="teknik-detail" class="detail-box">Select a teknik to see its role.</div>
+      <button class="btn" id="btn-teknik-back">Back</button>
+      <button class="btn btn-primary" id="btn-teknik-next" disabled>Next: Review</button>
+    </div>
+  </section>
+
+  <!-- SUMMARY -->
+  <section id="screen-summary" class="screen solid">
+    <div class="wizard-header"><h2>Your Character</h2></div>
+    <div id="summary-content" class="summary-content"></div>
+    <div class="wizard-footer">
+      <input id="summary-name" class="name-input" maxlength="18" placeholder="Character name (optional)">
+      <button class="btn" id="btn-summary-back">Back</button>
+      <button class="btn btn-primary" id="btn-summary-confirm">Enter the Island</button>
+    </div>
+  </section>
+
+  <!-- HUB -->
+  <section id="screen-hub" class="screen">
+    <div class="hub-topbar">
+      <div id="hub-player-tag" class="hub-tag"></div>
+      <button class="btn btn-small" id="btn-hub-menu">Menu</button>
+    </div>
+  </section>
+
+  <!-- MODE/MAP SELECT MODAL (over hub) -->
+  <section id="screen-modeselect" class="screen modal-screen">
+    <div class="modal-panel">
+      <h2 id="modeselect-title">Select Mode</h2>
+      <p id="modeselect-desc" class="wizard-sub"></p>
+      <h3>Choose a Map</h3>
+      <div id="map-grid" class="card-grid"></div>
+      <div class="wizard-footer">
+        <button class="btn" id="btn-modeselect-cancel">Cancel</button>
+        <button class="btn btn-primary" id="btn-modeselect-start" disabled>Start Match</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOURNAMENT BRACKET -->
+  <section id="screen-tournament" class="screen modal-screen">
+    <div class="modal-panel wide">
+      <h2>16-Team Tournament</h2>
+      <div id="tournament-status" class="tournament-status"></div>
+      <div id="tournament-current" class="tournament-current"></div>
+      <div class="wizard-footer">
+        <button class="btn" id="btn-tournament-leave">Leave Tournament</button>
+        <button class="btn btn-primary" id="btn-tournament-play" disabled>Play Match</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- MATCH HUD -->
+  <section id="screen-match" class="screen">
+    <div class="match-hud">
+      <div id="hud-topinfo" class="hud-topinfo"></div>
+      <div id="hud-killfeed" class="hud-killfeed"></div>
+      <div class="hud-bottom">
+        <div class="hud-healthbar-wrap">
+          <div class="hud-healthbar"><div id="hud-hp-fill" class="hud-hp-fill"></div><div id="hud-shield-fill" class="hud-shield-fill"></div></div>
+          <div id="hud-hp-text" class="hud-hp-text"></div>
+        </div>
+        <div id="hud-abilities" class="hud-abilities"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="screen-results" class="screen solid">
+    <div class="menu-panel">
+      <h1 id="results-title" class="game-title">VICTORY</h1>
+      <p id="results-sub" class="game-subtitle"></p>
+      <button class="btn btn-primary" id="btn-results-continue">Continue</button>
+    </div>
+  </section>
+
+  <div id="hud-mobile-root"></div>
+</div>
+
+
+<script>
+
+// ==== js/data/affinities.js ====
+// Affinity data: the ten elemental/thematic origins a character can be born from.
+// Each affinity supplies a color identity, flavor words used to name abilities,
+// a small stat lean, and a passive trait that hooks into the combat event system.
+const AFFINITIES = [
+  {
+    id: 'nature',
+    name: 'Nature',
+    tagline: 'Rooted in the wild, they grow stronger the longer they stand their ground.',
+    color: '#3fae4a',
+    colorDark: '#1f5c26',
+    glyph: '☘', // shamrock
+    words: ['Verdant', 'Thorned'],
+    statMods: { hp: 1.08, speed: 0.98, armor: 1.05, cdr: 1.0 },
+    passive: {
+      id: 'regrowth',
+      name: 'Regrowth',
+      desc: 'Regenerates a small amount of health every second while out of combat, and slightly more while below half health.',
+      onUpdate(entity, dt, world) {
+        const sinceHit = world.time - (entity.lastDamagedAt || -999);
+        if (sinceHit > 4) {
+          const rate = entity.hp < entity.maxHp * 0.5 ? 0.06 : 0.03;
+          entity.heal(entity.maxHp * rate * dt, entity);
+        }
+      }
+    }
+  },
+  {
+    id: 'starlight',
+    name: 'Starlight',
+    tagline: 'Woven from fallen star-stuff, they carry a shield that never quite goes out.',
+    color: '#8ecbff',
+    colorDark: '#2a4d80',
+    glyph: '✦', // sparkle star
+    words: ['Astral', 'Stellar'],
+    statMods: { hp: 0.98, speed: 1.02, armor: 1.0, cdr: 1.0 },
+    passive: {
+      id: 'stellar_shield',
+      name: 'Stellar Shield',
+      desc: 'Slowly regenerates a small personal shield whenever no shield is present. The shield absorbs damage before health.',
+      onUpdate(entity, dt) {
+        if (entity.shield <= 0) {
+          entity.shieldRegenTimer = (entity.shieldRegenTimer || 0) + dt;
+          if (entity.shieldRegenTimer > 3) {
+            entity.shield = Math.min(entity.maxShield, entity.shield + entity.maxHp * 0.05 * dt);
+          }
+        } else {
+          entity.shieldRegenTimer = 0;
+        }
+      }
+    }
+  },
+  {
+    id: 'nanotech',
+    name: 'Nanotech',
+    tagline: 'A living swarm of nanites that hardens the longer a fight drags on.',
+    color: '#43e0d8',
+    colorDark: '#1c6d68',
+    glyph: '⚙', // gear
+    words: ['Nanite', 'Cascading'],
+    statMods: { hp: 1.0, speed: 1.0, armor: 1.02, cdr: 1.05 },
+    passive: {
+      id: 'adaptive_plating',
+      name: 'Adaptive Plating',
+      desc: 'Damage taken is reduced more and more the longer the current fight has lasted, resetting after a few seconds of safety.',
+      onTakeDamage(entity, dmg, source, world) {
+        const fightLen = Math.min(8, world.time - (entity.combatStartedAt || world.time));
+        const reduction = Math.min(0.35, fightLen * 0.045);
+        return dmg * (1 - reduction);
+      },
+      onUpdate(entity, dt, world) {
+        const sinceHit = world.time - (entity.lastDamagedAt || -999);
+        if (sinceHit > 3) entity.combatStartedAt = world.time;
+        else if (!entity.combatStartedAt) entity.combatStartedAt = world.time;
+      }
+    }
+  },
+  {
+    id: 'robotics',
+    name: 'Robotics',
+    tagline: 'Chassis and servo, built to hit harder and faster the more damage they take.',
+    color: '#ff9c3f',
+    colorDark: '#7a4713',
+    glyph: '⬡', // hexagon
+    words: ['Servo', 'Kinetic'],
+    statMods: { hp: 1.05, speed: 0.97, armor: 1.05, cdr: 1.0 },
+    passive: {
+      id: 'overclock',
+      name: 'Overclock',
+      desc: 'Attack and ability cooldowns recover faster the lower this character\'s health is, up to 30% at critical health.',
+      cdrMultiplier(entity) {
+        const missing = 1 - entity.hp / entity.maxHp;
+        return 1 - Math.min(0.3, missing * 0.4);
+      }
+    }
+  },
+  {
+    id: 'paranormality',
+    name: 'Paranormality',
+    tagline: 'Half in this world and half out of it, slipping free of the killing blow.',
+    color: '#a071e8',
+    colorDark: '#402868',
+    glyph: '⭘', // heavy circle
+    words: ['Spectral', 'Phantom'],
+    statMods: { hp: 0.95, speed: 1.05, armor: 0.98, cdr: 1.0 },
+    passive: {
+      id: 'phase_step',
+      name: 'Phase Step',
+      desc: 'When a hit would take this character below 25% health, they briefly phase out of harm\'s way. Once every 18 seconds.',
+      onTakeDamage(entity, dmg, source, world) {
+        const wouldBe = entity.hp - dmg;
+        const last = entity.phaseStepAt || -999;
+        if (wouldBe > 0 && wouldBe < entity.maxHp * 0.25 && world.time - last > 18) {
+          entity.phaseStepAt = world.time;
+          entity.applyStatus('intangible', 0.6, world.time);
+          return dmg * 0.15;
+        }
+        return dmg;
+      }
+    }
+  },
+  {
+    id: 'demonology',
+    name: 'Demonology',
+    tagline: 'Bound to something hungry beneath the skin that feeds on the damage they deal.',
+    color: '#e03b3b',
+    colorDark: '#5c1414',
+    glyph: '⸩', // horns-ish bracket
+    words: ['Infernal', 'Cursed'],
+    statMods: { hp: 1.02, speed: 1.0, armor: 0.95, cdr: 1.0 },
+    passive: {
+      id: 'blood_pact',
+      name: 'Blood Pact',
+      desc: 'Heals for a portion of all damage dealt, but takes slightly more damage in return for the power.',
+      onDealDamage(entity, dmg, target, world) {
+        entity.heal(dmg * 0.12, entity);
+      },
+      onTakeDamage(entity, dmg) {
+        return dmg * 1.08;
+      }
+    }
+  },
+  {
+    id: 'faerie',
+    name: 'Faerie',
+    tagline: 'Quick, glamoured, and never quite where they seem to be.',
+    color: '#ff7ad9',
+    colorDark: '#7a2a5c',
+    glyph: '❁', // flower
+    words: ['Fey', 'Glimmering'],
+    statMods: { hp: 0.93, speed: 1.12, armor: 0.95, cdr: 1.0 },
+    passive: {
+      id: 'glamour',
+      name: 'Glamour',
+      desc: 'Moves faster than most, and has a small chance to dodge an incoming hit entirely.',
+      onTakeDamage(entity, dmg) {
+        if (Math.random() < 0.12) return 0;
+        return dmg;
+      }
+    }
+  },
+  {
+    id: 'song',
+    name: 'Song',
+    tagline: 'Carries a resonance that quickens with every note struck true.',
+    color: '#f4c542',
+    colorDark: '#7a5f13',
+    glyph: '♪', // music note
+    words: ['Resonant', 'Harmonic'],
+    statMods: { hp: 1.0, speed: 1.0, armor: 1.0, cdr: 0.9 },
+    passive: {
+      id: 'resonance',
+      name: 'Resonance',
+      desc: 'Landing an attack or ability shaves extra time off this character\'s other cooldowns.',
+      onDealDamage(entity) {
+        for (const cd of entity.cooldowns) cd.remaining = Math.max(0, cd.remaining - 0.35);
+      }
+    }
+  },
+  {
+    id: 'alchemy',
+    name: 'Alchemy',
+    tagline: 'Every strike carries an unstable mixture of effects waiting to go off.',
+    color: '#8fd13f',
+    colorDark: '#3d5c15',
+    glyph: '⚗', // alembic
+    words: ['Volatile', 'Alchemic'],
+    statMods: { hp: 1.0, speed: 1.0, armor: 1.0, cdr: 1.0 },
+    passive: {
+      id: 'volatile_mixture',
+      name: 'Volatile Mixture',
+      desc: 'Attacks have a chance to apply a random bonus effect: a burn, a slow, or a weaken.',
+      onDealDamage(entity, dmg, target, world) {
+        if (Math.random() < 0.25 && target && target.alive) {
+          const roll = Math.random();
+          if (roll < 0.34) target.applyStatus('burn', 3, world.time, { dps: entity.maxHp * 0.015 });
+          else if (roll < 0.67) target.applyStatus('slow', 2, world.time, { amount: 0.35 });
+          else target.applyStatus('weaken', 3, world.time, { amount: 0.2 });
+        }
+      }
+    }
+  },
+  {
+    id: 'ancient_runes',
+    name: 'Ancient Runes',
+    tagline: 'Marked since birth with sigils that flare into a shielding pulse under pressure.',
+    color: '#c9a24b',
+    colorDark: '#5c481c',
+    glyph: 'ᚠ', // runic-looking character
+    words: ['Runic', 'Sigil-Bound'],
+    statMods: { hp: 1.03, speed: 0.99, armor: 1.08, cdr: 1.0 },
+    passive: {
+      id: 'runic_ward',
+      name: 'Runic Ward',
+      desc: 'Every 14 seconds, the runes flare and grant a small shield automatically.',
+      onUpdate(entity, dt, world) {
+        const last = entity.runicWardAt || -999;
+        if (world.time - last > 14) {
+          entity.runicWardAt = world.time;
+          entity.shield = Math.min(entity.maxShield, entity.shield + entity.maxHp * 0.15);
+        }
+      }
+    }
+  }
+];
+
+const AFFINITY_BY_ID = Object.fromEntries(AFFINITIES.map(a => [a.id, a]));
+
+// ==== js/data/tekniks.js ====
+// Teknik data: how a character fights. Twelve tekniks across four roles.
+// Every teknik defines base combat stats, a basic attack type, four abilities,
+// and one ultimate. Ability "type" strings are resolved by js/game/combat.js.
+// Names get combined with the chosen affinity's flavor words at character-create time.
+
+const TEKNIKS = [
+  // ---------------- TANK ----------------
+  {
+    id: 'sword_knight', name: 'Sword Knight', role: 'tank', weaponGlyph: '🗡',
+    baseStats: { hp: 140, armor: 12, speed: 190, attackRange: 58, attackDamage: 10, attackCooldown: 0.9 },
+    attackType: 'melee',
+    abilities: [
+      { id: 'guard', base: 'Guard', type: 'shield_self', cooldown: 8, value: 0.25, duration: 4 },
+      { id: 'shield_bash', base: 'Shield Bash', type: 'melee_strike', cooldown: 6, damage: 14, range: 62, stun: 1.0 },
+      { id: 'rally_cry', base: 'Rally Cry', type: 'buff_team', cooldown: 14, radius: 150, stat: 'armor', amount: 0.15, duration: 5 },
+      { id: 'charge', base: 'Charge', type: 'dash', cooldown: 10, damage: 12, distance: 220 }
+    ],
+    ultimate: { id: 'bulwark', base: 'Unbreakable Bulwark', type: 'shield_self', cooldown: 60, value: 0.4, duration: 6, taunt: true }
+  },
+  {
+    id: 'mech', name: 'Mech', role: 'tank', weaponGlyph: '🤖',
+    baseStats: { hp: 150, armor: 14, speed: 170, attackRange: 66, attackDamage: 11, attackCooldown: 1.0 },
+    attackType: 'melee',
+    abilities: [
+      { id: 'servo_plating', base: 'Servo Plating', type: 'shield_self', cooldown: 9, value: 0.2, duration: 5 },
+      { id: 'ground_pound', base: 'Ground Pound', type: 'aoe_damage', cooldown: 7, damage: 16, radius: 90, slow: 0.3, originSelf: true },
+      { id: 'missile_pod', base: 'Missile Pod', type: 'projectile', cooldown: 5, damage: 14, range: 300 },
+      { id: 'overdrive_stomp', base: 'Overdrive Stomp', type: 'dash_aoe', cooldown: 11, damage: 18, radius: 80, distance: 200 }
+    ],
+    ultimate: { id: 'titanfall', base: 'Titanfall Barrage', type: 'aoe_damage', cooldown: 60, damage: 40, radius: 140, knockback: true, originSelf: true }
+  },
+  {
+    id: 'titan', name: 'Titan', role: 'tank', weaponGlyph: '⛰',
+    baseStats: { hp: 160, armor: 10, speed: 160, attackRange: 72, attackDamage: 12, attackCooldown: 1.0 },
+    attackType: 'melee',
+    abilities: [
+      { id: 'stone_skin', base: 'Stone Skin', type: 'shield_self', cooldown: 9, value: 0.22, duration: 5 },
+      { id: 'sweeping_backhand', base: 'Sweeping Backhand', type: 'aoe_damage', cooldown: 7, damage: 15, radius: 85, knockback: true, originSelf: true },
+      { id: 'seismic_slam', base: 'Seismic Slam', type: 'aoe_damage', cooldown: 10, damage: 18, radius: 110, slow: 0.4, originSelf: true },
+      { id: 'boulder_toss', base: 'Boulder Toss', type: 'projectile', cooldown: 6, damage: 16, range: 280 }
+    ],
+    ultimate: { id: 'cataclysm', base: 'Cataclysm', type: 'aoe_damage', cooldown: 60, damage: 45, radius: 160, knockback: true, stun: 1.0, originSelf: true }
+  },
+
+  // ---------------- HEALER ----------------
+  {
+    id: 'mender', name: 'Mender', role: 'healer', weaponGlyph: '🌿',
+    baseStats: { hp: 90, armor: 5, speed: 195, attackRange: 220, attackDamage: 6, attackCooldown: 0.8 },
+    attackType: 'ranged',
+    abilities: [
+      { id: 'healing_touch', base: 'Healing Touch', type: 'heal_ally', cooldown: 5, value: 0.22 },
+      { id: 'cleansing_bloom', base: 'Cleansing Bloom', type: 'cleanse_ally', cooldown: 12, value: 0.1 },
+      { id: 'growth_ward', base: 'Growth Ward', type: 'shield_ally', cooldown: 9, value: 0.2, duration: 5 },
+      { id: 'life_bloom', base: 'Life Bloom', type: 'heal_aoe', cooldown: 11, value: 0.12, radius: 140 }
+    ],
+    ultimate: { id: 'blossoming_renewal', base: 'Blossoming Renewal', type: 'heal_aoe', cooldown: 65, value: 0.45, radius: 200, cleanse: true }
+  },
+  {
+    id: 'scholar', name: 'Scholar', role: 'healer', weaponGlyph: '📖',
+    baseStats: { hp: 85, armor: 5, speed: 195, attackRange: 230, attackDamage: 6, attackCooldown: 0.8 },
+    attackType: 'ranged',
+    abilities: [
+      { id: 'runic_insight', base: 'Runic Insight', type: 'buff_team', cooldown: 10, radius: 140, stat: 'damage', amount: 0.2, duration: 6 },
+      { id: 'ward_of_warding', base: 'Ward of Warding', type: 'shield_ally', cooldown: 8, value: 0.25, duration: 5 },
+      { id: 'focused_study', base: 'Focused Study', type: 'heal_ally', cooldown: 6, value: 0.18 },
+      { id: 'temporal_sigil', base: 'Temporal Sigil', type: 'buff_team', cooldown: 12, radius: 140, stat: 'speed', amount: 0.2, duration: 5 }
+    ],
+    ultimate: { id: 'grand_convergence', base: 'Grand Convergence', type: 'buff_team_shield', cooldown: 65, radius: 220, shield: 0.3, damage: 0.2, duration: 8 }
+  },
+  {
+    id: 'surgeon', name: 'Surgeon', role: 'healer', weaponGlyph: '➕',
+    baseStats: { hp: 88, armor: 6, speed: 198, attackRange: 60, attackDamage: 7, attackCooldown: 0.7 },
+    attackType: 'melee',
+    abilities: [
+      { id: 'triage_strike', base: 'Triage Strike', type: 'melee_strike', cooldown: 4, damage: 8, range: 62 },
+      { id: 'emergency_stabilize', base: 'Emergency Stabilize', type: 'heal_ally', cooldown: 10, value: 0.3 },
+      { id: 'adrenaline_shot', base: 'Adrenaline Shot', type: 'buff_ally', cooldown: 9, stat: 'speed_damage', amount: 0.2, duration: 5 },
+      { id: 'field_surgery', base: 'Field Surgery', type: 'cleanse_ally', cooldown: 11, value: 0.2 }
+    ],
+    ultimate: { id: 'code_blue', base: 'Code Blue', type: 'heal_ally_shield', cooldown: 70, value: 0.7, shield: 0.2, radius: 220 }
+  },
+
+  // ---------------- MELEE DPS ----------------
+  {
+    id: 'rogue', name: 'Rogue', role: 'meleeDPS', weaponGlyph: '🔪',
+    baseStats: { hp: 95, armor: 6, speed: 215, attackRange: 52, attackDamage: 11, attackCooldown: 0.6 },
+    attackType: 'melee',
+    abilities: [
+      { id: 'shadow_step', base: 'Shadow Step', type: 'dash', cooldown: 7, damage: 10, distance: 220 },
+      { id: 'backstab', base: 'Backstab', type: 'melee_strike', cooldown: 6, damage: 16, range: 55, executeBonus: 0.5 },
+      { id: 'smoke_veil', base: 'Smoke Veil', type: 'stealth', cooldown: 12, duration: 2.5 },
+      { id: 'throwing_knives', base: 'Throwing Knives', type: 'projectile', cooldown: 4, damage: 9, range: 240 }
+    ],
+    ultimate: { id: 'death_mark', base: 'Death Mark', type: 'mark_and_strike', cooldown: 55, markAmount: 0.4, markDuration: 5, damage: 30, range: 60 }
+  },
+  {
+    id: 'martial_artist', name: 'Martial Artist', role: 'meleeDPS', weaponGlyph: '👊',
+    baseStats: { hp: 100, armor: 7, speed: 205, attackRange: 55, attackDamage: 10, attackCooldown: 0.55 },
+    attackType: 'melee',
+    abilities: [
+      { id: 'flowing_palm', base: 'Flowing Palm', type: 'melee_strike', cooldown: 4, damage: 13, range: 56 },
+      { id: 'rising_kick', base: 'Rising Kick', type: 'dash', cooldown: 7, damage: 12, distance: 160, stun: 0.8 },
+      { id: 'iron_stance', base: 'Iron Stance', type: 'shield_self', cooldown: 10, value: 0.15, duration: 4 },
+      { id: 'chi_burst', base: 'Chi Burst', type: 'aoe_damage', cooldown: 8, damage: 14, radius: 70, originSelf: true }
+    ],
+    ultimate: { id: 'hundred_fists', base: 'Hundred Fists', type: 'aoe_damage_selfheal', cooldown: 55, damage: 45, radius: 80, healPct: 0.1, originSelf: true }
+  },
+  {
+    id: 'engineer', name: 'Engineer', role: 'meleeDPS', weaponGlyph: '🔧',
+    baseStats: { hp: 98, armor: 7, speed: 195, attackRange: 58, attackDamage: 10, attackCooldown: 0.6 },
+    attackType: 'melee',
+    abilities: [
+      { id: 'wrench_smash', base: 'Wrench Smash', type: 'melee_strike', cooldown: 5, damage: 12, range: 58 },
+      { id: 'deploy_turret', base: 'Deploy Turret', type: 'summon_turret', cooldown: 14, duration: 8, damage: 4 },
+      { id: 'tesla_coil', base: 'Tesla Coil', type: 'aoe_damage', cooldown: 9, damage: 13, radius: 90, slow: 0.3, originSelf: true },
+      { id: 'overclock_gear', base: 'Overclock Gear', type: 'buff_self', cooldown: 11, stat: 'attackSpeed', amount: 0.25, duration: 5 }
+    ],
+    ultimate: { id: 'full_meltdown', base: 'Full Meltdown', type: 'aoe_damage_summon', cooldown: 60, damage: 38, radius: 110, turrets: 2, originSelf: true }
+  },
+
+  // ---------------- RANGED DPS ----------------
+  {
+    id: 'archer', name: 'Archer', role: 'rangedDPS', weaponGlyph: '🏹',
+    baseStats: { hp: 90, armor: 5, speed: 195, attackRange: 320, attackDamage: 11, attackCooldown: 0.75 },
+    attackType: 'ranged',
+    abilities: [
+      { id: 'piercing_shot', base: 'Piercing Shot', type: 'projectile', cooldown: 5, damage: 16, range: 360, pierce: true },
+      { id: 'hunters_mark', base: "Hunter's Mark", type: 'mark', cooldown: 10, amount: 0.25, duration: 6, range: 320 },
+      { id: 'retreat_roll', base: 'Retreat Roll', type: 'dash', cooldown: 8, damage: 0, distance: 180, backward: true },
+      { id: 'volley', base: 'Volley', type: 'aoe_damage', cooldown: 9, damage: 18, radius: 90, range: 300 }
+    ],
+    ultimate: { id: 'rain_of_arrows', base: 'Rain of Arrows', type: 'aoe_damage', cooldown: 58, damage: 40, radius: 130, range: 320 }
+  },
+  {
+    id: 'demolitionist', name: 'Demolitionist', role: 'rangedDPS', weaponGlyph: '💣',
+    baseStats: { hp: 96, armor: 6, speed: 185, attackRange: 280, attackDamage: 10, attackCooldown: 0.85 },
+    attackType: 'ranged',
+    abilities: [
+      { id: 'sticky_bomb', base: 'Sticky Bomb', type: 'aoe_damage', cooldown: 7, damage: 20, radius: 80, range: 260 },
+      { id: 'cluster_charge', base: 'Cluster Charge', type: 'aoe_damage', cooldown: 8, damage: 16, radius: 100, range: 260 },
+      { id: 'smoke_bomb', base: 'Smoke Bomb', type: 'debuff_area', cooldown: 10, amount: 0.3, radius: 90, range: 260, duration: 3 },
+      { id: 'kickback_blast', base: 'Kickback Blast', type: 'dash', cooldown: 8, damage: 12, distance: 160, backward: true }
+    ],
+    ultimate: { id: 'fire_in_the_hole', base: 'Fire in the Hole', type: 'aoe_damage', cooldown: 60, damage: 50, radius: 150, range: 300 }
+  },
+  {
+    id: 'sorcerer', name: 'Sorcerer', role: 'rangedDPS', weaponGlyph: '🔮',
+    baseStats: { hp: 88, armor: 5, speed: 195, attackRange: 300, attackDamage: 12, attackCooldown: 0.8 },
+    attackType: 'ranged',
+    abilities: [
+      { id: 'arcane_bolt', base: 'Arcane Bolt', type: 'projectile', cooldown: 5, damage: 17, range: 320 },
+      { id: 'frost_lance', base: 'Frost Lance', type: 'projectile_slow', cooldown: 7, damage: 13, range: 300, slow: 0.5, slowDuration: 2.5 },
+      { id: 'arcane_barrier', base: 'Arcane Barrier', type: 'shield_self', cooldown: 9, value: 0.18, duration: 4 },
+      { id: 'meteor_shard', base: 'Meteor Shard', type: 'aoe_damage', cooldown: 10, damage: 20, radius: 100, range: 300 }
+    ],
+    ultimate: { id: 'cataclysmic_nova', base: 'Cataclysmic Nova', type: 'aoe_damage', cooldown: 60, damage: 45, radius: 150, range: 280 }
+  }
+];
+
+const TEKNIK_BY_ID = Object.fromEntries(TEKNIKS.map(t => [t.id, t]));
+const ROLES = [
+  { id: 'tank', name: 'Tank', desc: 'High health and armor. Holds the front line, protects allies, and soaks up damage.' },
+  { id: 'healer', name: 'Healer', desc: 'Keeps the team alive with heals, shields, and buffs. Fragile but vital.' },
+  { id: 'meleeDPS', name: 'Melee DPS', desc: 'Fast, high burst damage up close. Fragile but deadly in the right hands.' },
+  { id: 'rangedDPS', name: 'Ranged DPS', desc: 'Deals heavy damage from a distance while kiting away from danger.' }
+];
+
+// ==== js/data/maps.js ====
+// Arena and hub map data. Everything is drawn with canvas primitives (no image
+// assets) so the whole game stays a handful of static files.
+// Obstacles are axis-aligned rectangles used for both rendering and collision.
+
+const MAPS = [
+  {
+    id: 'sunken_grove', name: 'Sunken Grove', theme: 'nature',
+    width: 1600, height: 1200, bg: '#0f2a17', accent: '#1e4d29',
+    obstacles: [
+      { x: 200, y: 200, w: 120, h: 120 }, { x: 1300, y: 200, w: 120, h: 120 },
+      { x: 200, y: 900, w: 120, h: 120 }, { x: 1300, y: 900, w: 120, h: 120 },
+      { x: 740, y: 540, w: 120, h: 120 }, { x: 500, y: 300, w: 60, h: 200 },
+      { x: 1050, y: 700, w: 60, h: 200 }, { x: 400, y: 800, w: 200, h: 40 },
+      { x: 1000, y: 250, w: 200, h: 40 }
+    ],
+    spawnPoints: [
+      { x: 100, y: 100 }, { x: 1500, y: 100 }, { x: 100, y: 1100 }, { x: 1500, y: 1100 },
+      { x: 800, y: 80 }, { x: 800, y: 1120 }, { x: 80, y: 600 }, { x: 1520, y: 600 }
+    ]
+  },
+  {
+    id: 'neon_district', name: 'Neon District', theme: 'nanotech',
+    width: 1600, height: 1200, bg: '#0a1420', accent: '#0e3a3a',
+    obstacles: [
+      { x: 300, y: 300, w: 200, h: 40 }, { x: 1100, y: 300, w: 200, h: 40 },
+      { x: 300, y: 860, w: 200, h: 40 }, { x: 1100, y: 860, w: 200, h: 40 },
+      { x: 760, y: 200, w: 80, h: 300 }, { x: 760, y: 700, w: 80, h: 300 },
+      { x: 500, y: 550, w: 100, h: 100 }, { x: 1000, y: 550, w: 100, h: 100 }
+    ],
+    spawnPoints: [
+      { x: 100, y: 100 }, { x: 1500, y: 100 }, { x: 100, y: 1100 }, { x: 1500, y: 1100 },
+      { x: 800, y: 80 }, { x: 800, y: 1120 }, { x: 80, y: 600 }, { x: 1520, y: 600 }
+    ]
+  },
+  {
+    id: 'skyshard_sanctum', name: 'Skyshard Sanctum', theme: 'starlight',
+    width: 1500, height: 1500, bg: '#0b1030', accent: '#25306e',
+    obstacles: [
+      { x: 700, y: 700, w: 100, h: 100 },
+      { x: 300, y: 300, w: 90, h: 90 }, { x: 1100, y: 300, w: 90, h: 90 },
+      { x: 300, y: 1100, w: 90, h: 90 }, { x: 1100, y: 1100, w: 90, h: 90 },
+      { x: 700, y: 200, w: 100, h: 40 }, { x: 700, y: 1260, w: 100, h: 40 },
+      { x: 200, y: 700, w: 40, h: 100 }, { x: 1260, y: 700, w: 40, h: 100 }
+    ],
+    spawnPoints: [
+      { x: 120, y: 120 }, { x: 1380, y: 120 }, { x: 120, y: 1380 }, { x: 1380, y: 1380 },
+      { x: 750, y: 90 }, { x: 750, y: 1410 }, { x: 90, y: 750 }, { x: 1410, y: 750 }
+    ]
+  },
+  {
+    id: 'ashen_hollow', name: 'Ashen Hollow', theme: 'demonology',
+    width: 1600, height: 1200, bg: '#200a08', accent: '#5c1e14',
+    obstacles: [
+      { x: 250, y: 250, w: 150, h: 60 }, { x: 1200, y: 250, w: 150, h: 60 },
+      { x: 250, y: 900, w: 150, h: 60 }, { x: 1200, y: 900, w: 150, h: 60 },
+      { x: 720, y: 500, w: 160, h: 160 },
+      { x: 500, y: 150, w: 60, h: 60 }, { x: 1040, y: 990, w: 60, h: 60 }
+    ],
+    spawnPoints: [
+      { x: 100, y: 100 }, { x: 1500, y: 100 }, { x: 100, y: 1100 }, { x: 1500, y: 1100 },
+      { x: 800, y: 80 }, { x: 800, y: 1120 }, { x: 80, y: 600 }, { x: 1520, y: 600 }
+    ]
+  },
+  {
+    id: 'ruined_observatory', name: 'Ruined Observatory', theme: 'ancient_runes',
+    width: 1500, height: 1300, bg: '#141008', accent: '#4a3a1a',
+    obstacles: [
+      { x: 650, y: 580, w: 200, h: 140 },
+      { x: 250, y: 250, w: 100, h: 100 }, { x: 1150, y: 250, w: 100, h: 100 },
+      { x: 250, y: 950, w: 100, h: 100 }, { x: 1150, y: 950, w: 100, h: 100 },
+      { x: 700, y: 200, w: 100, h: 40 }, { x: 700, y: 1060, w: 100, h: 40 }
+    ],
+    spawnPoints: [
+      { x: 110, y: 110 }, { x: 1390, y: 110 }, { x: 110, y: 1190 }, { x: 1390, y: 1190 },
+      { x: 750, y: 90 }, { x: 750, y: 1210 }, { x: 90, y: 650 }, { x: 1410, y: 650 }
+    ]
+  }
+];
+
+const MAP_BY_ID = Object.fromEntries(MAPS.map(m => [m.id, m]));
+
+// The persistent, non-combat hub island the player spawns on after character
+// creation. Decorations are purely visual; portals are interactable.
+const HUB_MAP = {
+  id: 'main_island', name: 'The Main Island',
+  width: 1800, height: 1400, bg: '#123a2b', accent: '#1c5c3f',
+  obstacles: [
+    { x: 850, y: 650, w: 100, h: 100 }, // central fountain/statue block
+    { x: 300, y: 300, w: 80, h: 80 }, { x: 1400, y: 300, w: 80, h: 80 },
+    { x: 300, y: 1000, w: 80, h: 80 }, { x: 1400, y: 1000, w: 80, h: 80 }
+  ],
+  decorations: [
+    { type: 'tree', x: 200, y: 200 }, { type: 'tree', x: 260, y: 240 }, { type: 'tree', x: 1600, y: 200 },
+    { type: 'tree', x: 1550, y: 260 }, { type: 'tree', x: 200, y: 1200 }, { type: 'tree', x: 1600, y: 1200 },
+    { type: 'tree', x: 1550, y: 1150 }, { type: 'tree', x: 900, y: 150 }, { type: 'tree', x: 950, y: 1250 },
+    { type: 'statue', x: 900, y: 700 }, { type: 'flag', x: 500, y: 500 }, { type: 'flag', x: 1300, y: 900 },
+    { type: 'rock', x: 700, y: 900 }, { type: 'rock', x: 1100, y: 500 }, { type: 'rock', x: 400, y: 1100 }
+  ],
+  portals: [
+    { id: 'ffa8', label: '8-Player Free-for-All', x: 500, y: 350, color: '#e0a03b' },
+    { id: 'br4v4', label: '4v4 Battle Royale', x: 1300, y: 350, color: '#3b8be0' },
+    { id: 'br2222', label: '2v2v2v2 Battle Royale', x: 500, y: 1050, color: '#a03be0' },
+    { id: 'tournament', label: '16-Team Tournament', x: 1300, y: 1050, color: '#e03b3b' },
+    { id: 'character', label: 'Change Character', x: 900, y: 300, color: '#3be08b' }
+  ],
+  spawnPoint: { x: 900, y: 750 }
+};
+
+// ==== js/character.js ====
+// Turns an (affinity, teknik) pair into a full character sheet: stats, a
+// styled basic attack, four named abilities, and an ultimate. This is what
+// makes all 120 affinity/teknik combinations feel distinct without hand
+// authoring 120 bespoke kits: the teknik supplies the mechanical shape of the
+// kit, the affinity supplies the name, color, small stat lean, and passive.
+
+function pickDescriptor(affinity, seedStr) {
+  // Deterministic-ish pick between the affinity's two flavor words based on
+  // the ability id, so the same ability always gets the same flavor word.
+  let hash = 0;
+  for (let i = 0; i < seedStr.length; i++) hash = (hash * 31 + seedStr.charCodeAt(i)) >>> 0;
+  return affinity.words[hash % affinity.words.length];
+}
+
+function nameAbility(affinity, ability) {
+  return `${pickDescriptor(affinity, ability.id)} ${ability.base}`;
+}
+
+function buildAbility(affinity, ability, statMods) {
+  const named = { ...ability, name: nameAbility(affinity, ability) };
+  // Scale numeric damage/heal/shield values slightly by role-agnostic power lean.
+  const scale = statMods.power || 1.0;
+  for (const key of ['damage', 'value', 'healPct']) {
+    if (typeof named[key] === 'number') named[key] = named[key] * scale;
+  }
+  named.remaining = 0;
+  named.maxCooldown = ability.cooldown;
+  return named;
+}
+
+function createCharacterSheet({ affinityId, teknikId, name, isAI = false, team = null }) {
+  const affinity = AFFINITY_BY_ID[affinityId];
+  const teknik = TEKNIK_BY_ID[teknikId];
+  if (!affinity || !teknik) throw new Error('Unknown affinity/teknik combo');
+
+  const mods = affinity.statMods;
+  const base = teknik.baseStats;
+  const stats = {
+    maxHp: Math.round(base.hp * mods.hp),
+    armor: +(base.armor * mods.armor).toFixed(1),
+    speed: Math.round(base.speed * mods.speed),
+    attackRange: base.attackRange,
+    attackDamage: +(base.attackDamage).toFixed(1),
+    attackCooldown: base.attackCooldown * (mods.cdr || 1),
+    projectileSpeed: 460
+  };
+
+  const abilities = teknik.abilities.map(a => buildAbility(affinity, a, mods));
+  const ultimate = buildAbility(affinity, teknik.ultimate, mods);
+
+  return {
+    displayName: name || `${affinity.name} ${teknik.name}`,
+    affinity, teknik, role: teknik.role,
+    isAI, team,
+    color: affinity.color, colorDark: affinity.colorDark,
+    glyph: affinity.glyph, weaponGlyph: teknik.weaponGlyph,
+    attackType: teknik.attackType,
+    stats,
+    abilities, ultimate,
+    passive: affinity.passive
+  };
+}
+
+function randomCharacterSheet(name, isAI, team) {
+  const affinity = AFFINITIES[Math.floor(Math.random() * AFFINITIES.length)];
+  const teknik = TEKNIKS[Math.floor(Math.random() * TEKNIKS.length)];
+  return createCharacterSheet({ affinityId: affinity.id, teknikId: teknik.id, name, isAI, team });
+}
+
+// ==== js/input.js ====
+// Unified input for desktop (keyboard + mouse) and mobile (twin virtual
+// joysticks + on-screen buttons). Produces a simple per-frame snapshot that
+// the match/hub loop consumes without caring which device is in use.
+
+class InputController {
+  constructor(canvas, hudRoot) {
+    this.canvas = canvas;
+    this.hudRoot = hudRoot;
+    this.keys = new Set();
+    this.mouse = { x: canvas.width / 2, y: canvas.height / 2, down: false };
+    this.moveJoystick = null; // { pointerId, originX, originY, x, y }
+    this.aimJoystick = null;
+    this.actions = { ability1: false, ability2: false, ability3: false, ability4: false, ultimate: false, interact: false };
+    this.pendingActions = new Set(); // one-shot presses this frame
+    this.isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+
+    window.addEventListener('keydown', e => this.onKeyDown(e));
+    window.addEventListener('keyup', e => this.keys.delete(e.code));
+    canvas.addEventListener('mousemove', e => this.onMouseMove(e));
+    canvas.addEventListener('mousedown', e => { if (e.button === 0) this.mouse.down = true; });
+    window.addEventListener('mouseup', () => { this.mouse.down = false; });
+    canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+    canvas.addEventListener('pointerdown', e => this.onPointerDown(e));
+    canvas.addEventListener('pointermove', e => this.onPointerMove(e));
+    canvas.addEventListener('pointerup', e => this.onPointerUp(e));
+    canvas.addEventListener('pointercancel', e => this.onPointerUp(e));
+
+    this._buildMobileButtons();
+  }
+
+  onKeyDown(e) {
+    this.keys.add(e.code);
+    const map = { Digit1: 'ability1', Digit2: 'ability2', Digit3: 'ability3', Digit4: 'ability4', KeyR: 'ultimate', Space: 'ultimate', KeyE: 'interact' };
+    if (map[e.code]) this.pendingActions.add(map[e.code]);
+  }
+
+  onMouseMove(e) {
+    const rect = this.canvas.getBoundingClientRect();
+    this.mouse.x = (e.clientX - rect.left) * (this.canvas.width / rect.width);
+    this.mouse.y = (e.clientY - rect.top) * (this.canvas.height / rect.height);
+  }
+
+  _rectPos(e) {
+    const rect = this.canvas.getBoundingClientRect();
+    return {
+      x: (e.clientX - rect.left) * (this.canvas.width / rect.width),
+      y: (e.clientY - rect.top) * (this.canvas.height / rect.height)
+    };
+  }
+
+  onPointerDown(e) {
+    if (!this.isTouch && e.pointerType !== 'touch') return;
+    const p = this._rectPos(e);
+    const half = this.canvas.width / 2;
+    if (p.x < half && !this.moveJoystick) {
+      this.moveJoystick = { pointerId: e.pointerId, originX: p.x, originY: p.y, x: p.x, y: p.y };
+    } else if (p.x >= half && !this.aimJoystick) {
+      this.aimJoystick = { pointerId: e.pointerId, originX: p.x, originY: p.y, x: p.x, y: p.y };
+    }
+  }
+
+  onPointerMove(e) {
+    const p = this._rectPos(e);
+    if (this.moveJoystick && e.pointerId === this.moveJoystick.pointerId) {
+      this.moveJoystick.x = p.x; this.moveJoystick.y = p.y;
+    } else if (this.aimJoystick && e.pointerId === this.aimJoystick.pointerId) {
+      this.aimJoystick.x = p.x; this.aimJoystick.y = p.y;
+    }
+  }
+
+  onPointerUp(e) {
+    if (this.moveJoystick && e.pointerId === this.moveJoystick.pointerId) this.moveJoystick = null;
+    if (this.aimJoystick && e.pointerId === this.aimJoystick.pointerId) this.aimJoystick = null;
+  }
+
+  _buildMobileButtons() {
+    this.mobileUI = document.createElement('div');
+    this.mobileUI.className = 'mobile-buttons';
+    this.mobileUI.innerHTML = `
+      <button data-action="ability1" class="ab-btn">1</button>
+      <button data-action="ability2" class="ab-btn">2</button>
+      <button data-action="ability3" class="ab-btn">3</button>
+      <button data-action="ability4" class="ab-btn">4</button>
+      <button data-action="ultimate" class="ult-btn">ULT</button>
+      <button data-action="interact" class="interact-btn">E</button>
+    `;
+    this.hudRoot.appendChild(this.mobileUI);
+    this.mobileUI.querySelectorAll('button').forEach(btn => {
+      const act = btn.dataset.action;
+      const fire = ev => { ev.preventDefault(); ev.stopPropagation(); this.pendingActions.add(act); };
+      btn.addEventListener('pointerdown', fire);
+    });
+  }
+
+  setInteractVisible(visible) {
+    const btn = this.mobileUI.querySelector('.interact-btn');
+    if (btn) btn.style.visibility = visible ? 'visible' : 'hidden';
+  }
+
+  // ctx: 'hidden' | 'hub' | 'match' — controls which touch buttons are shown.
+  setContext(ctx) {
+    if (!this.isTouch) { this.mobileUI.style.display = 'none'; return; }
+    if (ctx === 'hidden') { this.mobileUI.style.display = 'none'; return; }
+    this.mobileUI.style.display = 'flex';
+    this.mobileUI.querySelectorAll('.ab-btn, .ult-btn').forEach(b => b.style.display = ctx === 'match' ? '' : 'none');
+    const interactBtn = this.mobileUI.querySelector('.interact-btn');
+    interactBtn.style.display = ctx === 'hub' ? '' : 'none';
+    if (ctx !== 'hub') interactBtn.style.visibility = 'hidden';
+  }
+
+  // Returns { moveX, moveY } normalized-ish direction from -1..1
+  getMove() {
+    if (this.moveJoystick) {
+      const dx = this.moveJoystick.x - this.moveJoystick.originX;
+      const dy = this.moveJoystick.y - this.moveJoystick.originY;
+      const len = Math.hypot(dx, dy) || 1;
+      const clampLen = Math.min(len, 50) / 50;
+      return { x: (dx / len) * clampLen, y: (dy / len) * clampLen };
+    }
+    let x = 0, y = 0;
+    if (this.keys.has('KeyW') || this.keys.has('ArrowUp')) y -= 1;
+    if (this.keys.has('KeyS') || this.keys.has('ArrowDown')) y += 1;
+    if (this.keys.has('KeyA') || this.keys.has('ArrowLeft')) x -= 1;
+    if (this.keys.has('KeyD') || this.keys.has('ArrowRight')) x += 1;
+    return { x, y };
+  }
+
+  // Returns world-space aim point given the entity's screen position and camera.
+  getAimPoint(entityScreenX, entityScreenY) {
+    if (this.aimJoystick) {
+      const dx = this.aimJoystick.x - this.aimJoystick.originX;
+      const dy = this.aimJoystick.y - this.aimJoystick.originY;
+      if (Math.hypot(dx, dy) > 8) return { x: entityScreenX + dx * 6, y: entityScreenY + dy * 6, active: true };
+      return { x: entityScreenX + 1, y: entityScreenY, active: false };
+    }
+    return { x: this.mouse.x, y: this.mouse.y, active: true };
+  }
+
+  isFiring() {
+    if (this.aimJoystick) { const dx = this.aimJoystick.x - this.aimJoystick.originX; const dy = this.aimJoystick.y - this.aimJoystick.originY; return Math.hypot(dx, dy) > 8; }
+    return this.mouse.down;
+  }
+
+  consumePending(name) {
+    if (this.pendingActions.has(name)) { this.pendingActions.delete(name); return true; }
+    return false;
+  }
+
+  clearFrame() {
+    this.pendingActions.clear();
+  }
+}
+
+// ==== js/game/entity.js ====
+// Runtime combat entity: wraps a character sheet with live match state
+// (position, health, shield, status effects, ability cooldowns).
+
+class Entity {
+  constructor(sheet, x, y, world) {
+    this.sheet = sheet;
+    this.id = Entity.nextId++;
+    this.x = x; this.y = y;
+    this.vx = 0; this.vy = 0;
+    this.facing = 0; // radians
+    this.radius = 18;
+    this.maxHp = sheet.stats.maxHp;
+    this.hp = this.maxHp;
+    this.maxShield = this.maxHp * 0.6;
+    this.shield = 0;
+    this.alive = true;
+    this.team = sheet.team;
+    this.isAI = sheet.isAI;
+    this.kills = 0;
+    this.statuses = {}; // type -> { until, ...extra }
+    this.buffs = {}; // stat -> { until, amount }
+    this.cooldowns = sheet.abilities.map(a => ({ id: a.id, remaining: 0, max: a.maxCooldown }));
+    this.ultCooldown = { id: sheet.ultimate.id, remaining: 0, max: sheet.ultimate.maxCooldown };
+    this.attackCooldownRemaining = 0;
+    this.lastDamagedAt = -999;
+    this.combatStartedAt = null;
+    this.stealthUntil = -1;
+    this.world = world;
+    this.aiState = null; // populated by ai.js
+  }
+
+  get isStunned() {
+    const s = this.statuses.stun;
+    return !!s && s.until > this.world.time;
+  }
+  get isIntangible() {
+    const s = this.statuses.intangible;
+    return !!s && s.until > this.world.time;
+  }
+  get isStealthed() {
+    return this.stealthUntil > this.world.time;
+  }
+  get speedMultiplier() {
+    let mult = 1;
+    const slow = this.statuses.slow;
+    if (slow && slow.until > this.world.time) mult *= (1 - slow.amount);
+    const buff = this.buffs.speed;
+    if (buff && buff.until > this.world.time) mult *= (1 + buff.amount);
+    return mult;
+  }
+  get damageMultiplier() {
+    let mult = 1;
+    const weak = this.statuses.weaken;
+    if (weak && weak.until > this.world.time) mult *= (1 - weak.amount);
+    const buff = this.buffs.damage;
+    if (buff && buff.until > this.world.time) mult *= (1 + buff.amount);
+    const mark = this.statuses.mark;
+    return mult;
+  }
+  get armorValue() {
+    let armor = this.sheet.stats.armor;
+    const buff = this.buffs.armor;
+    if (buff && buff.until > this.world.time) armor *= (1 + buff.amount);
+    return armor;
+  }
+  get cdrMultiplier() {
+    const passive = this.sheet.passive;
+    if (passive && passive.cdrMultiplier) return passive.cdrMultiplier(this);
+    return 1;
+  }
+
+  applyStatus(type, duration, now, extra = {}) {
+    this.statuses[type] = { until: now + duration, ...extra };
+  }
+  applyBuff(stat, amount, duration, now) {
+    this.buffs[stat] = { until: now + duration, amount };
+  }
+
+  heal(amount, source) {
+    if (!this.alive || amount <= 0) return;
+    this.hp = Math.min(this.maxHp, this.hp + amount);
+  }
+
+  takeDamage(amount, source, world) {
+    if (!this.alive || this.isIntangible) return 0;
+    let dmg = amount;
+    const mark = this.statuses.mark;
+    if (mark && mark.until > world.time) dmg *= (1 + mark.amount);
+    const passive = this.sheet.passive;
+    if (passive && passive.onTakeDamage) dmg = passive.onTakeDamage(this, dmg, source, world);
+    dmg = Math.max(0, dmg - this.armorValue * 0.6);
+    // shield absorbs first
+    if (this.shield > 0) {
+      const absorbed = Math.min(this.shield, dmg);
+      this.shield -= absorbed;
+      dmg -= absorbed;
+    }
+    this.hp -= dmg;
+    this.lastDamagedAt = world.time;
+    if (source && source.sheet && source.sheet.passive && source.sheet.passive.onDealDamage) {
+      source.sheet.passive.onDealDamage(source, amount, this, world);
+    }
+    if (this.hp <= 0 && this.alive) {
+      this.hp = 0;
+      this.alive = false;
+      if (source) source.kills++;
+      world.onDeath && world.onDeath(this, source);
+    }
+    return dmg;
+  }
+
+  tickStatuses(dt, world) {
+    const burn = this.statuses.burn;
+    if (burn && burn.until > world.time) {
+      this.hp -= burn.dps * dt;
+      if (this.hp <= 0 && this.alive) {
+        this.hp = 0; this.alive = false;
+        world.onDeath && world.onDeath(this, burn.source || null);
+      }
+    }
+  }
+
+  tickCooldowns(dt) {
+    const mult = this.cdrMultiplier;
+    for (const cd of this.cooldowns) cd.remaining = Math.max(0, cd.remaining - dt * mult);
+    this.ultCooldown.remaining = Math.max(0, this.ultCooldown.remaining - dt * mult);
+    this.attackCooldownRemaining = Math.max(0, this.attackCooldownRemaining - dt * mult);
+  }
+
+  update(dt, world) {
+    if (!this.alive) return;
+    this.tickStatuses(dt, world);
+    this.tickCooldowns(dt);
+    const passive = this.sheet.passive;
+    if (passive && passive.onUpdate) passive.onUpdate(this, dt, world);
+  }
+}
+Entity.nextId = 1;
+
+// ==== js/game/movement.js ====
+// Shared movement/collision helpers used by both the player controller and AI.
+
+function resolveCircleRect(x, y, radius, rect) {
+  const closestX = Math.max(rect.x, Math.min(x, rect.x + rect.w));
+  const closestY = Math.max(rect.y, Math.min(y, rect.y + rect.h));
+  const dx = x - closestX, dy = y - closestY;
+  const distSq = dx * dx + dy * dy;
+  if (distSq >= radius * radius || distSq === 0) return { x, y };
+  const d = Math.sqrt(distSq) || 0.001;
+  const push = radius - d;
+  return { x: x + (dx / d) * push, y: y + (dy / d) * push };
+}
+
+function clampToMapBounds(x, y, world) {
+  const m = world.map;
+  return { x: Math.max(20, Math.min(m.width - 20, x)), y: Math.max(20, Math.min(m.height - 20, y)) };
+}
+
+// dirX/dirY: desired movement direction, need not be normalized.
+function applyMovement(entity, dirX, dirY, dt, world) {
+  if (!entity.alive || entity.isStunned) return;
+  const len = Math.hypot(dirX, dirY);
+  if (len > 0.001) { dirX /= len; dirY /= len; } else { dirX = 0; dirY = 0; }
+  const speed = entity.sheet.stats.speed * entity.speedMultiplier;
+  let nx = entity.x + dirX * speed * dt;
+  let ny = entity.y + dirY * speed * dt;
+  for (const obs of world.map.obstacles) {
+    const r = resolveCircleRect(nx, ny, entity.radius, obs);
+    nx = r.x; ny = r.y;
+  }
+  const clamped = clampToMapBounds(nx, ny, world);
+  entity.x = clamped.x; entity.y = clamped.y;
+  if (len > 0.001) entity.facing = Math.atan2(dirY, dirX);
+}
+
+// Simple line-of-path obstacle check: is the straight segment from (x,y) toward
+// (tx,ty) about to slam into an obstacle within `lookahead` units?
+function pathBlocked(x, y, tx, ty, lookahead, world) {
+  const ang = Math.atan2(ty - y, tx - x);
+  const px = x + Math.cos(ang) * lookahead, py = y + Math.sin(ang) * lookahead;
+  for (const obs of world.map.obstacles) {
+    if (px > obs.x - 15 && px < obs.x + obs.w + 15 && py > obs.y - 15 && py < obs.y + obs.h + 15) return true;
+  }
+  return false;
+}
+
+// ==== js/game/combat.js ====
+// Resolves basic attacks, all ability types, projectiles and turrets.
+// `world` is the live match state: { time, map, entities, projectiles,
+// turrets, effects, onDeath }.
+
+function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+
+function getAllies(entity, world) {
+  return world.entities.filter(e => e.alive && e.team === entity.team);
+}
+function getEnemies(entity, world) {
+  return world.entities.filter(e => e.alive && e.team !== entity.team);
+}
+function visibleEnemies(entity, world) {
+  return getEnemies(entity, world).filter(e => !e.isStealthed);
+}
+function nearestEnemy(entity, world, maxRange = Infinity) {
+  let best = null, bestD = maxRange;
+  for (const e of visibleEnemies(entity, world)) {
+    const d = dist(entity, e);
+    if (d <= bestD) { best = e; bestD = d; }
+  }
+  return best;
+}
+function lowestHpAlly(entity, world, includeSelf = true, maxRange = Infinity) {
+  let best = null, bestRatio = Infinity;
+  for (const a of getAllies(entity, world)) {
+    if (!includeSelf && a === entity) continue;
+    if (dist(entity, a) > maxRange) continue;
+    const ratio = a.hp / a.maxHp;
+    if (ratio < bestRatio) { bestRatio = ratio; best = a; }
+  }
+  return best || (includeSelf ? entity : null);
+}
+function enemiesInRadius(cx, cy, radius, entity, world) {
+  return visibleEnemies(entity, world).filter(e => Math.hypot(e.x - cx, e.y - cy) <= radius + e.radius);
+}
+function alliesInRadius(cx, cy, radius, entity, world) {
+  return getAllies(entity, world).filter(a => Math.hypot(a.x - cx, a.y - cy) <= radius + a.radius);
+}
+
+function spawnEffect(world, effect) {
+  world.effects.push({ createdAt: world.time, ...effect });
+}
+
+function clampToMap(x, y, world) {
+  const m = world.map;
+  return { x: Math.max(20, Math.min(m.width - 20, x)), y: Math.max(20, Math.min(m.height - 20, y)) };
+}
+
+function dealDamageTo(target, amount, source, world) {
+  const dmg = amount * (source.damageMultiplier || 1);
+  return target.takeDamage(dmg, source, world);
+}
+
+// ---------------- basic attack ----------------
+function useBasicAttack(entity, aimX, aimY, world) {
+  if (!entity.alive || entity.isStunned || entity.attackCooldownRemaining > 0) return false;
+  const speedBuff = entity.buffs.attackSpeed;
+  const cdMult = speedBuff && speedBuff.until > world.time ? (1 - speedBuff.amount) : 1;
+  entity.attackCooldownRemaining = entity.sheet.stats.attackCooldown * cdMult;
+  entity.stealthUntil = -1; // attacking breaks stealth
+  const dmg = entity.sheet.stats.attackDamage;
+  const range = entity.sheet.stats.attackRange;
+  entity.facing = Math.atan2(aimY - entity.y, aimX - entity.x);
+
+  if (entity.sheet.attackType === 'melee') {
+    const target = nearestEnemy(entity, world, range);
+    if (target) dealDamageTo(target, dmg, entity, world);
+    spawnEffect(world, { type: 'slash', x: entity.x, y: entity.y, angle: entity.facing, life: 0.15, color: entity.sheet.color });
+    return true;
+  }
+  // ranged / heal basic attacks both fire a small projectile
+  const ang = Math.atan2(aimY - entity.y, aimX - entity.x);
+  world.projectiles.push({
+    x: entity.x, y: entity.y, vx: Math.cos(ang) * entity.sheet.stats.projectileSpeed,
+    vy: Math.sin(ang) * entity.sheet.stats.projectileSpeed, damage: dmg, owner: entity,
+    radius: 6, traveled: 0, maxRange: range, color: entity.sheet.color, basic: true
+  });
+  return true;
+}
+
+// ---------------- ability dispatch ----------------
+// Each handler returns true if the ability was successfully cast.
+const ABILITY_HANDLERS = {
+  shield_self(entity, ab, aimX, aimY, world) {
+    entity.shield = Math.min(entity.maxShield, entity.shield + entity.maxHp * ab.value);
+    if (ab.taunt) spawnEffect(world, { type: 'taunt', x: entity.x, y: entity.y, life: 1.5 });
+    spawnEffect(world, { type: 'shieldpop', x: entity.x, y: entity.y, life: 0.4, color: entity.sheet.color });
+    return true;
+  },
+  melee_strike(entity, ab, aimX, aimY, world) {
+    const target = nearestEnemy(entity, world, ab.range);
+    entity.facing = Math.atan2(aimY - entity.y, aimX - entity.x);
+    spawnEffect(world, { type: 'slash', x: entity.x, y: entity.y, angle: entity.facing, life: 0.2, color: entity.sheet.color, big: true });
+    if (!target) return true;
+    let dmg = ab.damage;
+    if (ab.executeBonus && target.hp / target.maxHp > 0.5) dmg *= (1 + ab.executeBonus);
+    dealDamageTo(target, dmg, entity, world);
+    if (ab.stun) target.applyStatus('stun', ab.stun, world.time);
+    return true;
+  },
+  projectile(entity, ab, aimX, aimY, world) {
+    const ang = Math.atan2(aimY - entity.y, aimX - entity.x);
+    world.projectiles.push({
+      x: entity.x, y: entity.y, vx: Math.cos(ang) * entity.sheet.stats.projectileSpeed * 1.1,
+      vy: Math.sin(ang) * entity.sheet.stats.projectileSpeed * 1.1, damage: ab.damage, owner: entity,
+      radius: 8, traveled: 0, maxRange: ab.range, pierce: !!ab.pierce, color: entity.sheet.color
+    });
+    return true;
+  },
+  projectile_slow(entity, ab, aimX, aimY, world) {
+    const ang = Math.atan2(aimY - entity.y, aimX - entity.x);
+    world.projectiles.push({
+      x: entity.x, y: entity.y, vx: Math.cos(ang) * entity.sheet.stats.projectileSpeed,
+      vy: Math.sin(ang) * entity.sheet.stats.projectileSpeed, damage: ab.damage, owner: entity,
+      radius: 8, traveled: 0, maxRange: ab.range, color: entity.sheet.color,
+      onHit: (target) => target.applyStatus('slow', ab.slowDuration, world.time, { amount: ab.slow })
+    });
+    return true;
+  },
+  aoe_damage(entity, ab, aimX, aimY, world) {
+    let cx = entity.x, cy = entity.y;
+    if (!ab.originSelf) {
+      const ang = Math.atan2(aimY - entity.y, aimX - entity.x);
+      const d = Math.min(ab.range || 300, Math.hypot(aimX - entity.x, aimY - entity.y));
+      cx = entity.x + Math.cos(ang) * d; cy = entity.y + Math.sin(ang) * d;
+    }
+    spawnEffect(world, { type: 'blast', x: cx, y: cy, radius: ab.radius, life: 0.35, color: entity.sheet.color });
+    for (const t of enemiesInRadius(cx, cy, ab.radius, entity, world)) {
+      dealDamageTo(t, ab.damage, entity, world);
+      if (ab.slow) t.applyStatus('slow', 2, world.time, { amount: ab.slow });
+      if (ab.stun) t.applyStatus('stun', ab.stun, world.time);
+      if (ab.knockback) {
+        const ang = Math.atan2(t.y - cy, t.x - cx);
+        const p = clampToMap(t.x + Math.cos(ang) * 60, t.y + Math.sin(ang) * 60, world);
+        t.x = p.x; t.y = p.y;
+      }
+    }
+    return true;
+  },
+  aoe_damage_selfheal(entity, ab, aimX, aimY, world) {
+    ABILITY_HANDLERS.aoe_damage(entity, ab, entity.x, entity.y, world);
+    entity.heal(entity.maxHp * ab.healPct, entity);
+    return true;
+  },
+  aoe_damage_summon(entity, ab, aimX, aimY, world) {
+    ABILITY_HANDLERS.aoe_damage(entity, ab, entity.x, entity.y, world);
+    for (let i = 0; i < ab.turrets; i++) spawnTurret(entity, world, i);
+    return true;
+  },
+  dash(entity, ab, aimX, aimY, world) {
+    let ang = Math.atan2(aimY - entity.y, aimX - entity.x);
+    if (ab.backward) ang += Math.PI;
+    const dest = clampToMap(entity.x + Math.cos(ang) * ab.distance, entity.y + Math.sin(ang) * ab.distance, world);
+    spawnEffect(world, { type: 'dashtrail', x1: entity.x, y1: entity.y, x2: dest.x, y2: dest.y, life: 0.25, color: entity.sheet.color });
+    entity.x = dest.x; entity.y = dest.y;
+    if (ab.damage) {
+      for (const t of enemiesInRadius(dest.x, dest.y, 60, entity, world)) {
+        dealDamageTo(t, ab.damage, entity, world);
+        if (ab.stun) t.applyStatus('stun', ab.stun, world.time);
+      }
+    }
+    return true;
+  },
+  dash_aoe(entity, ab, aimX, aimY, world) {
+    ABILITY_HANDLERS.dash(entity, ab, aimX, aimY, world);
+    ABILITY_HANDLERS.aoe_damage(entity, { ...ab, originSelf: true }, entity.x, entity.y, world);
+    return true;
+  },
+  stealth(entity, ab, aimX, aimY, world) {
+    entity.stealthUntil = world.time + ab.duration;
+    spawnEffect(world, { type: 'shieldpop', x: entity.x, y: entity.y, life: 0.3, color: '#ffffff' });
+    return true;
+  },
+  summon_turret(entity, ab, aimX, aimY, world) {
+    spawnTurret(entity, world, 0, ab);
+    return true;
+  },
+  buff_self(entity, ab, aimX, aimY, world) {
+    entity.applyBuff(ab.stat, ab.amount, ab.duration, world.time);
+    return true;
+  },
+  buff_team(entity, ab, aimX, aimY, world) {
+    for (const a of alliesInRadius(entity.x, entity.y, ab.radius, entity, world)) {
+      a.applyBuff(ab.stat, ab.amount, ab.duration, world.time);
+    }
+    spawnEffect(world, { type: 'blast', x: entity.x, y: entity.y, radius: ab.radius, life: 0.4, color: entity.sheet.color, ring: true });
+    return true;
+  },
+  buff_ally(entity, ab, aimX, aimY, world) {
+    const target = lowestHpAlly(entity, world, false, 400) || entity;
+    if (ab.stat === 'speed_damage') {
+      target.applyBuff('speed', ab.amount, ab.duration, world.time);
+      target.applyBuff('damage', ab.amount, ab.duration, world.time);
+    } else {
+      target.applyBuff(ab.stat, ab.amount, ab.duration, world.time);
+    }
+    return true;
+  },
+  buff_team_shield(entity, ab, aimX, aimY, world) {
+    for (const a of alliesInRadius(entity.x, entity.y, ab.radius, entity, world)) {
+      a.shield = Math.min(a.maxShield, a.shield + a.maxHp * ab.shield);
+      a.applyBuff('damage', ab.damage, ab.duration, world.time);
+    }
+    spawnEffect(world, { type: 'blast', x: entity.x, y: entity.y, radius: ab.radius, life: 0.5, color: entity.sheet.color, ring: true });
+    return true;
+  },
+  heal_ally(entity, ab, aimX, aimY, world) {
+    const target = lowestHpAlly(entity, world, true, 500);
+    if (target) { target.heal(target.maxHp * ab.value, entity); spawnEffect(world, { type: 'heal', x: target.x, y: target.y, life: 0.4 }); }
+    return true;
+  },
+  heal_ally_shield(entity, ab, aimX, aimY, world) {
+    const target = lowestHpAlly(entity, world, true, 500);
+    if (target) {
+      target.heal(target.maxHp * ab.value, entity);
+      target.shield = Math.min(target.maxShield, target.shield + target.maxHp * ab.shield);
+      spawnEffect(world, { type: 'heal', x: target.x, y: target.y, life: 0.5, big: true });
+    }
+    return true;
+  },
+  shield_ally(entity, ab, aimX, aimY, world) {
+    const target = lowestHpAlly(entity, world, true, 500);
+    if (target) { target.shield = Math.min(target.maxShield, target.shield + target.maxHp * ab.value); spawnEffect(world, { type: 'shieldpop', x: target.x, y: target.y, life: 0.4, color: entity.sheet.color }); }
+    return true;
+  },
+  cleanse_ally(entity, ab, aimX, aimY, world) {
+    const target = lowestHpAlly(entity, world, true, 500);
+    if (target) {
+      for (const k of ['slow', 'burn', 'weaken', 'stun', 'mark']) delete target.statuses[k];
+      target.heal(target.maxHp * ab.value, entity);
+      spawnEffect(world, { type: 'heal', x: target.x, y: target.y, life: 0.3 });
+    }
+    return true;
+  },
+  heal_aoe(entity, ab, aimX, aimY, world) {
+    for (const a of alliesInRadius(entity.x, entity.y, ab.radius, entity, world)) {
+      a.heal(a.maxHp * ab.value, entity);
+      if (ab.cleanse) for (const k of ['slow', 'burn', 'weaken', 'stun', 'mark']) delete a.statuses[k];
+    }
+    spawnEffect(world, { type: 'blast', x: entity.x, y: entity.y, radius: ab.radius, life: 0.5, color: '#7CFF9E', ring: true });
+    return true;
+  },
+  mark(entity, ab, aimX, aimY, world) {
+    const target = nearestEnemy(entity, world, ab.range);
+    if (target) target.applyStatus('mark', ab.duration, world.time, { amount: ab.amount });
+    return true;
+  },
+  mark_and_strike(entity, ab, aimX, aimY, world) {
+    const target = nearestEnemy(entity, world, ab.range);
+    if (target) {
+      target.applyStatus('mark', ab.markDuration, world.time, { amount: ab.markAmount });
+      dealDamageTo(target, ab.damage, entity, world);
+    }
+    spawnEffect(world, { type: 'slash', x: entity.x, y: entity.y, angle: entity.facing, life: 0.25, color: '#e03b3b', big: true });
+    return true;
+  },
+  debuff_area(entity, ab, aimX, aimY, world) {
+    const ang = Math.atan2(aimY - entity.y, aimX - entity.x);
+    const d = Math.min(ab.range, Math.hypot(aimX - entity.x, aimY - entity.y));
+    const cx = entity.x + Math.cos(ang) * d, cy = entity.y + Math.sin(ang) * d;
+    for (const t of enemiesInRadius(cx, cy, ab.radius, entity, world)) t.applyStatus('weaken', ab.duration, world.time, { amount: ab.amount });
+    spawnEffect(world, { type: 'blast', x: cx, y: cy, radius: ab.radius, life: ab.duration, color: '#555' });
+    return true;
+  }
+};
+
+function spawnTurret(owner, world, index, ab) {
+  const angle = (index / 3) * Math.PI * 2 + Math.random() * 0.5;
+  const pos = clampToMap(owner.x + Math.cos(angle) * 40, owner.y + Math.sin(angle) * 40, world);
+  world.turrets.push({
+    id: 'turret_' + Math.random().toString(36).slice(2),
+    owner, team: owner.team, x: pos.x, y: pos.y, radius: 12,
+    hp: 40, maxHp: 40, range: 260, damage: (ab && ab.damage) || 4,
+    fireCooldown: 0, expiresAt: world.time + ((ab && ab.duration) || 8)
+  });
+}
+
+function useAbility(entity, index, aimX, aimY, world) {
+  if (!entity.alive || entity.isStunned) return false;
+  const ab = entity.sheet.abilities[index];
+  const cd = entity.cooldowns[index];
+  if (cd.remaining > 0) return false;
+  const handler = ABILITY_HANDLERS[ab.type];
+  if (!handler) return false;
+  const ok = handler(entity, ab, aimX, aimY, world);
+  if (ok) cd.remaining = cd.max;
+  return ok;
+}
+
+function useUltimate(entity, aimX, aimY, world) {
+  if (!entity.alive || entity.isStunned) return false;
+  const ab = entity.sheet.ultimate;
+  if (entity.ultCooldown.remaining > 0) return false;
+  const handler = ABILITY_HANDLERS[ab.type];
+  if (!handler) return false;
+  const ok = handler(entity, ab, aimX, aimY, world);
+  if (ok) entity.ultCooldown.remaining = entity.ultCooldown.max;
+  return ok;
+}
+
+// ---------------- world tick: projectiles & turrets ----------------
+function updateProjectiles(world, dt) {
+  for (let i = world.projectiles.length - 1; i >= 0; i--) {
+    const p = world.projectiles[i];
+    const step = Math.hypot(p.vx, p.vy) * dt;
+    p.x += p.vx * dt; p.y += p.vy * dt; p.traveled += step;
+    let hit = false;
+    for (const e of visibleEnemies(p.owner, world)) {
+      if (Math.hypot(e.x - p.x, e.y - p.y) <= p.radius + e.radius) {
+        dealDamageTo(e, p.damage, p.owner, world);
+        if (p.onHit) p.onHit(e);
+        hit = true;
+        if (!p.pierce) break;
+      }
+    }
+    const outOfMap = p.x < 0 || p.y < 0 || p.x > world.map.width || p.y > world.map.height;
+    if ((hit && !p.pierce) || p.traveled >= p.maxRange || outOfMap) world.projectiles.splice(i, 1);
+  }
+}
+
+function updateTurrets(world, dt) {
+  for (let i = world.turrets.length - 1; i >= 0; i--) {
+    const t = world.turrets[i];
+    t.fireCooldown = Math.max(0, t.fireCooldown - dt);
+    if (world.time >= t.expiresAt || t.hp <= 0) { world.turrets.splice(i, 1); continue; }
+    let target = null, bestD = t.range;
+    for (const e of world.entities) {
+      if (!e.alive || e.team === t.team || e.isStealthed) continue;
+      const d = dist(t, e);
+      if (d < bestD) { bestD = d; target = e; }
+    }
+    if (target && t.fireCooldown <= 0) {
+      t.fireCooldown = 1.1;
+      const ang = Math.atan2(target.y - t.y, target.x - t.x);
+      world.projectiles.push({
+        x: t.x, y: t.y, vx: Math.cos(ang) * 380, vy: Math.sin(ang) * 380,
+        damage: t.damage, owner: { sheet: { color: '#ffaa33', passive: null, displayName: 'a turret' }, team: t.team, damageMultiplier: 1, kills: 0 },
+        radius: 5, traveled: 0, maxRange: t.range, color: '#ffaa33'
+      });
+    }
+  }
+}
+
+function updateEffects(world) {
+  world.effects = world.effects.filter(fx => world.time - fx.createdAt < fx.life);
+}
+
+// ==== js/game/ai.js ====
+// AI controller. Tuned to play at roughly "competent average player" level:
+// it reacts on a short human-like delay, aims with a little imprecision,
+// uses cooldowns sensibly, and follows its role, but doesn't play perfectly
+// (no pixel-perfect kiting, no frame-perfect combos).
+
+const AI_AWARENESS_RANGE = 620;
+
+function newAiState() {
+  return {
+    nextDecision: Math.random() * 0.2,
+    moveDirX: 0, moveDirY: 0,
+    aimX: 0, aimY: 0,
+    targetId: null,
+    aimError: 0
+  };
+}
+
+function aiPickTarget(entity, world) {
+  const enemies = visibleEnemies(entity, world).filter(e => dist(entity, e) < AI_AWARENESS_RANGE);
+  if (!enemies.length) return null;
+  // Prefer low-hp targets, but weight by distance so AI doesn't beeline across the map.
+  let best = null, bestScore = -Infinity;
+  for (const e of enemies) {
+    const hpRatio = e.hp / e.maxHp;
+    const d = dist(entity, e);
+    const score = (1 - hpRatio) * 120 - d * 0.15;
+    if (score > bestScore) { bestScore = score; best = e; }
+  }
+  return best;
+}
+
+function aiDefensiveAbilityIndex(entity) {
+  const defensiveTypes = ['shield_self', 'heal_ally', 'heal_ally_shield', 'cleanse_ally', 'shield_ally'];
+  return entity.sheet.abilities.findIndex((a, i) =>
+    defensiveTypes.includes(a.type) && entity.cooldowns[i].remaining <= 0);
+}
+
+function aiOffensiveAbilityIndex(entity, target, world) {
+  let bestIdx = -1, bestDamage = -1;
+  entity.sheet.abilities.forEach((a, i) => {
+    if (entity.cooldowns[i].remaining > 0) return;
+    const dealsDamage = typeof a.damage === 'number' && a.damage > 0;
+    if (!dealsDamage) return;
+    const range = a.range || (a.radius ? a.radius + 80 : entity.sheet.stats.attackRange);
+    if (target && dist(entity, target) > range + 40) return;
+    if (a.damage > bestDamage) { bestDamage = a.damage; bestIdx = i; }
+  });
+  return bestIdx;
+}
+
+function aiUtilityAbilityIndex(entity, world) {
+  // healer/support: proactively buff or heal an ally that isn't full.
+  const idx = entity.sheet.abilities.findIndex((a, i) => {
+    if (entity.cooldowns[i].remaining > 0) return false;
+    return ['heal_ally', 'heal_aoe', 'shield_ally', 'cleanse_ally', 'buff_team', 'buff_ally', 'buff_self'].includes(a.type);
+  });
+  return idx;
+}
+
+function aiDecide(entity, world, st) {
+  const target = aiPickTarget(entity, world);
+  st.targetId = target ? target.id : null;
+  st.aimError = (Math.random() - 0.5) * 40; // a little imprecision, not laser-perfect
+
+  const hpRatio = entity.hp / entity.maxHp;
+  const role = entity.sheet.role;
+
+  // 1. Emergency defense.
+  if (hpRatio < 0.35) {
+    const di = aiDefensiveAbilityIndex(entity);
+    if (di >= 0) {
+      const ab = entity.sheet.abilities[di];
+      const aim = ['heal_ally', 'heal_ally_shield', 'cleanse_ally', 'shield_ally'].includes(ab.type)
+        ? pointOf(lowestHpAlly(entity, world, true, 500) || entity) : pointOf(entity);
+      useAbility(entity, di, aim.x, aim.y, world);
+    }
+  }
+
+  // 2. Healer role: keep the weakest ally topped up proactively.
+  if (role === 'healer') {
+    const weakAlly = lowestHpAlly(entity, world, false, 550);
+    if (weakAlly && weakAlly.hp / weakAlly.maxHp < 0.85) {
+      const ui = aiUtilityAbilityIndex(entity, world);
+      if (ui >= 0) {
+        const p = pointOf(weakAlly);
+        useAbility(entity, ui, p.x, p.y, world);
+      }
+    }
+  } else if (Math.random() < 0.5) {
+    // Non-healers occasionally still pop team buffs (tank rally cries, scholar's team isn't the only support).
+    const ui = aiUtilityAbilityIndex(entity, world);
+    if (ui >= 0 && ['buff_team', 'buff_self'].includes(entity.sheet.abilities[ui].type)) {
+      useAbility(entity, ui, entity.x, entity.y, world);
+    }
+  }
+
+  // 3. Ultimate when a fight is on.
+  if (target && entity.ultCooldown.remaining <= 0) {
+    const nearbyEnemies = enemiesInRadius(entity.x, entity.y, 260, entity, world).length;
+    if (nearbyEnemies > 0 || role === 'healer') {
+      const aim = pointOf(target);
+      useUltimate(entity, aim.x + st.aimError, aim.y + st.aimError, world);
+    }
+  }
+
+  // 4. Offensive ability on cooldown.
+  if (target) {
+    const oi = aiOffensiveAbilityIndex(entity, target, world);
+    if (oi >= 0 && Math.random() < 0.85) {
+      const aim = pointOf(target);
+      useAbility(entity, oi, aim.x + st.aimError, aim.y + st.aimError, world);
+    }
+  }
+
+  // 5. Movement decision.
+  if (target) {
+    const range = entity.sheet.stats.attackRange;
+    const d = dist(entity, target);
+    const isRanged = entity.sheet.attackType === 'ranged';
+    let dx = target.x - entity.x, dy = target.y - entity.y;
+    if (isRanged && d < range * 0.55) { dx = -dx; dy = -dy; } // kite away when too close
+    else if (d < range * 0.85 && isRanged) {
+      // strafe sideways around the target instead of standing still
+      const perp = Math.random() < 0.5 ? 1 : -1;
+      dx = -(target.y - entity.y) * perp;
+      dy = (target.x - entity.x) * perp;
+    }
+    if (pathBlocked(entity.x, entity.y, entity.x + dx, entity.y + dy, 70, world)) {
+      const t = dx; dx = -dy * 0.7; dy = t * 0.7; // steer around
+    }
+    st.moveDirX = dx; st.moveDirY = dy;
+    st.aimX = target.x + st.aimError; st.aimY = target.y + st.aimError;
+  } else {
+    // No target: wander gently toward map center / random point.
+    if (!st.wanderX || Math.random() < 0.02) {
+      st.wanderX = 60 + Math.random() * (world.map.width - 120);
+      st.wanderY = 60 + Math.random() * (world.map.height - 120);
+    }
+    st.moveDirX = st.wanderX - entity.x; st.moveDirY = st.wanderY - entity.y;
+    st.aimX = entity.x + st.moveDirX; st.aimY = entity.y + st.moveDirY;
+  }
+}
+
+function pointOf(e) { return { x: e.x, y: e.y }; }
+
+function updateAI(entity, world, dt) {
+  if (!entity.alive) return;
+  if (!entity.aiState) entity.aiState = newAiState();
+  const st = entity.aiState;
+  st.nextDecision -= dt;
+  if (st.nextDecision <= 0) {
+    aiDecide(entity, world, st);
+    st.nextDecision = 0.18 + Math.random() * 0.22; // ~180-400ms reaction cadence
+  }
+  applyMovement(entity, st.moveDirX, st.moveDirY, dt, world);
+
+  // Auto basic-attack whenever a target is in range, independent of the decision tick
+  // so it doesn't feel like it's missing free damage between "thinks".
+  const target = world.entities.find(e => e.id === st.targetId && e.alive);
+  if (target && dist(entity, target) <= entity.sheet.stats.attackRange + 10) {
+    useBasicAttack(entity, target.x + st.aimError, target.y + st.aimError, world);
+  }
+}
+
+// ==== js/game/modes.js ====
+// Game mode configuration and match/tournament setup.
+
+const GAME_MODES = {
+  ffa8: { id: 'ffa8', name: '8-Player Free-for-All', teamSize: 1, teamCount: 8, zone: false, desc: 'Every fighter for themself. Last one standing wins.' },
+  br4v4: { id: 'br4v4', name: '4v4 Battle Royale', teamSize: 4, teamCount: 2, zone: true, desc: 'Two squads of four. The storm closes in — last team standing wins.' },
+  br2222: { id: 'br2222', name: '2v2v2v2 Battle Royale', teamSize: 2, teamCount: 4, zone: true, desc: 'Four duos fight it out as the storm shrinks the arena.' },
+  tournament: { id: 'tournament', name: '4v4 16-Team Tournament', teamSize: 4, teamCount: 2, zone: true, desc: 'A single-elimination bracket of sixteen 4-player teams. Keep your squad together all the way to the final.' }
+};
+
+// Builds the list of character sheets (with team ids assigned) for a single match.
+function buildMatchRoster(mode, playerSheet, opponentTeams = null) {
+  playerSheet.team = 0;
+  const roster = [playerSheet];
+  for (let i = 1; i < mode.teamSize; i++) {
+    roster.push(randomCharacterSheet(`Ally ${i}`, true, 0));
+  }
+  if (opponentTeams) {
+    // opponentTeams: array (teamCount-1) of arrays of pre-built sheets (tournament mode)
+    opponentTeams.forEach((team, ti) => {
+      team.forEach(sheet => { sheet.team = ti + 1; roster.push(sheet); });
+    });
+  } else {
+    for (let t = 1; t < mode.teamCount; t++) {
+      for (let i = 0; i < mode.teamSize; i++) {
+        roster.push(randomCharacterSheet(`${teamLabel(t)} ${i + 1}`, true, t));
+      }
+    }
+  }
+  // FFA: everyone is their own team so "allies" collapses to self.
+  if (mode.teamSize === 1) roster.forEach((s, i) => { s.team = i; });
+  return roster;
+}
+
+function teamLabel(t) {
+  const names = ['', 'Crimson Squad', 'Azure Squad', 'Golden Squad', 'Violet Squad', 'Jade Squad', 'Silver Squad', 'Amber Squad'];
+  return names[t] || `Squad ${t}`;
+}
+
+function assignSpawnPositions(entities, map, mode) {
+  const pts = map.spawnPoints;
+  const perTeam = Math.ceil(pts.length / mode.teamCount);
+  const byTeam = {};
+  entities.forEach(e => { (byTeam[e.team] = byTeam[e.team] || []).push(e); });
+  Object.keys(byTeam).forEach((teamId, ti) => {
+    const base = ti * perTeam;
+    byTeam[teamId].forEach((e, i) => {
+      const p = pts[(base + i) % pts.length];
+      e.x = p.x + (Math.random() - 0.5) * 40;
+      e.y = p.y + (Math.random() - 0.5) * 40;
+    });
+  });
+}
+
+// ---------------- Tournament (16 teams of 4, single elimination) ----------------
+function generatePower(sheet) {
+  const s = sheet.stats;
+  return s.maxHp * 0.6 + s.attackDamage * 12 + (1 / s.attackCooldown) * 30 + s.speed * 0.3;
+}
+function teamPower(team) { return team.reduce((sum, s) => sum + generatePower(s), 0); }
+
+function simulateMatch(teamA, teamB) {
+  const pa = teamPower(teamA) * (0.8 + Math.random() * 0.4);
+  const pb = teamPower(teamB) * (0.8 + Math.random() * 0.4);
+  return pa >= pb ? 0 : 1;
+}
+
+function createTournament(playerSheet) {
+  playerSheet.team = 0;
+  const playerTeam = [playerSheet, randomCharacterSheet('Ally 1', true, 0), randomCharacterSheet('Ally 2', true, 0), randomCharacterSheet('Ally 3', true, 0)];
+  const teams = [playerTeam];
+  for (let i = 1; i < 16; i++) {
+    teams.push([0, 1, 2, 3].map(j => randomCharacterSheet(`${teamLabel((i % 7) + 1)} ${j + 1}`, true, 0)));
+  }
+  const round1 = [];
+  for (let i = 0; i < 16; i += 2) round1.push({ teamIds: [i, i + 1], winner: null });
+  return {
+    teams, // fixed roster per team index; index 0 is always the player's team
+    playerTeamId: 0,
+    rounds: [round1],
+    currentRound: 0,
+    roundSimulated: false,
+    eliminated: false,
+    champion: null
+  };
+}
+
+// Advances every match in the current round except the one containing the
+// player's team (that one is resolved by actually playing it, via
+// resolvePlayerMatch). Returns the matchup object the player must play.
+function advanceTournamentRound(tourney) {
+  const round = tourney.rounds[tourney.currentRound];
+  let playerMatch = null;
+  for (const m of round) {
+    if (m.teamIds.includes(tourney.playerTeamId)) { playerMatch = m; continue; }
+    m.winner = m.teamIds[simulateMatch(tourney.teams[m.teamIds[0]], tourney.teams[m.teamIds[1]])] === 0 ? m.teamIds[0] : m.teamIds[1];
+  }
+  tourney.roundSimulated = true;
+  return playerMatch;
+}
+
+function resolvePlayerMatchAndAdvance(tourney, playerWon) {
+  const round = tourney.rounds[tourney.currentRound];
+  const playerMatch = round.find(m => m.teamIds.includes(tourney.playerTeamId));
+  const opponentId = playerMatch.teamIds.find(id => id !== tourney.playerTeamId);
+  playerMatch.winner = playerWon ? tourney.playerTeamId : opponentId;
+
+  if (!playerWon) { tourney.eliminated = true; return; }
+
+  if (round.length === 1) { tourney.champion = tourney.playerTeamId; return; }
+
+  const winners = round.map(m => m.winner);
+  const nextRound = [];
+  for (let i = 0; i < winners.length; i += 2) nextRound.push({ teamIds: [winners[i], winners[i + 1]], winner: null });
+  tourney.rounds.push(nextRound);
+  tourney.currentRound++;
+  tourney.roundSimulated = false;
+}
+
+// ==== js/game/engine.js ====
+// Drives a single match: owns the world, steps AI/physics/combat each frame,
+// tracks the shrinking storm zone for battle-royale modes, and the camera.
+
+function clampNum(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+class MatchEngine {
+  constructor({ map, mode, roster, playerSheet, input, canvas, onEnd, onKillFeed }) {
+    this.map = map;
+    this.mode = mode;
+    this.input = input;
+    this.canvas = canvas;
+    this.onEnd = onEnd;
+    this.onKillFeed = onKillFeed || (() => {});
+    this.ended = false;
+    this.camera = { x: 0, y: 0 };
+
+    this.world = {
+      time: 0, map, entities: [], projectiles: [], turrets: [], effects: [],
+      onDeath: (entity, killer) => this.handleDeath(entity, killer)
+    };
+
+    assignSpawnPositions(roster, map, mode);
+    this.world.entities = roster.map(sheet => new Entity(sheet, sheet.x, sheet.y, this.world));
+    this.playerEntity = this.world.entities.find(e => e.sheet === playerSheet);
+
+    this.zone = mode.zone ? {
+      cx: map.width / 2, cy: map.height / 2,
+      startRadius: Math.max(map.width, map.height) * 0.72,
+      radius: Math.max(map.width, map.height) * 0.72,
+      endRadius: 240, duration: 150, elapsed: 0, nextDamageTick: 1
+    } : null;
+
+    this._lastPlayerX = this.playerEntity.x;
+    this._lastPlayerY = this.playerEntity.y;
+  }
+
+  update(dt) {
+    if (this.ended) return;
+    this.world.time += dt;
+    this.updateCamera();
+    this.handlePlayerInput(dt);
+    for (const e of this.world.entities) {
+      if (e.isAI && e.alive) updateAI(e, this.world, dt);
+    }
+    for (const e of this.world.entities) e.update(dt, this.world);
+    updateProjectiles(this.world, dt);
+    updateTurrets(this.world, dt);
+    updateEffects(this.world);
+    if (this.zone) this.updateZone(dt);
+    this.checkWinCondition();
+  }
+
+  handlePlayerInput(dt) {
+    const pe = this.playerEntity;
+    if (!pe.alive) { this.input.clearFrame(); return; }
+    const move = this.input.getMove();
+    applyMovement(pe, move.x, move.y, dt, this.world);
+
+    const screenAim = this.input.getAimPoint(pe.x - this.camera.x, pe.y - this.camera.y);
+    const worldAim = { x: screenAim.x + this.camera.x, y: screenAim.y + this.camera.y };
+    this.lastAim = worldAim;
+    pe.facing = Math.atan2(worldAim.y - pe.y, worldAim.x - pe.x);
+
+    if (this.input.isFiring()) useBasicAttack(pe, worldAim.x, worldAim.y, this.world);
+    for (let i = 0; i < 4; i++) {
+      if (this.input.consumePending('ability' + (i + 1))) useAbility(pe, i, worldAim.x, worldAim.y, this.world);
+    }
+    if (this.input.consumePending('ultimate')) useUltimate(pe, worldAim.x, worldAim.y, this.world);
+    this.input.clearFrame();
+  }
+
+  updateZone(dt) {
+    const z = this.zone;
+    z.elapsed += dt;
+    const t = Math.min(1, z.elapsed / z.duration);
+    z.radius = z.startRadius + (z.endRadius - z.startRadius) * t;
+    z.nextDamageTick -= dt;
+    if (z.nextDamageTick <= 0) {
+      z.nextDamageTick = 1;
+      for (const e of this.world.entities) {
+        if (!e.alive) continue;
+        const d = Math.hypot(e.x - z.cx, e.y - z.cy);
+        if (d > z.radius) e.takeDamage(e.maxHp * 0.05, null, this.world);
+      }
+    }
+  }
+
+  updateCamera() {
+    const pe = this.playerEntity;
+    if (pe.alive) { this._lastPlayerX = pe.x; this._lastPlayerY = pe.y; }
+    const focusX = this._lastPlayerX, focusY = this._lastPlayerY;
+    this.camera.x = clampNum(focusX - this.canvas.width / 2, 0, Math.max(0, this.map.width - this.canvas.width));
+    this.camera.y = clampNum(focusY - this.canvas.height / 2, 0, Math.max(0, this.map.height - this.canvas.height));
+  }
+
+  handleDeath(entity, killer) {
+    this.onKillFeed(entity, killer);
+  }
+
+  checkWinCondition() {
+    if (this.ended) return;
+    const aliveTeams = new Set(this.world.entities.filter(e => e.alive).map(e => e.team));
+    if (aliveTeams.size <= 1) {
+      this.ended = true;
+      const winnerTeam = aliveTeams.size === 1 ? [...aliveTeams][0] : null;
+      const playerWon = winnerTeam !== null && winnerTeam === this.playerEntity.team;
+      this.onEnd({ playerWon, winnerTeam });
+    }
+  }
+}
+
+// ==== js/game/hub.js ====
+// The main island hub: free walk-around area with decorations and portals
+// that open the mode/map select UI. No combat happens here.
+
+const PORTAL_INTERACT_RADIUS = 80;
+
+class HubEngine {
+  constructor({ map, input, canvas, characterSheet, onPortalEnter }) {
+    this.map = map;
+    this.input = input;
+    this.canvas = canvas;
+    this.onPortalEnter = onPortalEnter;
+    this.camera = { x: 0, y: 0 };
+    this.player = {
+      x: map.spawnPoint.x, y: map.spawnPoint.y, radius: 18, facing: 0,
+      alive: true, isStunned: false, speedMultiplier: 1,
+      sheet: characterSheet
+    };
+    this.nearPortal = null;
+    this.time = 0;
+  }
+
+  update(dt) {
+    this.time += dt;
+    const move = this.input.getMove();
+    applyMovement(this.player, move.x, move.y, dt, { map: this.map });
+
+    this.camera.x = clampNum(this.player.x - this.canvas.width / 2, 0, Math.max(0, this.map.width - this.canvas.width));
+    this.camera.y = clampNum(this.player.y - this.canvas.height / 2, 0, Math.max(0, this.map.height - this.canvas.height));
+
+    this.nearPortal = this.map.portals.find(p => Math.hypot(p.x - this.player.x, p.y - this.player.y) < PORTAL_INTERACT_RADIUS) || null;
+    this.input.setInteractVisible(!!this.nearPortal);
+    if (this.nearPortal && this.input.consumePending('interact')) {
+      this.onPortalEnter(this.nearPortal.id);
+    }
+    this.input.clearFrame();
+  }
+}
+
+// ==== js/game/renderer.js ====
+// All canvas drawing: arenas, the hub island, entities, projectiles, turrets,
+// ability effects, and the shrinking storm zone. Pure geometric shapes and
+// text so the whole game needs zero image assets.
+
+function drawGroundGrid(ctx, camera, canvas, map) {
+  ctx.fillStyle = map.bg;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = map.accent;
+  ctx.globalAlpha = 0.35;
+  ctx.lineWidth = 1;
+  const grid = 80;
+  const startX = -((camera.x) % grid);
+  const startY = -((camera.y) % grid);
+  for (let x = startX; x < canvas.width; x += grid) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+  }
+  for (let y = startY; y < canvas.height; y += grid) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  // map border
+  ctx.strokeStyle = '#000000aa';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(-camera.x, -camera.y, map.width, map.height);
+}
+
+function drawObstacles(ctx, camera, map) {
+  ctx.fillStyle = map.accent;
+  ctx.strokeStyle = '#00000055';
+  ctx.lineWidth = 2;
+  for (const o of map.obstacles) {
+    ctx.fillRect(o.x - camera.x, o.y - camera.y, o.w, o.h);
+    ctx.strokeRect(o.x - camera.x, o.y - camera.y, o.w, o.h);
+  }
+}
+
+function worldToScreen(x, y, camera) { return { x: x - camera.x, y: y - camera.y }; }
+
+const TEAM_COLORS = ['#4fd1ff', '#ff5c5c', '#ffd24f', '#9d6bff', '#5cff9e', '#ff8ac8', '#c0c0c0', '#ff9c3f'];
+
+function isVisibleToViewer(entity, viewerTeam) {
+  return entity.team === viewerTeam || !entity.isStealthed;
+}
+
+function drawEntity(ctx, entity, camera, viewerTeam, isPlayer) {
+  if (!entity.alive) return;
+  if (!isVisibleToViewer(entity, viewerTeam)) return;
+  const p = worldToScreen(entity.x, entity.y, camera);
+  const alpha = entity.isStealthed ? 0.35 : 1;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  // team ring
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, entity.radius + 6, 0, Math.PI * 2);
+  ctx.strokeStyle = TEAM_COLORS[entity.team % TEAM_COLORS.length];
+  ctx.lineWidth = isPlayer ? 4 : 2;
+  ctx.stroke();
+
+  // body
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, entity.radius, 0, Math.PI * 2);
+  ctx.fillStyle = entity.sheet.color;
+  ctx.fill();
+  ctx.strokeStyle = entity.sheet.colorDark;
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // facing indicator
+  ctx.beginPath();
+  ctx.moveTo(p.x, p.y);
+  ctx.lineTo(p.x + Math.cos(entity.facing) * (entity.radius + 10), p.y + Math.sin(entity.facing) * (entity.radius + 10));
+  ctx.strokeStyle = '#ffffffcc';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // glyph
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '14px sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(entity.sheet.glyph, p.x, p.y);
+
+  ctx.restore();
+
+  // health / shield bars
+  const barW = 44, barH = 5;
+  const bx = p.x - barW / 2, by = p.y - entity.radius - 20;
+  ctx.fillStyle = '#000000aa';
+  ctx.fillRect(bx - 1, by - 1, barW + 2, barH + 2);
+  ctx.fillStyle = '#3a3a3a';
+  ctx.fillRect(bx, by, barW, barH);
+  ctx.fillStyle = entity.hp / entity.maxHp > 0.3 ? '#4fd15a' : '#e05c3b';
+  ctx.fillRect(bx, by, barW * Math.max(0, entity.hp / entity.maxHp), barH);
+  if (entity.shield > 0) {
+    ctx.fillStyle = '#6fc9ff';
+    ctx.fillRect(bx, by - 4, barW * Math.min(1, entity.shield / entity.maxShield), 3);
+  }
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText((isPlayer ? 'You — ' : '') + entity.sheet.displayName, p.x, by - 8);
+}
+
+function drawProjectiles(ctx, world, camera) {
+  for (const pr of world.projectiles) {
+    const p = worldToScreen(pr.x, pr.y, camera);
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, pr.radius, 0, Math.PI * 2);
+    ctx.fillStyle = pr.color || '#fff';
+    ctx.fill();
+  }
+}
+
+function drawTurrets(ctx, world, camera) {
+  for (const t of world.turrets) {
+    const p = worldToScreen(t.x, t.y, camera);
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, t.radius, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffaa33';
+    ctx.fill();
+    ctx.strokeStyle = '#7a4713';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+}
+
+function drawEffects(ctx, world, camera) {
+  for (const fx of world.effects) {
+    const t = (world.time - fx.createdAt) / fx.life;
+    const alpha = Math.max(0, 1 - t);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    if (fx.type === 'blast') {
+      const p = worldToScreen(fx.x, fx.y, camera);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, fx.radius * (fx.ring ? 1 : (0.3 + t * 0.7)), 0, Math.PI * 2);
+      if (fx.ring) { ctx.strokeStyle = fx.color || '#fff'; ctx.lineWidth = 3; ctx.stroke(); }
+      else { ctx.fillStyle = fx.color || '#fff'; ctx.fill(); }
+    } else if (fx.type === 'slash') {
+      const p = worldToScreen(fx.x, fx.y, camera);
+      ctx.strokeStyle = fx.color || '#fff';
+      ctx.lineWidth = fx.big ? 5 : 3;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, fx.big ? 40 : 28, fx.angle - 0.6, fx.angle + 0.6);
+      ctx.stroke();
+    } else if (fx.type === 'shieldpop') {
+      const p = worldToScreen(fx.x, fx.y, camera);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 24 + t * 10, 0, Math.PI * 2);
+      ctx.strokeStyle = fx.color || '#6fc9ff';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    } else if (fx.type === 'heal') {
+      const p = worldToScreen(fx.x, fx.y, camera);
+      ctx.strokeStyle = '#7CFF9E';
+      ctx.lineWidth = fx.big ? 4 : 3;
+      const s = fx.big ? 14 : 10;
+      ctx.beginPath(); ctx.moveTo(p.x - s, p.y - (1 - t) * 10); ctx.lineTo(p.x + s, p.y - (1 - t) * 10); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(p.x, p.y - s - (1 - t) * 10); ctx.lineTo(p.x, p.y + s - (1 - t) * 10); ctx.stroke();
+    } else if (fx.type === 'dashtrail') {
+      const a = worldToScreen(fx.x1, fx.y1, camera), b = worldToScreen(fx.x2, fx.y2, camera);
+      ctx.strokeStyle = fx.color || '#fff';
+      ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    } else if (fx.type === 'taunt') {
+      const p = worldToScreen(fx.x, fx.y, camera);
+      ctx.fillStyle = '#ffde59';
+      ctx.font = 'bold 20px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('!', p.x, p.y - 40 - t * 20);
+    }
+    ctx.restore();
+  }
+}
+
+function drawZone(ctx, zone, camera, canvas) {
+  if (!zone) return;
+  const cx = zone.cx - camera.x, cy = zone.cy - camera.y;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, canvas.width, canvas.height);
+  ctx.arc(cx, cy, zone.radius, 0, Math.PI * 2, true);
+  ctx.fillStyle = 'rgba(120,20,20,0.28)';
+  ctx.fill('evenodd');
+  ctx.beginPath();
+  ctx.arc(cx, cy, zone.radius, 0, Math.PI * 2);
+  ctx.strokeStyle = '#ff6b4f';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  ctx.restore();
+}
+
+function renderMatch(ctx, canvas, engine) {
+  const { camera, map, world, playerEntity } = engine;
+  drawGroundGrid(ctx, camera, canvas, map);
+  drawObstacles(ctx, camera, map);
+  drawZone(ctx, engine.zone, camera, canvas);
+  drawProjectiles(ctx, world, camera);
+  drawTurrets(ctx, world, camera);
+  for (const e of world.entities) drawEntity(ctx, e, camera, playerEntity.team, e === playerEntity);
+  drawEffects(ctx, world, camera);
+}
+
+// ---------------- Hub rendering ----------------
+function drawDecoration(ctx, d, camera) {
+  const p = worldToScreen(d.x, d.y, camera);
+  if (d.type === 'tree') {
+    ctx.fillStyle = '#5c3a1e'; ctx.fillRect(p.x - 4, p.y - 6, 8, 24);
+    ctx.beginPath(); ctx.arc(p.x, p.y - 20, 22, 0, Math.PI * 2); ctx.fillStyle = '#2e7d3d'; ctx.fill();
+  } else if (d.type === 'statue') {
+    ctx.fillStyle = '#8a8a8a'; ctx.fillRect(p.x - 14, p.y - 40, 28, 50);
+    ctx.beginPath(); ctx.arc(p.x, p.y - 50, 12, 0, Math.PI * 2); ctx.fill();
+  } else if (d.type === 'flag') {
+    ctx.fillStyle = '#7a6a4a'; ctx.fillRect(p.x - 2, p.y - 50, 4, 50);
+    ctx.fillStyle = '#e0a03b'; ctx.beginPath(); ctx.moveTo(p.x + 2, p.y - 50); ctx.lineTo(p.x + 34, p.y - 40); ctx.lineTo(p.x + 2, p.y - 30); ctx.fill();
+  } else if (d.type === 'rock') {
+    ctx.fillStyle = '#5a5a5a';
+    ctx.beginPath();
+    ctx.moveTo(p.x - 16, p.y + 8); ctx.lineTo(p.x - 8, p.y - 10); ctx.lineTo(p.x + 10, p.y - 8); ctx.lineTo(p.x + 16, p.y + 8); ctx.closePath();
+    ctx.fill();
+  }
+}
+
+function drawPortal(ctx, portal, camera, time, near) {
+  const p = worldToScreen(portal.x, portal.y, camera);
+  const pulse = 34 + Math.sin(time * 3) * 4;
+  ctx.save();
+  ctx.beginPath(); ctx.arc(p.x, p.y, pulse, 0, Math.PI * 2);
+  ctx.fillStyle = portal.color + '55';
+  ctx.fill();
+  ctx.beginPath(); ctx.arc(p.x, p.y, 26, 0, Math.PI * 2);
+  ctx.strokeStyle = portal.color; ctx.lineWidth = near ? 5 : 3; ctx.stroke();
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 13px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(portal.label, p.x, p.y - 42);
+  if (near) { ctx.font = '12px sans-serif'; ctx.fillStyle = '#ffde59'; ctx.fillText('Press E / tap E to enter', p.x, p.y + 46); }
+  ctx.restore();
+}
+
+function drawHubPlayer(ctx, hub, camera) {
+  const pl = hub.player;
+  const p = worldToScreen(pl.x, pl.y, camera);
+  ctx.save();
+  ctx.beginPath(); ctx.arc(p.x, p.y, pl.radius + 5, 0, Math.PI * 2);
+  ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3; ctx.stroke();
+  ctx.beginPath(); ctx.arc(p.x, p.y, pl.radius, 0, Math.PI * 2);
+  ctx.fillStyle = pl.sheet.color; ctx.fill();
+  ctx.strokeStyle = pl.sheet.colorDark; ctx.lineWidth = 3; ctx.stroke();
+  ctx.fillStyle = '#fff'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(pl.sheet.glyph, p.x, p.y);
+  ctx.restore();
+  ctx.fillStyle = '#fff'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText(pl.sheet.displayName, p.x, p.y - pl.radius - 14);
+}
+
+function renderHub(ctx, canvas, hub) {
+  drawGroundGrid(ctx, hub.camera, canvas, hub.map);
+  drawObstacles(ctx, hub.camera, hub.map);
+  for (const d of hub.map.decorations) drawDecoration(ctx, d, hub.camera);
+  for (const portal of hub.map.portals) drawPortal(ctx, portal, hub.camera, hub.time, hub.nearPortal === portal);
+  drawHubPlayer(ctx, hub, hub.camera);
+}
+
+// ==== js/ui.js ====
+// DOM rendering helpers for every non-canvas screen: character creation,
+// summaries, mode/map pickers, the tournament bracket, and the match HUD.
+
+function pct(v) { return Math.round(v * 100) + '%'; }
+
+const ABILITY_DESCRIPTIONS = {
+  shield_self: a => `Shields self for ${pct(a.value)} of max HP.${a.taunt ? ' Also draws enemy attention.' : ''}`,
+  melee_strike: a => `Strikes for ${Math.round(a.damage)} damage.${a.stun ? ` Stuns for ${a.stun}s.` : ''}${a.executeBonus ? ' Extra damage vs. healthy targets.' : ''}`,
+  projectile: a => `Fires a bolt for ${Math.round(a.damage)} damage.${a.pierce ? ' Pierces through enemies.' : ''}`,
+  projectile_slow: a => `Fires a bolt for ${Math.round(a.damage)} damage that slows the target.`,
+  aoe_damage: a => `Blasts a wide area for ${Math.round(a.damage)} damage.${a.slow ? ' Slows survivors.' : ''}${a.knockback ? ' Knocks them back.' : ''}${a.stun ? ' Stuns briefly.' : ''}`,
+  aoe_damage_selfheal: a => `Unleashes a flurry for ${Math.round(a.damage)} damage around self and heals for ${pct(a.healPct)} of max HP.`,
+  aoe_damage_summon: a => `Blasts nearby foes for ${Math.round(a.damage)} damage and deploys ${a.turrets} turret(s).`,
+  dash: a => `Dashes ${a.backward ? 'away from' : 'toward'} the fight.${a.damage ? ` Deals ${Math.round(a.damage)} damage on arrival.` : ''}${a.stun ? ' Stuns on landing.' : ''}`,
+  dash_aoe: a => `Dashes forward and slams down for ${Math.round(a.damage)} damage in a wide radius.`,
+  stealth: a => `Turns invisible to enemies for ${a.duration}s.`,
+  summon_turret: a => `Deploys an automated turret that fires at nearby enemies for ${a.duration}s.`,
+  buff_self: a => `Empowers self: +${pct(a.amount)} ${a.stat} for ${a.duration}s.`,
+  buff_team: a => `Empowers nearby allies: +${pct(a.amount)} ${a.stat} for ${a.duration}s.`,
+  buff_ally: a => `Empowers the ally who needs it most for ${a.duration}s.`,
+  buff_team_shield: a => `Shields and empowers all nearby allies.`,
+  heal_ally: a => `Heals the ally with the lowest health for ${pct(a.value)} of their max HP.`,
+  heal_ally_shield: a => `Heavily heals and shields the ally with the lowest health.`,
+  shield_ally: a => `Shields the ally with the lowest health for ${pct(a.value)} of max HP.`,
+  cleanse_ally: a => `Cleanses debuffs from and heals the weakest ally.`,
+  heal_aoe: a => `Heals all nearby allies for ${pct(a.value)} of max HP.${a.cleanse ? ' Also cleanses debuffs.' : ''}`,
+  mark: a => `Marks an enemy, increasing damage they take by ${pct(a.amount)} for ${a.duration}s.`,
+  mark_and_strike: a => `Marks an enemy and strikes them for ${Math.round(a.damage)} damage.`,
+  debuff_area: a => `Weakens enemies in an area, reducing their damage for ${a.duration}s.`
+};
+
+function describeAbility(ability) {
+  const fn = ABILITY_DESCRIPTIONS[ability.type];
+  return fn ? fn(ability) : 'A unique effect.';
+}
+
+function cooldownLabel(ability) { return `${ability.cooldown}s cooldown`; }
+
+// ---------------- Affinity select ----------------
+function renderAffinityGrid(container, selectedId, onSelect) {
+  container.innerHTML = '';
+  for (const a of AFFINITIES) {
+    const card = document.createElement('div');
+    card.className = 'pick-card' + (a.id === selectedId ? ' selected' : '');
+    card.style.setProperty('--accent', a.color);
+    card.innerHTML = `<span class="glyph" style="color:${a.color}">${a.glyph}</span><div class="pname">${a.name}</div>`;
+    card.addEventListener('click', () => onSelect(a.id));
+    container.appendChild(card);
+  }
+}
+function renderAffinityDetail(container, affinity) {
+  if (!affinity) { container.textContent = 'Select an affinity to see its trait.'; return; }
+  container.innerHTML = `<b style="color:${affinity.color}">${affinity.name}</b> — ${affinity.tagline}<br><br>
+    <b>Passive: ${affinity.passive.name}</b> — ${affinity.passive.desc}`;
+}
+
+// ---------------- Teknik select ----------------
+function renderRoleTabs(container, activeRole, onSelect) {
+  container.innerHTML = '';
+  for (const r of ROLES) {
+    const tab = document.createElement('div');
+    tab.className = 'role-tab' + (r.id === activeRole ? ' active' : '');
+    tab.textContent = r.name;
+    tab.addEventListener('click', () => onSelect(r.id));
+    container.appendChild(tab);
+  }
+}
+function renderTeknikGrid(container, role, selectedId, onSelect) {
+  container.innerHTML = '';
+  for (const t of TEKNIKS.filter(t => t.role === role)) {
+    const card = document.createElement('div');
+    card.className = 'pick-card' + (t.id === selectedId ? ' selected' : '');
+    card.style.setProperty('--accent', '#4fd1ff');
+    card.innerHTML = `<span class="glyph">${t.weaponGlyph}</span><div class="pname">${t.name}</div><div class="prole">${ROLES.find(r => r.id === t.role).name}</div>`;
+    card.addEventListener('click', () => onSelect(t.id));
+    container.appendChild(card);
+  }
+}
+function renderTeknikDetail(container, teknik) {
+  if (!teknik) { container.textContent = 'Select a teknik to see its role.'; return; }
+  const role = ROLES.find(r => r.id === teknik.role);
+  container.innerHTML = `<b>${teknik.name}</b> — ${role.desc}<br><br>
+    HP ${teknik.baseStats.hp} · Armor ${teknik.baseStats.armor} · Speed ${teknik.baseStats.speed} ·
+    ${teknik.attackType === 'melee' ? 'Melee' : 'Ranged'} attack (${teknik.baseStats.attackDamage} dmg)`;
+}
+
+// ---------------- Summary ----------------
+function renderSummary(container, sheet) {
+  const abilityCards = sheet.abilities.map(a => `
+    <div class="ability-card">
+      <div class="aname">${a.name}</div>
+      <div class="adesc">${describeAbility(a)} (${cooldownLabel(a)})</div>
+    </div>`).join('');
+  container.innerHTML = `
+    <div class="summary-header">
+      <div class="summary-avatar" style="background:${sheet.color}22;border-color:${sheet.color}">${sheet.glyph}</div>
+      <div>
+        <div style="font-size:1.3rem;font-weight:700">${sheet.affinity.name} ${sheet.teknik.name}</div>
+        <div style="color:#9aa">${ROLES.find(r => r.id === sheet.role).name} · Passive: ${sheet.passive.name}</div>
+      </div>
+    </div>
+    <div class="summary-stats">
+      <div>HP: ${sheet.stats.maxHp}</div>
+      <div>Armor: ${sheet.stats.armor}</div>
+      <div>Speed: ${sheet.stats.speed}</div>
+      <div>Attack: ${sheet.stats.attackDamage} dmg (${sheet.attackType})</div>
+    </div>
+    <p style="color:#9aa;font-size:0.85rem">${sheet.passive.desc}</p>
+    <div class="ability-list">
+      ${abilityCards}
+      <div class="ability-card ult">
+        <div class="aname">★ ${sheet.ultimate.name} (Ultimate)</div>
+        <div class="adesc">${describeAbility(sheet.ultimate)} (${cooldownLabel(sheet.ultimate)})</div>
+      </div>
+    </div>`;
+}
+
+// ---------------- Mode / map select ----------------
+function renderMapGrid(container, selectedId, onSelect) {
+  container.innerHTML = '';
+  for (const m of MAPS) {
+    const card = document.createElement('div');
+    card.className = 'pick-card' + (m.id === selectedId ? ' selected' : '');
+    card.style.setProperty('--accent', m.accent);
+    card.innerHTML = `<div class="map-card-img" style="background:${m.bg};border:1px solid ${m.accent}"></div><div class="pname">${m.name}</div>`;
+    card.addEventListener('click', () => onSelect(m.id));
+    container.appendChild(card);
+  }
+}
+
+// ---------------- Match HUD ----------------
+function updateMatchHud(engine, elapsed) {
+  const pe = engine.playerEntity;
+  const hpFill = document.getElementById('hud-hp-fill');
+  const shieldFill = document.getElementById('hud-shield-fill');
+  const hpText = document.getElementById('hud-hp-text');
+  hpFill.style.width = Math.max(0, (pe.hp / pe.maxHp) * 100) + '%';
+  shieldFill.style.width = Math.min(100, (pe.shield / pe.maxShield) * 100) + '%';
+  hpText.textContent = `${Math.max(0, Math.round(pe.hp))} / ${pe.maxHp} HP${pe.shield > 0 ? ` (+${Math.round(pe.shield)} shield)` : ''}`;
+
+  const aliveTeams = new Set(engine.world.entities.filter(e => e.alive).map(e => e.team)).size;
+  const aliveCount = engine.world.entities.filter(e => e.alive).length;
+  const zoneInfo = engine.zone ? ` · Storm radius: ${Math.round(engine.zone.radius)}` : '';
+  document.getElementById('hud-topinfo').textContent =
+    `${engine.mode.name} · ${aliveTeams > 1 ? aliveTeams + ' teams left' : ''} ${aliveCount} fighters left${zoneInfo}`;
+
+  const abRoot = document.getElementById('hud-abilities');
+  if (abRoot.childElementCount !== pe.sheet.abilities.length + 1) {
+    abRoot.innerHTML = '';
+    pe.sheet.abilities.forEach((a, i) => {
+      const el = document.createElement('div');
+      el.className = 'hud-ab'; el.dataset.idx = i;
+      el.innerHTML = `<span>${i + 1}<br>${a.name.split(' ').pop()}</span><div class="cd-overlay" style="display:none"></div>`;
+      abRoot.appendChild(el);
+    });
+    const ultEl = document.createElement('div');
+    ultEl.className = 'hud-ab ult'; ultEl.dataset.idx = 'ult';
+    ultEl.innerHTML = `<span>ULT<br>${pe.sheet.ultimate.name.split(' ').pop()}</span><div class="cd-overlay" style="display:none"></div>`;
+    abRoot.appendChild(ultEl);
+  }
+  pe.cooldowns.forEach((cd, i) => {
+    const overlay = abRoot.children[i].querySelector('.cd-overlay');
+    if (cd.remaining > 0.05) { overlay.style.display = 'flex'; overlay.textContent = Math.ceil(cd.remaining); }
+    else overlay.style.display = 'none';
+  });
+  const ultOverlay = abRoot.children[pe.cooldowns.length].querySelector('.cd-overlay');
+  if (pe.ultCooldown.remaining > 0.05) { ultOverlay.style.display = 'flex'; ultOverlay.textContent = Math.ceil(pe.ultCooldown.remaining); }
+  else ultOverlay.style.display = 'none';
+}
+
+function pushKillFeed(text) {
+  const feed = document.getElementById('hud-killfeed');
+  const row = document.createElement('div');
+  row.textContent = text;
+  feed.appendChild(row);
+  setTimeout(() => row.remove(), 4500);
+  while (feed.childElementCount > 5) feed.removeChild(feed.firstChild);
+}
+
+// ---------------- Tournament bracket ----------------
+function teamDisplayName(tourney, teamId) {
+  if (teamId === tourney.playerTeamId) return 'Your Team';
+  const t = tourney.teams[teamId];
+  return t[0].displayName.split(' ').slice(0, 2).join(' ') || `Team ${teamId + 1}`;
+}
+function renderTournament(container, tourney) {
+  container.innerHTML = '';
+  tourney.rounds.forEach((round, ri) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'bracket-round';
+    const roundNames = ['Round of 16', 'Quarterfinals', 'Semifinals', 'Final'];
+    wrap.innerHTML = `<h4>${roundNames[ri] || `Round ${ri + 1}`}</h4>`;
+    round.forEach(m => {
+      const row = document.createElement('div');
+      const isPlayer = m.teamIds.includes(tourney.playerTeamId);
+      row.className = 'matchup' + (isPlayer ? ' player' : '') + (m.winner !== null ? ' done' : '');
+      const [a, b] = m.teamIds;
+      const nameA = teamDisplayName(tourney, a), nameB = teamDisplayName(tourney, b);
+      const result = m.winner !== null ? ` — winner: ${teamDisplayName(tourney, m.winner)}` : (isPlayer ? ' (your match)' : ' (pending)');
+      row.textContent = `${nameA} vs ${nameB}${result}`;
+      wrap.appendChild(row);
+    });
+    container.appendChild(wrap);
+  });
+}
+
+// ==== js/main.js ====
+// Top-level state machine wiring every screen to the engine, input, and
+// renderer. This is the only file that knows about screen transitions.
+
+const SAVE_KEY = 'affinityGameCharacter';
+
+let canvas, ctx, input;
+let currentScreenId = 'screen-menu';
+let lastFrameTime = 0;
+
+let selectedAffinityId = null;
+let selectedTeknikId = null;
+let currentTeknikRole = 'tank';
+let draftSheet = null;
+
+let playerSheet = null; // the confirmed, active character
+let hubEngine = null;
+let matchEngine = null;
+
+let pendingModeId = null;
+let pendingMapId = null;
+let tournamentOpponentId = null;
+let activeTournament = null;
+let lastMatchResult = null;
+let lastMatchWasTournament = false;
+
+function setScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  currentScreenId = id;
+  canvas.classList.toggle('visible', id === 'screen-hub' || id === 'screen-match');
+  if (id === 'screen-hub') input.setContext('hub');
+  else if (id === 'screen-match') input.setContext('match');
+  else input.setContext('hidden');
+}
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+// ---------------- Character creation ----------------
+function openAffinityScreen() {
+  refreshAffinityScreen();
+  setScreen('screen-affinity');
+}
+function refreshAffinityScreen() {
+  renderAffinityGrid(document.getElementById('affinity-grid'), selectedAffinityId, id => {
+    selectedAffinityId = id;
+    refreshAffinityScreen();
+  });
+  renderAffinityDetail(document.getElementById('affinity-detail'), selectedAffinityId ? AFFINITY_BY_ID[selectedAffinityId] : null);
+  document.getElementById('btn-affinity-next').disabled = !selectedAffinityId;
+}
+
+function openTeknikScreen() {
+  refreshTeknikScreen();
+  setScreen('screen-teknik');
+}
+function refreshTeknikScreen() {
+  renderRoleTabs(document.getElementById('role-tabs'), currentTeknikRole, role => {
+    currentTeknikRole = role; selectedTeknikId = null; refreshTeknikScreen();
+  });
+  renderTeknikGrid(document.getElementById('teknik-grid'), currentTeknikRole, selectedTeknikId, id => {
+    selectedTeknikId = id; refreshTeknikScreen();
+  });
+  renderTeknikDetail(document.getElementById('teknik-detail'), selectedTeknikId ? TEKNIK_BY_ID[selectedTeknikId] : null);
+  document.getElementById('btn-teknik-next').disabled = !selectedTeknikId;
+}
+
+function openSummaryScreen() {
+  draftSheet = createCharacterSheet({ affinityId: selectedAffinityId, teknikId: selectedTeknikId, isAI: false });
+  renderSummary(document.getElementById('summary-content'), draftSheet);
+  document.getElementById('summary-name').value = '';
+  setScreen('screen-summary');
+}
+
+function confirmCharacter() {
+  const name = document.getElementById('summary-name').value.trim();
+  if (name) draftSheet.displayName = name;
+  playerSheet = draftSheet;
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ affinityId: selectedAffinityId, teknikId: selectedTeknikId, name }));
+  } catch (e) { /* storage unavailable, ignore */ }
+  activeTournament = null;
+  enterHub();
+}
+
+function enterHub() {
+  document.getElementById('hub-player-tag').textContent =
+    `${playerSheet.displayName} — ${ROLES.find(r => r.id === playerSheet.role).name}`;
+  hubEngine = new HubEngine({ map: HUB_MAP, input, canvas, characterSheet: playerSheet, onPortalEnter: handlePortalEnter });
+  setScreen('screen-hub');
+}
+
+function handlePortalEnter(portalId) {
+  if (portalId === 'character') {
+    selectedAffinityId = null; selectedTeknikId = null; currentTeknikRole = 'tank';
+    openAffinityScreen();
+    return;
+  }
+  if (portalId === 'tournament') { openTournamentScreen(); return; }
+  pendingModeId = portalId;
+  openModeSelect(GAME_MODES[portalId]);
+}
+
+// ---------------- Mode / map select ----------------
+function refreshMapGrid() {
+  renderMapGrid(document.getElementById('map-grid'), pendingMapId, id => {
+    pendingMapId = id;
+    refreshMapGrid();
+    document.getElementById('btn-modeselect-start').disabled = false;
+  });
+}
+function openModeSelect(mode) {
+  pendingMapId = null;
+  document.getElementById('modeselect-title').textContent = mode.name;
+  document.getElementById('modeselect-desc').textContent = mode.desc;
+  document.getElementById('btn-modeselect-start').disabled = true;
+  refreshMapGrid();
+  setScreen('screen-modeselect');
+}
+
+function startMatchFromSelection() {
+  const mode = GAME_MODES[pendingModeId];
+  const map = MAP_BY_ID[pendingMapId];
+  if (pendingModeId === 'tournament') {
+    const teamA = activeTournament.teams[activeTournament.playerTeamId];
+    const teamB = activeTournament.teams[tournamentOpponentId];
+    teamA.forEach(s => s.team = 0);
+    teamB.forEach(s => s.team = 1);
+    startMatch(mode, map, teamA.concat(teamB), true);
+  } else {
+    startMatch(mode, map, buildMatchRoster(mode, playerSheet), false);
+  }
+}
+
+function startMatch(mode, map, roster, isTournamentMatch) {
+  document.getElementById('hud-killfeed').innerHTML = '';
+  lastMatchWasTournament = isTournamentMatch;
+  matchEngine = new MatchEngine({
+    map, mode, roster, playerSheet, input, canvas,
+    onEnd: result => handleMatchEnd(result),
+    onKillFeed: (victim, killer) => pushKillFeed(
+      killer ? `${victim.sheet.displayName} was defeated by ${killer.sheet.displayName}` : `${victim.sheet.displayName} fell to the storm`
+    )
+  });
+  setScreen('screen-match');
+}
+
+function handleMatchEnd(result) {
+  lastMatchResult = result;
+  setTimeout(() => showResults(result), 1000);
+}
+
+function showResults(result) {
+  document.getElementById('results-title').textContent = result.playerWon ? 'VICTORY' : 'DEFEAT';
+  document.getElementById('results-sub').textContent = result.playerWon
+    ? 'Your side stood alone when the dust settled.'
+    : 'You were eliminated. The island remains — try again.';
+  setScreen('screen-results');
+}
+
+function continueAfterResults() {
+  if (lastMatchWasTournament && activeTournament) {
+    resolvePlayerMatchAndAdvance(activeTournament, lastMatchResult.playerWon);
+    openTournamentScreen();
+  } else {
+    setScreen('screen-hub');
+  }
+}
+
+// ---------------- Tournament ----------------
+function openTournamentScreen() {
+  if (!activeTournament || activeTournament.champion !== null || activeTournament.eliminated) {
+    activeTournament = createTournament(playerSheet);
+  }
+  let matchup;
+  if (!activeTournament.roundSimulated) {
+    matchup = advanceTournamentRound(activeTournament);
+  } else {
+    matchup = activeTournament.rounds[activeTournament.currentRound].find(m => m.teamIds.includes(activeTournament.playerTeamId));
+  }
+  renderTournament(document.getElementById('tournament-current'), activeTournament);
+
+  const statusEl = document.getElementById('tournament-status');
+  const playBtn = document.getElementById('btn-tournament-play');
+  if (activeTournament.champion !== null) {
+    statusEl.textContent = 'Champions! Your team took the whole bracket.';
+    playBtn.style.display = 'none';
+  } else if (activeTournament.eliminated) {
+    statusEl.textContent = 'Eliminated. Leave to start a fresh run whenever you like.';
+    playBtn.style.display = 'none';
+  } else {
+    statusEl.textContent = '';
+    playBtn.style.display = '';
+    playBtn.disabled = false;
+    tournamentOpponentId = matchup.teamIds.find(id => id !== activeTournament.playerTeamId);
+  }
+  setScreen('screen-tournament');
+}
+
+// ---------------- Wiring ----------------
+function wireUI() {
+  document.getElementById('btn-new-game').addEventListener('click', () => {
+    selectedAffinityId = null; selectedTeknikId = null; currentTeknikRole = 'tank';
+    openAffinityScreen();
+  });
+  document.getElementById('btn-continue').addEventListener('click', () => {
+    const saved = loadSavedCharacter();
+    if (saved) { playerSheet = saved; enterHub(); }
+  });
+
+  document.getElementById('btn-affinity-next').addEventListener('click', openTeknikScreen);
+  document.getElementById('btn-teknik-back').addEventListener('click', openAffinityScreen);
+  document.getElementById('btn-teknik-next').addEventListener('click', openSummaryScreen);
+  document.getElementById('btn-summary-back').addEventListener('click', openTeknikScreen);
+  document.getElementById('btn-summary-confirm').addEventListener('click', confirmCharacter);
+
+  document.getElementById('btn-hub-menu').addEventListener('click', () => setScreen('screen-menu'));
+
+  document.getElementById('btn-modeselect-cancel').addEventListener('click', () => {
+    if (pendingModeId === 'tournament') openTournamentScreen();
+    else setScreen('screen-hub');
+  });
+  document.getElementById('btn-modeselect-start').addEventListener('click', startMatchFromSelection);
+
+  document.getElementById('btn-tournament-leave').addEventListener('click', () => {
+    activeTournament = null;
+    setScreen('screen-hub');
+  });
+  document.getElementById('btn-tournament-play').addEventListener('click', () => {
+    pendingModeId = 'tournament';
+    openModeSelect(GAME_MODES.tournament);
+  });
+
+  document.getElementById('btn-results-continue').addEventListener('click', continueAfterResults);
+}
+
+function loadSavedCharacter() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!AFFINITY_BY_ID[data.affinityId] || !TEKNIK_BY_ID[data.teknikId]) return null;
+    const sheet = createCharacterSheet({ affinityId: data.affinityId, teknikId: data.teknikId, isAI: false });
+    if (data.name) sheet.displayName = data.name;
+    return sheet;
+  } catch (e) { return null; }
+}
+
+// ---------------- Boot & main loop ----------------
+function loop(now) {
+  const dt = Math.min(0.05, (now - lastFrameTime) / 1000 || 0.016);
+  lastFrameTime = now;
+
+  if (currentScreenId === 'screen-hub' && hubEngine) {
+    hubEngine.update(dt);
+    renderHub(ctx, canvas, hubEngine);
+  } else if (currentScreenId === 'screen-match' && matchEngine) {
+    matchEngine.update(dt);
+    renderMatch(ctx, canvas, matchEngine);
+    updateMatchHud(matchEngine);
+  }
+  requestAnimationFrame(loop);
+}
+
+function init() {
+  canvas = document.getElementById('game-canvas');
+  ctx = canvas.getContext('2d');
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+  input = new InputController(canvas, document.getElementById('hud-mobile-root'));
+  wireUI();
+
+  if (loadSavedCharacter()) document.getElementById('btn-continue').style.display = '';
+
+  setScreen('screen-menu');
+  lastFrameTime = performance.now();
+  requestAnimationFrame(loop);
+}
+
+document.addEventListener('DOMContentLoaded', init);
+
+// Lightweight debug hook (harmless in production, handy for automated smoke tests).
+window.__affinityDebug = {
+  getHubPlayer: () => hubEngine && hubEngine.player,
+  getNearPortal: () => hubEngine && hubEngine.nearPortal,
+  getMatchEngine: () => matchEngine,
+  getScreen: () => currentScreenId
+};
+
+</script>
