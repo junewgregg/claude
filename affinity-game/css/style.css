@@ -1,0 +1,168 @@
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0; width: 100%; height: 100%;
+  background: #0a0c10; color: #eee;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  overflow: hidden; overscroll-behavior: none; touch-action: none;
+  -webkit-user-select: none; user-select: none;
+}
+#app { position: relative; width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; }
+
+#game-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; background: #000; display: none; }
+#game-canvas.visible { display: block; }
+
+.screen {
+  position: absolute; inset: 0; display: none; z-index: 1;
+  flex-direction: column; align-items: center; background: transparent;
+}
+.screen.active { display: flex; }
+.screen.solid { background: #0a0c10; }
+
+/* ---------- Menu / Results ---------- */
+.menu-panel {
+  margin: auto; text-align: center; padding: 20px; max-width: 560px;
+}
+.game-title {
+  font-size: 4.2rem; letter-spacing: 0.35em; margin: 0 0 6px 0;
+  background: linear-gradient(90deg,#8ecbff,#ff7ad9,#f4c542,#3fae4a);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  text-shadow: 0 0 40px rgba(255,255,255,0.15);
+}
+.game-subtitle { color: #aab; margin: 0 0 28px 0; font-size: 1.05rem; }
+.menu-hint { color: #778; font-size: 0.8rem; margin-top: 28px; line-height: 1.5; }
+
+.btn {
+  background: #1c212b; color: #eee; border: 1px solid #333c4a; border-radius: 10px;
+  padding: 12px 26px; font-size: 1rem; margin: 6px; cursor: pointer;
+  transition: all .15s ease; min-width: 140px;
+}
+.btn:hover:not(:disabled) { background: #262d3b; border-color: #4fd1ff; transform: translateY(-1px); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-primary { background: linear-gradient(90deg,#3b6fe0,#7a3be0); border: none; font-weight: 600; }
+.btn-primary:hover:not(:disabled) { filter: brightness(1.15); }
+.btn-small { padding: 6px 14px; min-width: unset; font-size: 0.85rem; }
+
+/* ---------- Wizard (affinity/teknik/summary) ---------- */
+.wizard-header { text-align: center; margin: 18px 12px 6px; }
+.wizard-header h2 { margin: 0 0 6px; font-size: 1.6rem; }
+.wizard-sub { color: #99a; max-width: 700px; margin: 0 auto; font-size: 0.92rem; }
+.card-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px; padding: 14px 20px; overflow-y: auto; flex: 1; width: 100%; max-width: 1100px; align-content: start;
+}
+.pick-card {
+  border: 2px solid #2a2f3a; border-radius: 12px; padding: 14px 10px; text-align: center;
+  cursor: pointer; background: #12161d; transition: all .12s ease;
+}
+.pick-card:hover { border-color: #667; transform: translateY(-2px); }
+.pick-card.selected { border-color: var(--accent, #4fd1ff); box-shadow: 0 0 16px var(--accent, #4fd1ff); }
+.pick-card .glyph { font-size: 2rem; display: block; margin-bottom: 6px; }
+.pick-card .pname { font-weight: 600; }
+.pick-card .prole { font-size: 0.75rem; color: #9aa; margin-top: 2px; }
+
+.role-tabs { display: flex; gap: 8px; padding: 10px 20px 0; flex-wrap: wrap; justify-content: center; }
+.role-tab {
+  padding: 8px 16px; border-radius: 20px; border: 1px solid #333c4a; background: #12161d;
+  cursor: pointer; font-size: 0.9rem;
+}
+.role-tab.active { background: #2a3550; border-color: #4fd1ff; }
+
+.wizard-footer {
+  display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
+  padding: 10px 20px 18px; width: 100%; max-width: 1100px;
+}
+.detail-box { flex: 1; min-width: 220px; color: #bcd; font-size: 0.85rem; background: #12161d; border-radius: 8px; padding: 10px 14px; }
+.name-input {
+  background: #12161d; border: 1px solid #333c4a; color: #eee; border-radius: 8px; padding: 10px 12px; font-size: 1rem;
+}
+
+.summary-content { flex: 1; overflow-y: auto; width: 100%; max-width: 900px; padding: 10px 20px; }
+.summary-header { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
+.summary-avatar {
+  width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 2rem; border: 3px solid #fff2;
+}
+.summary-stats { display: flex; gap: 18px; flex-wrap: wrap; margin: 10px 0 16px; font-size: 0.85rem; color: #bcd; }
+.ability-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: 10px; }
+.ability-card { background: #12161d; border: 1px solid #2a2f3a; border-radius: 10px; padding: 10px 12px; }
+.ability-card.ult { border-color: #f4c542; background: #1d1a10; }
+.ability-card .aname { font-weight: 600; font-size: 0.92rem; }
+.ability-card .adesc { color: #9aa; font-size: 0.78rem; margin-top: 4px; }
+
+/* ---------- Hub ---------- */
+.hub-topbar {
+  position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; align-items: center;
+  pointer-events: none;
+}
+.hub-topbar > * { pointer-events: auto; }
+.hub-tag { background: #000a; padding: 8px 14px; border-radius: 8px; font-size: 0.9rem; }
+
+/* ---------- Mode select / tournament modal ---------- */
+.modal-screen { background: rgba(5,7,10,0.92); z-index: 20; }
+.modal-panel { margin: auto; max-width: 900px; width: 92%; max-height: 88vh; display: flex; flex-direction: column; padding: 20px; }
+.modal-panel.wide { max-width: 1000px; }
+.modal-panel h2 { text-align: center; margin: 0 0 4px; }
+.map-card-img { width: 100%; height: 70px; border-radius: 8px; margin-bottom: 6px; }
+
+.tournament-status { text-align: center; font-weight: 600; color: #f4c542; min-height: 1.2em; }
+.tournament-current { flex: 1; overflow-y: auto; padding: 10px 0; }
+.bracket-round { margin-bottom: 10px; }
+.bracket-round h4 { margin: 6px 0; color: #8ab; }
+.matchup { display: flex; justify-content: space-between; background: #12161d; border-radius: 8px; padding: 8px 12px; margin-bottom: 6px; font-size: 0.85rem; }
+.matchup.player { border: 1px solid #4fd1ff; }
+.matchup.done { opacity: 0.6; }
+
+/* ---------- Match HUD ---------- */
+.match-hud { position: absolute; inset: 0; pointer-events: none; }
+.hud-topinfo {
+  position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+  background: #000a; padding: 6px 16px; border-radius: 8px; font-size: 0.9rem; text-align: center;
+}
+.hud-killfeed {
+  position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 4px; align-items: flex-end;
+  font-size: 0.78rem;
+}
+.hud-killfeed div { background: #000a; padding: 4px 10px; border-radius: 6px; }
+.hud-bottom {
+  position: absolute; bottom: 14px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 8px;
+  pointer-events: auto;
+}
+.hud-healthbar-wrap { width: min(420px, 90vw); }
+.hud-healthbar { position: relative; height: 18px; background: #1c212b; border-radius: 9px; overflow: hidden; border: 1px solid #333c4a; }
+.hud-hp-fill { position: absolute; inset: 0; background: #4fd15a; width: 100%; transition: width .1s linear; }
+.hud-shield-fill { position: absolute; top: -6px; left: 0; height: 4px; background: #6fc9ff; width: 0%; }
+.hud-hp-text { text-align: center; font-size: 0.75rem; color: #bcd; margin-top: 2px; }
+.hud-abilities { display: flex; gap: 8px; }
+.hud-ab {
+  width: 54px; height: 54px; border-radius: 12px; background: #12161dcc; border: 2px solid #333c4a;
+  display: flex; align-items: center; justify-content: center; font-size: 0.75rem; position: relative; color: #eee;
+  text-align: center;
+}
+.hud-ab.ult { border-color: #f4c542; }
+.hud-ab .cd-overlay {
+  position: absolute; inset: 0; background: rgba(0,0,0,0.72); border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.95rem;
+}
+
+/* ---------- Mobile touch controls (rendered by input.js) ---------- */
+#hud-mobile-root { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+.mobile-buttons {
+  position: absolute; bottom: 90px; right: 14px; display: none; gap: 10px; pointer-events: none;
+  flex-wrap: wrap; width: 240px; justify-content: flex-end;
+}
+.ab-btn, .ult-btn, .interact-btn {
+  pointer-events: auto; width: 50px; height: 50px; border-radius: 50%; border: 2px solid #556;
+  background: #12161dcc; color: #fff; font-weight: 700; font-size: 0.9rem;
+}
+.ult-btn { border-color: #f4c542; background: #3a300ecc; }
+.interact-btn { position: absolute; top: -120px; right: 90px; width: 60px; height: 60px; border-color: #4fd1ff; }
+
+@media (pointer: coarse) {
+  .mobile-buttons { display: flex; }
+}
+
+/* Small screens: shrink title & grids */
+@media (max-width: 640px) {
+  .game-title { font-size: 2.6rem; }
+  .card-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+}

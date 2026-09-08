@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Affinity</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="game-canvas"></canvas>
+
+  <!-- MAIN MENU -->
+  <section id="screen-menu" class="screen solid active">
+    <div class="menu-panel">
+      <h1 class="game-title">AFFINITY</h1>
+      <p class="game-subtitle">Ten origins. Twelve fighting styles. One island.</p>
+      <button class="btn btn-primary" id="btn-new-game">New Character</button>
+      <button class="btn" id="btn-continue" style="display:none;">Continue</button>
+      <p class="menu-hint">Desktop: WASD to move, mouse to aim, click to attack, 1-4 for abilities, R for ultimate, E to interact.<br>Mobile: left stick to move, right stick to aim &amp; attack, buttons for abilities.</p>
+    </div>
+  </section>
+
+  <!-- AFFINITY SELECT -->
+  <section id="screen-affinity" class="screen solid">
+    <div class="wizard-header">
+      <h2>Choose Your Affinity</h2>
+      <p class="wizard-sub">Your affinity is the origin of your power. It shapes your look, your passive trait, and the flavor of every ability you'll use.</p>
+    </div>
+    <div id="affinity-grid" class="card-grid"></div>
+    <div class="wizard-footer">
+      <div id="affinity-detail" class="detail-box">Select an affinity to see its trait.</div>
+      <button class="btn btn-primary" id="btn-affinity-next" disabled>Next: Choose Teknik</button>
+    </div>
+  </section>
+
+  <!-- TEKNIK SELECT -->
+  <section id="screen-teknik" class="screen solid">
+    <div class="wizard-header">
+      <h2>Choose Your Teknik</h2>
+      <p class="wizard-sub">Your teknik is how you fight — it sets your role, your base attack, and your four abilities plus ultimate.</p>
+    </div>
+    <div class="role-tabs" id="role-tabs"></div>
+    <div id="teknik-grid" class="card-grid"></div>
+    <div class="wizard-footer">
+      <div id="teknik-detail" class="detail-box">Select a teknik to see its role.</div>
+      <button class="btn" id="btn-teknik-back">Back</button>
+      <button class="btn btn-primary" id="btn-teknik-next" disabled>Next: Review</button>
+    </div>
+  </section>
+
+  <!-- SUMMARY -->
+  <section id="screen-summary" class="screen solid">
+    <div class="wizard-header"><h2>Your Character</h2></div>
+    <div id="summary-content" class="summary-content"></div>
+    <div class="wizard-footer">
+      <input id="summary-name" class="name-input" maxlength="18" placeholder="Character name (optional)">
+      <button class="btn" id="btn-summary-back">Back</button>
+      <button class="btn btn-primary" id="btn-summary-confirm">Enter the Island</button>
+    </div>
+  </section>
+
+  <!-- HUB -->
+  <section id="screen-hub" class="screen">
+    <div class="hub-topbar">
+      <div id="hub-player-tag" class="hub-tag"></div>
+      <button class="btn btn-small" id="btn-hub-menu">Menu</button>
+    </div>
+  </section>
+
+  <!-- MODE/MAP SELECT MODAL (over hub) -->
+  <section id="screen-modeselect" class="screen modal-screen">
+    <div class="modal-panel">
+      <h2 id="modeselect-title">Select Mode</h2>
+      <p id="modeselect-desc" class="wizard-sub"></p>
+      <h3>Choose a Map</h3>
+      <div id="map-grid" class="card-grid"></div>
+      <div class="wizard-footer">
+        <button class="btn" id="btn-modeselect-cancel">Cancel</button>
+        <button class="btn btn-primary" id="btn-modeselect-start" disabled>Start Match</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOURNAMENT BRACKET -->
+  <section id="screen-tournament" class="screen modal-screen">
+    <div class="modal-panel wide">
+      <h2>16-Team Tournament</h2>
+      <div id="tournament-status" class="tournament-status"></div>
+      <div id="tournament-current" class="tournament-current"></div>
+      <div class="wizard-footer">
+        <button class="btn" id="btn-tournament-leave">Leave Tournament</button>
+        <button class="btn btn-primary" id="btn-tournament-play" disabled>Play Match</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- MATCH HUD -->
+  <section id="screen-match" class="screen">
+    <div class="match-hud">
+      <div id="hud-topinfo" class="hud-topinfo"></div>
+      <div id="hud-killfeed" class="hud-killfeed"></div>
+      <div class="hud-bottom">
+        <div class="hud-healthbar-wrap">
+          <div class="hud-healthbar"><div id="hud-hp-fill" class="hud-hp-fill"></div><div id="hud-shield-fill" class="hud-shield-fill"></div></div>
+          <div id="hud-hp-text" class="hud-hp-text"></div>
+        </div>
+        <div id="hud-abilities" class="hud-abilities"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="screen-results" class="screen solid">
+    <div class="menu-panel">
+      <h1 id="results-title" class="game-title">VICTORY</h1>
+      <p id="results-sub" class="game-subtitle"></p>
+      <button class="btn btn-primary" id="btn-results-continue">Continue</button>
+    </div>
+  </section>
+
+  <div id="hud-mobile-root"></div>
+</div>
+
+<script src="js/data/affinities.js"></script>
+<script src="js/data/tekniks.js"></script>
+<script src="js/data/maps.js"></script>
+<script src="js/character.js"></script>
+<script src="js/input.js"></script>
+<script src="js/game/entity.js"></script>
+<script src="js/game/movement.js"></script>
+<script src="js/game/combat.js"></script>
+<script src="js/game/ai.js"></script>
+<script src="js/game/modes.js"></script>
+<script src="js/game/engine.js"></script>
+<script src="js/game/hub.js"></script>
+<script src="js/game/renderer.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
