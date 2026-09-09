@@ -169,7 +169,7 @@ function statusLines(s, x, y, w, h, lines, size) {
   const neutral = { bg: TEAL_TINT, ln: LINE, fg: TEAL_DK };
   const warn = { bg: "FBEAEC", ln: "E8BFC6", fg: RED };
   const caut = { bg: "FCF3E6", ln: "EAD5B4", fg: AMBER };
-  chip(s, M, 1.55, 3.5, "WEIGHTED SCORE", "1.85 / 3.00", neutral);
+  chip(s, M, 1.55, 3.5, "WEIGHTED SCORE", "1.65 / 3.00", neutral);
   chip(s, M + 3.75, 1.55, 4.7, "HARD GATE", "Reserved — Roche B2B", warn);
   chip(s, M + 8.7, 1.55, 4.35, "STAGE", "IND lapsed 08-May-26", caut);
   chip(s, M + 13.3, 1.55, 3.3, "IP RUNWAY", "2041 / 2043", neutral);
@@ -183,10 +183,12 @@ function statusLines(s, x, y, w, h, lines, size) {
   ]);
 
   card(s, LX + CW + CGAP, ROW_Y[0], CW, ROW_H, "Competitive landscape", [
-    { text: "No approved DGKζ inhibitor. Bayer and BMS each hold one Phase 1 asset; class has shown " },
-    { text: "neurotoxicity and only moderate efficacy", options: { bold: true, color: RED } },
-    { text: ". The differentiators that decide the winner: brain penetrance / CNS safety margin, and DGKζ-vs-DGKα selectivity. Note: first-in-class mechanism — in tension with the best-in-class-only criterion." },
-  ]);
+    { text: "No approved DGK inhibitor. Bayer's selective DGKζ asset (veludacigib / BAY 2965501) was " },
+    { text: "discontinued Nov-2025", options: { bold: true, color: RED } },
+    { text: "; BMS-986408 and Incyte's INCB177054 both continue as " },
+    { text: "dual DGKα/ζ", options: { bold: true } },
+    { text: " inhibitors. Every asset still advancing is dual; both selective-ζ assets have been shelved. See landscape slide." },
+  ], RED);
 
   card(s, LX, ROW_Y[1], CW, ROW_H, "Commercial", [
     { text: "PD-1-resistant solid tumors — NSCLC, melanoma, RCC, HNSCC and selected gastric / other tumors. Addressable market " },
@@ -220,9 +222,9 @@ function statusLines(s, x, y, w, h, lines, size) {
     fontFace: F, fontSize: 12, bold: true, color: TEAL, charSpacing: 1, valign: "middle",
   });
   s.addText([
-    { text: "Request the confidential package and run initial technical diligence (2–3 h oncology non-clinical + clinical SME review). " },
-    { text: "Route to the Roche build-to-buy lane, not an LSB portfolio slot", options: { bold: true } },
-    { text: " — oncology spots are reserved. Advance only if the confidential data clear three gates: (1) brain penetrance and CNS safety margin vs. Bayer/BMS, (2) DGKζ-vs-DGKα selectivity, (3) a costed IND-reactivation path." },
+    { text: "Request the confidential package, but lead the 2–3 h SME review with one question: " },
+    { text: "is selective DGKζ inhibition a viable premise", options: { bold: true } },
+    { text: " when the published pharmacology favours dual α/ζ and both selective-ζ assets have been shelved by their owners? If that answer holds up, route to the Roche build-to-buy lane — oncology slots are reserved. Brain penetrance and selectivity are now second-order questions." },
   ], {
     x: LX + 0.22, y: BAR_Y + 0.4, w: LW - 0.44, h: BAR_H - 0.52, isTextBox: true, margin: 0,
     fontFace: F, fontSize: 14, color: INK, valign: "top", lineSpacingMultiple: 1.08,
@@ -236,7 +238,7 @@ function statusLines(s, x, y, w, h, lines, size) {
     { name: "Development stage & POC feasibility", weight: 20, rating: 2, pts: "0.40" },
     { name: "Therapeutic-area fit", weight: 15, rating: 0, pts: "0.00" },
     { name: "Translational readiness", weight: 15, rating: 2, pts: "0.30" },
-    { name: "Differentiation & unmet need", weight: 20, rating: 2, pts: "0.40" },
+    { name: "Differentiation & unmet need", weight: 20, rating: 1, pts: "0.20" },
     { name: "IP strength", weight: 10, rating: 3, pts: "0.30" },
     { name: "Deal economics", weight: 15, rating: 2, pts: "0.30" },
     { name: "Regulatory & endpoint fit", weight: 5, rating: 3, pts: "0.15" },
@@ -255,7 +257,7 @@ function statusLines(s, x, y, w, h, lines, size) {
   ], {
     x: RX + 0.2, y: totY + 0.06, w: RW - 1.7, h: 0.3, isTextBox: true, margin: 0, fontFace: F, valign: "middle",
   });
-  s.addText("1.85 / 3.00", {
+  s.addText("1.65 / 3.00", {
     x: RX + RW - 1.9, y: totY + 0.06, w: 1.7, h: 0.3, isTextBox: true, margin: 0,
     fontFace: F, fontSize: 15, bold: true, color: RED, align: "right", valign: "middle",
   });
@@ -265,7 +267,7 @@ function statusLines(s, x, y, w, h, lines, size) {
   ], {
     x: RX + 0.2, y: totY + 0.38, w: RW - 1.7, h: 0.3, isTextBox: true, margin: 0, fontFace: F, valign: "middle",
   });
-  s.addText("2.30 / 3.00", {
+  s.addText("2.10 / 3.00", {
     x: RX + RW - 1.9, y: totY + 0.38, w: 1.7, h: 0.3, isTextBox: true, margin: 0,
     fontFace: F, fontSize: 15, bold: true, color: GREEN, align: "right", valign: "middle",
   });
@@ -278,22 +280,116 @@ function statusLines(s, x, y, w, h, lines, size) {
     { mark: "⚑", color: RED, text: "Oncology solid tumor — hard gate → Roche build-to-buy" },
     { mark: "✓", color: GREEN, text: "IP runway 15+ yrs; non-confidential briefing provided" },
     { mark: "!", color: AMBER, text: "IND-cleared but inactivated — conditional on reactivation" },
-    { mark: "?", color: AMBER, text: "COM vs. MOU split undisclosed; deal terms unknown" },
+    { mark: "!", color: RED, text: "Class signal: 2 of 3 sponsors exited selective-ζ in 12 mths" },
   ], 12.5);
 
   // ---- open questions ----
   panel(s, RX, BAR_Y, RW, BAR_H, "OPEN QUESTIONS FOR THE CONFIDENTIAL REVIEW");
   statusLines(s, RX + 0.22, BAR_Y + 0.54, RW - 0.44, BAR_H - 0.62, [
-    { mark: "1", color: TEAL, text: "Brain Kp,uu and CNS NOAEL margin vs. class neurotoxicity" },
-    { mark: "2", color: TEAL, text: "DGKζ:DGKα selectivity ratio; biomarker for patient selection" },
-    { mark: "3", color: TEAL, text: "What drove Astellas' deprioritization — portfolio or data?" },
+    { mark: "1", color: TEAL, text: "Is selective ζ viable, or is dual α/ζ coverage required?" },
+    { mark: "2", color: TEAL, text: "Why did Bayer stop — portfolio triage, or Phase 1 data?" },
+    { mark: "3", color: TEAL, text: "Brain Kp,uu and CNS margin; DGKζ:DGKα selectivity ratio" },
   ], 12.5);
 
   footer(s, 1);
 }
 
 // =====================================================================
-// SLIDE 2 — scoring rubric
+// SLIDE 2 — DGK competitive landscape (public sources, Sep-2026)
+// =====================================================================
+{
+  const s = pres.addSlide();
+  s.background = { color: "FFFFFF" };
+  header(s, "DGK Competitive Landscape",
+    "Public sources, verified September 2026 — the field has consolidated around dual DGKα/ζ inhibition, and both selective-ζ assets are shelved");
+
+  const PW = (18.8 - 3 * 0.3) / 4, PY = 1.85, PH = 3.6;
+
+  function program(i, name, sponsor, pill, pillTone, runs) {
+    const x = M + i * (PW + 0.3);
+    s.addShape(pres.ShapeType.roundRect, {
+      x, y: PY, w: PW, h: PH, rectRadius: 0.05,
+      fill: { color: CARD }, line: { color: LINE, width: 1 },
+    });
+    s.addText(name, {
+      x: x + 0.22, y: PY + 0.14, w: PW - 0.44, h: 0.34, isTextBox: true, margin: 0,
+      fontFace: F, fontSize: 16, bold: true, color: TEAL_DK, valign: "middle",
+    });
+    s.addText(sponsor, {
+      x: x + 0.22, y: PY + 0.48, w: PW - 0.44, h: 0.26, isTextBox: true, margin: 0,
+      fontFace: F, fontSize: 12.5, color: GRAY, valign: "middle",
+    });
+    s.addShape(pres.ShapeType.roundRect, {
+      x: x + 0.22, y: PY + 0.82, w: PW - 0.44, h: 0.36, rectRadius: 0.06,
+      fill: { color: pillTone.bg }, line: { color: pillTone.ln, width: 1 },
+    });
+    s.addText(pill, {
+      x: x + 0.22, y: PY + 0.82, w: PW - 0.44, h: 0.36, isTextBox: true, margin: 0,
+      fontFace: F, fontSize: 11.5, bold: true, color: pillTone.fg,
+      align: "center", valign: "middle", charSpacing: 0.6,
+    });
+    s.addText(runs, {
+      x: x + 0.22, y: PY + 1.32, w: PW - 0.44, h: PH - 1.5, isTextBox: true, margin: 0,
+      fontFace: F, fontSize: 12.5, color: INK, valign: "top", lineSpacingMultiple: 1.1,
+    });
+  }
+
+  const tOpen = { bg: TEAL_TINT, ln: LINE, fg: TEAL_DK };
+  const tDead = { bg: "FBEAEC", ln: "E8BFC6", fg: RED };
+  const tLive = { bg: "E8F3E9", ln: "BFD9C1", fg: GREEN };
+  const tEarly = { bg: "FCF3E6", ln: "EAD5B4", fg: AMBER };
+
+  program(0, "ASP2616", "Astellas  ·  selective DGKζ, oral", "AVAILABLE — SHELVED", tOpen, [
+    { text: "IND cleared Jun-2022 and never used — no site initiations, no patients dosed. IND inactivated 08-May-2026. Full preclinical package: pharmacology, ADME, reversible 4-week rat and cyno tox." },
+  ]);
+
+  program(1, "Veludacigib", "Bayer / DKFZ  ·  selective DGKζ, oral", "DISCONTINUED NOV-2025", tDead, [
+    { text: "BAY 2965501. Phase 1 FIH (NCT05614102) in NSCLC, gastric/GEJ, ccRCC and melanoma. Dropped in an early-stage oncology clear-out alongside DGKα asset BAY 2862789. Bayer cited " },
+    { text: "portfolio refocus", options: { bold: true } },
+    { text: " on GU/GI/lung — no safety or efficacy failure was disclosed." },
+  ]);
+
+  program(2, "BMS-986408", "Bristol Myers Squibb  ·  dual α/ζ, oral", "ACTIVE — PHASE 1/2", tLive, [
+    { text: "First-in-class dual DGKα/ζ inhibitor. Phase 1/2 (NCT05407675) as monotherapy and with nivolumab, and with nivolumab + ipilimumab, in advanced solid tumors. Discovery published 2025 in Cancer Immunol Res and J Med Chem." },
+  ]);
+
+  program(3, "INCB177054", "Incyte  ·  dual α/ζ, oral", "EARLY / DISCLOSED 2025", tEarly, [
+    { text: "Potent oral dual DGKα/ζ inhibitor; preclinical disclosure at AACR 2025. Also emerging: ISM4312A (Insilico, DGKα-selective, preclinical) and DGK degraders in academic preprints — a modality that would reset the field again." },
+  ]);
+
+  // ---- implications ----
+  const IY = 5.75, IH = 3.9;
+  panel(s, M, IY, 18.8, IH, "WHAT THIS MEANS FOR ASP2616");
+  const P_END = { breakLine: true, paraSpaceAfter: 11 };
+  s.addText([
+    { text: "The differentiator in the original thesis may be the liability.  ", options: { bold: true, color: TEAL_DK } },
+    { text: "Selective DGKζ inhibition was framed as a strength. The published pharmacology now points the other way: a 2026 J Pharmacol Exp Ther study reports that selective DGKζ inhibition produced only " },
+    { text: "modest", options: { bold: true } },
+    { text: " effects on TCR-mediated activity and DGKα inhibition alone had minimal effect, while dual α/ζ inhibition drove the largest gains in cytokine production and tumor-cell killing — including in TILs from NSCLC biopsies.", options: P_END },
+
+    { text: "Two of three sponsors have exited selective ζ within twelve months.  ", options: { bold: true, color: TEAL_DK } },
+    { text: "Bayer discontinued veludacigib in Nov-2025; Astellas let this IND lapse in May-2026. Everything still advancing — BMS, Incyte — is dual α/ζ. Neither exit was attributed to a disclosed safety or efficacy failure, so this is a pattern to explain, not yet a verdict.", options: P_END },
+
+    { text: "The neurotoxicity premise is unverified.  ", options: { bold: true, color: TEAL_DK } },
+    { text: "No public source was found for a class neurotoxicity signal or for moderate clinical efficacy; no Phase 1 data have been reported for either program. Bayer's disclosed preclinical toxicology was low-grade gastrointestinal. If that read came from a non-public source it should be recorded as such — it is currently carrying weight the public evidence does not support.", options: P_END },
+
+    { text: "Net effect on the score:  ", options: { bold: true, color: TEAL_DK } },
+    { text: "differentiation drops from 2 to 1 (LSB lane 1.85 → 1.65). Translational readiness is held at 2 — the DAG/TCR axis is validated biology and the open question is isoform coverage, not mechanism — so the same finding is not counted twice." },
+  ], {
+    x: M + 0.28, y: IY + 0.62, w: 18.24, h: IH - 0.8, isTextBox: true, margin: 0,
+    fontFace: F, fontSize: 13.5, color: INK, valign: "top", lineSpacingMultiple: 1.06,
+  });
+
+  s.addText("Sources: AACR Cancer Res ND04 (BAY 2965501); Cancer Immunol Res 2025;13(9):1342 and J Med Chem 2025;68(20):21840 (BMS-986408); AACR 2025 abstr. 3789 (INCB177054); J Pharmacol Exp Ther 2026, PMID 42068678; FierceBiotech 12-Nov-2025 (Bayer discontinuation). Trial registry records were not directly reachable from this session.", {
+    x: M, y: 9.82, w: 18.8, h: 0.5, isTextBox: true, margin: 0,
+    fontFace: F, fontSize: 10.5, color: MUTE, valign: "top", lineSpacingMultiple: 1.05,
+  });
+
+  footer(s, 2);
+}
+
+// =====================================================================
+// SLIDE 3 — scoring rubric
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -365,11 +461,11 @@ function statusLines(s, x, y, w, h, lines, size) {
     fontFace: F, fontSize: 14, valign: "middle", lineSpacingMultiple: 1.05,
   });
 
-  footer(s, 2);
+  footer(s, 3);
 }
 
 // =====================================================================
-// SLIDE 3 — blank template
+// SLIDE 4 — blank template
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -456,7 +552,7 @@ function statusLines(s, x, y, w, h, lines, size) {
     fontFace: F, fontSize: 12.5, valign: "top", lineSpacingMultiple: 1.1,
   });
 
-  footer(s, 3);
+  footer(s, 4);
 }
 
 pres.writeFile({ fileName: "/tmp/claude-0/-home-user-claude/d2f5455d-7c3f-5235-b1e7-82237e3dc413/scratchpad/LSB_Asset_Scorecards.pptx" })

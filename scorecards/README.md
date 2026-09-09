@@ -6,8 +6,9 @@
 | Slide | Contents |
 |---|---|
 | 1 | ASP2616 (DGKζ) — populated scorecard |
-| 2 | Scoring key: the 7 weighted criteria, hard gates, stage gates |
-| 3 | Blank template — duplicate this per new asset |
+| 2 | DGK competitive landscape — the four programs, verified against public sources Sep-2026 |
+| 3 | Scoring key: the 7 weighted criteria, hard gates, stage gates |
+| 4 | Blank template — duplicate this per new asset |
 
 ## Scoring
 
@@ -32,4 +33,6 @@ node build_scorecards.js
 
 Source facts belong in the cards verbatim from the non-confidential summary. Where the
 source is silent (deal terms, COM vs. MOU split, FTO), say so on the card rather than
-scoring an assumption as fact.
+scoring an assumption as fact. Competitive claims get checked against public sources
+before they carry weight in a rating — on ASP2616 that check moved the differentiation
+score from 2 to 1 and reordered the diligence questions.
