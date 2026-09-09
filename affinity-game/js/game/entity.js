@@ -91,7 +91,10 @@ class Entity {
     if (mark && mark.until > world.time) dmg *= (1 + mark.amount);
     const passive = this.sheet.passive;
     if (passive && passive.onTakeDamage) dmg = passive.onTakeDamage(this, dmg, source, world);
-    dmg = Math.max(0, dmg - this.armorValue * 0.6);
+    // Armor scales damage down by a percentage rather than subtracting a flat
+    // amount. Flat armor meant a 14-armor tank soaked ~8 of every hit, so small
+    // basic attacks landed for almost nothing (a healer's hit did literally 0).
+    dmg = dmg * (1 - this.armorValue / (this.armorValue + 55));
     // shield absorbs first
     if (this.shield > 0) {
       const absorbed = Math.min(this.shield, dmg);

@@ -167,8 +167,13 @@ function updateMatchHud(engine, elapsed) {
     respawnEl.hidden = true;
   }
 
+  // Rebuild when the character changes, not just when the ability *count*
+  // changes — every kit has 4 + 1, so a count check never fired and the hotbar
+  // kept showing the previous character's ability names.
   const abRoot = document.getElementById('hud-abilities');
-  if (abRoot.childElementCount !== pe.sheet.abilities.length + 1) {
+  const kitKey = `${pe.sheet.affinity.id}:${pe.sheet.teknik.id}`;
+  if (abRoot.dataset.kit !== kitKey) {
+    abRoot.dataset.kit = kitKey;
     abRoot.innerHTML = '';
     pe.sheet.abilities.forEach((a, i) => {
       const el = document.createElement('div');
@@ -197,6 +202,18 @@ function renderResultsStandings(container, result, playerTeam) {
        <span>${i + 1}. ${s.name}</span>
        <span class="rk">${s.kills} kills · ${s.deaths} deaths</span>
      </div>`).join('');
+}
+
+// Brief centered message explaining why an input didn't do what was expected
+// ("No target in range", "Ability — 4s").
+let hudHintTimer = null;
+function showHudHint(text) {
+  const el = document.getElementById('hud-hint');
+  if (!el) return;
+  el.textContent = text;
+  el.hidden = false;
+  clearTimeout(hudHintTimer);
+  hudHintTimer = setTimeout(() => { el.hidden = true; }, 1100);
 }
 
 function pushKillFeed(text) {

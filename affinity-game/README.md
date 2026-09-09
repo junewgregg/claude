@@ -15,9 +15,10 @@ python3 -m http.server 8080
 
 ## Controls
 
-**Desktop:** WASD to move, mouse to aim, left-click to attack (one click, one
-swing), 1-4 for abilities, R (or Space) for your ultimate, E to interact with
-hub portals.
+**Desktop:** WASD to move, mouse to aim, left-click to attack (each click
+swings once; hold to keep swinging at your attack speed), 1-4 for abilities,
+R (or Space) for your ultimate, E to interact with hub portals, **Esc to
+pause** (resume, restart, leave the match, or quit to the main menu).
 
 **Mobile/touch:** left half of the screen is a virtual movement joystick,
 right half is an aim-and-attack joystick (hold it to keep swinging), with
@@ -50,9 +51,14 @@ closes in over the match, herding everyone toward the middle for the endgame.
   4v4 Tournament where your squad stays together across every round while the
   rest of the bracket plays out around you.
 - **5 arenas** plus the hub, all drawn with canvas primitives.
-- **AI opponents** that pick targets, kite or engage based on role, manage
-  their cooldowns, and play at a competent "average player" level rather
-  than perfectly.
+- **AI opponents and allies** running the same controller, so your squad is
+  exactly as capable as the enemy. They're tuned to play like an average
+  human rather than a machine: ~350-750ms reaction time, scattered aim, a
+  minimum gap between ability casts (no four-ability dumps), and they pass on
+  some openings. Teammates regroup on you when there's nobody to fight.
+- **Damage model** where armor reduces damage by a percentage rather than
+  subtracting a flat amount, so every attack lands for something — a flat
+  system meant heavy tanks shrugged off small hits entirely.
 
 ## Code layout
 

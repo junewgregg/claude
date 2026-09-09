@@ -86,14 +86,22 @@ class MatchEngine {
     this.lastAim = worldAim;
     pe.facing = Math.atan2(worldAim.y - pe.y, worldAim.x - pe.x);
 
-    // One click, one swing. Touch players hold the aim stick to keep attacking.
-    if (this.input.consumePending('attack') || this.input.isTouchFiring()) {
+    // A click swings immediately; holding the button (or the touch aim stick)
+    // keeps swinging at the character's own attack speed.
+    if (this.input.consumePending('attack') || this.input.isHoldFiring() || this.input.isTouchFiring()) {
       useBasicAttack(pe, worldAim.x, worldAim.y, this.world);
     }
     for (let i = 0; i < 4; i++) {
-      if (this.input.consumePending('ability' + (i + 1))) useAbility(pe, i, worldAim.x, worldAim.y, this.world);
+      if (!this.input.consumePending('ability' + (i + 1))) continue;
+      const ability = pe.sheet.abilities[i];
+      const cd = pe.cooldowns[i];
+      if (cd.remaining > 0) showHudHint(`${ability.name} — ${Math.ceil(cd.remaining)}s`);
+      else if (!useAbility(pe, i, worldAim.x, worldAim.y, this.world)) showHudHint('No target in range');
     }
-    if (this.input.consumePending('ultimate')) useUltimate(pe, worldAim.x, worldAim.y, this.world);
+    if (this.input.consumePending('ultimate')) {
+      if (pe.ultCooldown.remaining > 0) showHudHint(`Ultimate — ${Math.ceil(pe.ultCooldown.remaining)}s`);
+      else if (!useUltimate(pe, worldAim.x, worldAim.y, this.world)) showHudHint('No target in range');
+    }
     this.input.clearFrame();
   }
 

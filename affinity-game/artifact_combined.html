@@ -1,3 +1,4 @@
+<meta charset="utf-8">
 <title>Affinity</title>
 <style>
 * { box-sizing: border-box; }
@@ -19,6 +20,10 @@ html, body {
 }
 .screen.active { display: flex; }
 .screen.solid { background: #0a0c10; }
+/* The hub and match screens are HUD layers over the canvas: they must not
+   swallow clicks meant for the game. Their interactive bits opt back in. */
+#screen-hub, #screen-match { pointer-events: none; }
+#screen-hub button, #screen-match button, #screen-match .hud-abilities { pointer-events: auto; }
 
 /* ---------- Menu / Results ---------- */
 .menu-panel {
@@ -139,6 +144,29 @@ html, body {
 }
 .score-chip.mine { background: #122a3ad9; font-weight: 700; }
 .score-chip .sc { font-variant-numeric: tabular-nums; font-weight: 700; }
+.btn-pause {
+  position: absolute; top: 12px; left: 12px; pointer-events: auto;
+  width: 44px; height: 44px; border-radius: 10px; font-size: 0.9rem; letter-spacing: 1px;
+  background: #12161dcc; color: #eee; border: 1px solid #333c4a; cursor: pointer;
+}
+.btn-pause:hover { border-color: #4fd1ff; }
+.pause-overlay {
+  position: absolute; inset: 0; z-index: 30; display: flex;
+  background: rgba(5,7,10,0.82); backdrop-filter: blur(2px);
+}
+.pause-overlay[hidden] { display: none; }
+.pause-panel {
+  margin: auto; text-align: center; padding: 28px 34px; background: #10141b;
+  border: 1px solid #2a2f3a; border-radius: 16px; display: flex; flex-direction: column; min-width: 260px;
+}
+.pause-panel h2 { margin: 0 0 4px; letter-spacing: 0.12em; }
+.pause-info { color: #9aa; font-size: 0.85rem; margin: 0 0 16px; }
+.hud-hint {
+  position: absolute; bottom: 150px; left: 50%; transform: translateX(-50%);
+  background: #000000cc; color: #ffd24f; padding: 7px 16px; border-radius: 8px;
+  font-size: 0.9rem; font-weight: 600;
+}
+.hud-hint[hidden] { display: none; }
 .hud-respawn {
   position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%);
   background: #000000cc; padding: 18px 34px; border-radius: 14px; text-align: center;
@@ -303,6 +331,8 @@ html, body {
         <div id="hud-topinfo" class="hud-topinfo"></div>
         <div id="hud-scores" class="hud-scores"></div>
       </div>
+      <button id="btn-pause" class="btn-pause" title="Pause (Esc)">❚❚</button>
+      <div id="hud-hint" class="hud-hint" hidden></div>
       <div id="hud-respawn" class="hud-respawn" hidden></div>
       <div id="hud-killfeed" class="hud-killfeed"></div>
       <div class="hud-bottom">
@@ -324,6 +354,18 @@ html, body {
       <button class="btn btn-primary" id="btn-results-continue">Continue</button>
     </div>
   </section>
+
+  <!-- PAUSE MENU (overlays a live match without unloading it) -->
+  <div id="pause-overlay" class="pause-overlay" hidden>
+    <div class="pause-panel">
+      <h2>Paused</h2>
+      <p id="pause-info" class="pause-info"></p>
+      <button class="btn btn-primary" id="btn-pause-resume">Resume</button>
+      <button class="btn" id="btn-pause-restart">Restart Match</button>
+      <button class="btn" id="btn-pause-leave">Leave Match</button>
+      <button class="btn" id="btn-pause-menu">Main Menu</button>
+    </div>
+  </div>
 
   <div id="hud-mobile-root"></div>
 </div>
@@ -569,11 +611,11 @@ const TEKNIKS = [
   // ---------------- TANK ----------------
   {
     id: 'sword_knight', name: 'Sword Knight', role: 'tank', weaponGlyph: '🗡',
-    baseStats: { hp: 140, armor: 12, speed: 190, attackRange: 58, attackDamage: 10, attackCooldown: 0.9 },
+    baseStats: { hp: 140, armor: 12, speed: 190, attackRange: 82, attackDamage: 10, attackCooldown: 0.9 },
     attackType: 'melee',
     abilities: [
       { id: 'guard', base: 'Guard', type: 'shield_self', cooldown: 8, value: 0.25, duration: 4 },
-      { id: 'shield_bash', base: 'Shield Bash', type: 'melee_strike', cooldown: 6, damage: 14, range: 62, stun: 1.0 },
+      { id: 'shield_bash', base: 'Shield Bash', type: 'melee_strike', cooldown: 6, damage: 14, range: 86, stun: 1.0 },
       { id: 'rally_cry', base: 'Rally Cry', type: 'buff_team', cooldown: 14, radius: 150, stat: 'armor', amount: 0.15, duration: 5 },
       { id: 'charge', base: 'Charge', type: 'dash', cooldown: 10, damage: 12, distance: 220 }
     ],
@@ -581,7 +623,7 @@ const TEKNIKS = [
   },
   {
     id: 'mech', name: 'Mech', role: 'tank', weaponGlyph: '🤖',
-    baseStats: { hp: 150, armor: 14, speed: 170, attackRange: 66, attackDamage: 11, attackCooldown: 1.0 },
+    baseStats: { hp: 150, armor: 14, speed: 170, attackRange: 90, attackDamage: 11, attackCooldown: 1.0 },
     attackType: 'melee',
     abilities: [
       { id: 'servo_plating', base: 'Servo Plating', type: 'shield_self', cooldown: 9, value: 0.2, duration: 5 },
@@ -593,7 +635,7 @@ const TEKNIKS = [
   },
   {
     id: 'titan', name: 'Titan', role: 'tank', weaponGlyph: '⛰',
-    baseStats: { hp: 160, armor: 10, speed: 160, attackRange: 72, attackDamage: 12, attackCooldown: 1.0 },
+    baseStats: { hp: 160, armor: 10, speed: 160, attackRange: 96, attackDamage: 12, attackCooldown: 1.0 },
     attackType: 'melee',
     abilities: [
       { id: 'stone_skin', base: 'Stone Skin', type: 'shield_self', cooldown: 9, value: 0.22, duration: 5 },
@@ -631,10 +673,10 @@ const TEKNIKS = [
   },
   {
     id: 'surgeon', name: 'Surgeon', role: 'healer', weaponGlyph: '➕',
-    baseStats: { hp: 88, armor: 6, speed: 198, attackRange: 60, attackDamage: 7, attackCooldown: 0.7 },
+    baseStats: { hp: 88, armor: 6, speed: 198, attackRange: 82, attackDamage: 7, attackCooldown: 0.7 },
     attackType: 'melee',
     abilities: [
-      { id: 'triage_strike', base: 'Triage Strike', type: 'melee_strike', cooldown: 4, damage: 8, range: 62 },
+      { id: 'triage_strike', base: 'Triage Strike', type: 'melee_strike', cooldown: 4, damage: 8, range: 86 },
       { id: 'emergency_stabilize', base: 'Emergency Stabilize', type: 'heal_ally', cooldown: 10, value: 0.3 },
       { id: 'adrenaline_shot', base: 'Adrenaline Shot', type: 'buff_ally', cooldown: 9, stat: 'speed_damage', amount: 0.2, duration: 5 },
       { id: 'field_surgery', base: 'Field Surgery', type: 'cleanse_ally', cooldown: 11, value: 0.2 }
@@ -645,22 +687,22 @@ const TEKNIKS = [
   // ---------------- MELEE DPS ----------------
   {
     id: 'rogue', name: 'Rogue', role: 'meleeDPS', weaponGlyph: '🔪',
-    baseStats: { hp: 95, armor: 6, speed: 215, attackRange: 52, attackDamage: 11, attackCooldown: 0.6 },
+    baseStats: { hp: 95, armor: 6, speed: 215, attackRange: 76, attackDamage: 11, attackCooldown: 0.6 },
     attackType: 'melee',
     abilities: [
       { id: 'shadow_step', base: 'Shadow Step', type: 'dash', cooldown: 7, damage: 10, distance: 220 },
-      { id: 'backstab', base: 'Backstab', type: 'melee_strike', cooldown: 6, damage: 16, range: 55, executeBonus: 0.5 },
+      { id: 'backstab', base: 'Backstab', type: 'melee_strike', cooldown: 6, damage: 16, range: 79, executeBonus: 0.5 },
       { id: 'smoke_veil', base: 'Smoke Veil', type: 'stealth', cooldown: 12, duration: 2.5 },
       { id: 'throwing_knives', base: 'Throwing Knives', type: 'projectile', cooldown: 4, damage: 9, range: 240 }
     ],
-    ultimate: { id: 'death_mark', base: 'Death Mark', type: 'mark_and_strike', cooldown: 55, markAmount: 0.4, markDuration: 5, damage: 30, range: 60 }
+    ultimate: { id: 'death_mark', base: 'Death Mark', type: 'mark_and_strike', cooldown: 55, markAmount: 0.4, markDuration: 5, damage: 30, range: 84 }
   },
   {
     id: 'martial_artist', name: 'Martial Artist', role: 'meleeDPS', weaponGlyph: '👊',
-    baseStats: { hp: 100, armor: 7, speed: 205, attackRange: 55, attackDamage: 10, attackCooldown: 0.55 },
+    baseStats: { hp: 100, armor: 7, speed: 205, attackRange: 79, attackDamage: 10, attackCooldown: 0.55 },
     attackType: 'melee',
     abilities: [
-      { id: 'flowing_palm', base: 'Flowing Palm', type: 'melee_strike', cooldown: 4, damage: 13, range: 56 },
+      { id: 'flowing_palm', base: 'Flowing Palm', type: 'melee_strike', cooldown: 4, damage: 13, range: 80 },
       { id: 'rising_kick', base: 'Rising Kick', type: 'dash', cooldown: 7, damage: 12, distance: 160, stun: 0.8 },
       { id: 'iron_stance', base: 'Iron Stance', type: 'shield_self', cooldown: 10, value: 0.15, duration: 4 },
       { id: 'chi_burst', base: 'Chi Burst', type: 'aoe_damage', cooldown: 8, damage: 14, radius: 70, originSelf: true }
@@ -669,10 +711,10 @@ const TEKNIKS = [
   },
   {
     id: 'engineer', name: 'Engineer', role: 'meleeDPS', weaponGlyph: '🔧',
-    baseStats: { hp: 98, armor: 7, speed: 195, attackRange: 58, attackDamage: 10, attackCooldown: 0.6 },
+    baseStats: { hp: 98, armor: 7, speed: 195, attackRange: 82, attackDamage: 10, attackCooldown: 0.6 },
     attackType: 'melee',
     abilities: [
-      { id: 'wrench_smash', base: 'Wrench Smash', type: 'melee_strike', cooldown: 5, damage: 12, range: 58 },
+      { id: 'wrench_smash', base: 'Wrench Smash', type: 'melee_strike', cooldown: 5, damage: 12, range: 82 },
       { id: 'deploy_turret', base: 'Deploy Turret', type: 'summon_turret', cooldown: 14, duration: 8, damage: 4 },
       { id: 'tesla_coil', base: 'Tesla Coil', type: 'aoe_damage', cooldown: 9, damage: 13, radius: 90, slow: 0.3, originSelf: true },
       { id: 'overclock_gear', base: 'Overclock Gear', type: 'buff_self', cooldown: 11, stat: 'attackSpeed', amount: 0.25, duration: 5 }
@@ -923,24 +965,37 @@ class InputController {
     this.pendingActions = new Set(); // one-shot presses this frame
     this.isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
 
+    // Pointer input listens on the window, not the canvas: the HUD/screen
+    // layers sit on top of the canvas, so canvas-bound listeners never fire.
+    // Anything landing on real UI (buttons, panels) is ignored instead.
     window.addEventListener('keydown', e => this.onKeyDown(e));
     window.addEventListener('keyup', e => this.keys.delete(e.code));
-    canvas.addEventListener('mousemove', e => this.onMouseMove(e));
-    // Each click is one basic attack — holding the button does not auto-repeat.
-    canvas.addEventListener('mousedown', e => {
-      if (e.button !== 0) return;
+    window.addEventListener('mousemove', e => this.onMouseMove(e));
+    window.addEventListener('mousedown', e => {
+      if (e.button !== 0 || this._isUiTarget(e)) return;
+      this.onMouseMove(e);
       this.mouse.down = true;
       this.pendingActions.add('attack');
     });
     window.addEventListener('mouseup', () => { this.mouse.down = false; });
+    window.addEventListener('blur', () => { this.mouse.down = false; this.keys.clear(); });
     canvas.addEventListener('contextmenu', e => e.preventDefault());
 
-    canvas.addEventListener('pointerdown', e => this.onPointerDown(e));
-    canvas.addEventListener('pointermove', e => this.onPointerMove(e));
-    canvas.addEventListener('pointerup', e => this.onPointerUp(e));
-    canvas.addEventListener('pointercancel', e => this.onPointerUp(e));
+    window.addEventListener('pointerdown', e => this.onPointerDown(e));
+    window.addEventListener('pointermove', e => this.onPointerMove(e));
+    window.addEventListener('pointerup', e => this.onPointerUp(e));
+    window.addEventListener('pointercancel', e => this.onPointerUp(e));
 
     this._buildMobileButtons();
+  }
+
+  // True when the event landed on interactive UI rather than the play area.
+  _isUiTarget(e) {
+    const t = e.target;
+    return !!(t && t.closest && t.closest(
+      'button, input, .menu-panel, .modal-panel, .card-grid, .wizard-footer, ' +
+      '.role-tabs, .hub-topbar, .mobile-buttons, .hud-abilities, .pause-overlay'
+    ));
   }
 
   onKeyDown(e) {
@@ -964,7 +1019,8 @@ class InputController {
   }
 
   onPointerDown(e) {
-    if (!this.isTouch && e.pointerType !== 'touch') return;
+    if (e.pointerType !== 'touch') return;
+    if (this._isUiTarget(e)) return;
     const p = this._rectPos(e);
     const half = this.canvas.width / 2;
     if (p.x < half && !this.moveJoystick) {
@@ -1051,9 +1107,22 @@ class InputController {
     return { x: this.mouse.x, y: this.mouse.y, active: true };
   }
 
+  // A click queues one immediate attack ('attack' in pendingActions); holding
+  // the button keeps swinging at the character's own attack speed.
+  isHoldFiring() {
+    return this.mouse.down;
+  }
+
+  // Drop anything queued up, so clicks on menus never leak into the next match.
+  clearPending() {
+    this.pendingActions.clear();
+    this.mouse.down = false;
+    this.moveJoystick = null;
+    this.aimJoystick = null;
+  }
+
   // Touch players hold the aim stick to keep swinging; tapping repeatedly on a
-  // phone would be miserable. Mouse players get one attack per click instead,
-  // queued through pendingActions as 'attack'.
+  // phone would be miserable.
   isTouchFiring() {
     if (!this.aimJoystick) return false;
     const dx = this.aimJoystick.x - this.aimJoystick.originX;
@@ -1165,7 +1234,10 @@ class Entity {
     if (mark && mark.until > world.time) dmg *= (1 + mark.amount);
     const passive = this.sheet.passive;
     if (passive && passive.onTakeDamage) dmg = passive.onTakeDamage(this, dmg, source, world);
-    dmg = Math.max(0, dmg - this.armorValue * 0.6);
+    // Armor scales damage down by a percentage rather than subtracting a flat
+    // amount. Flat armor meant a 14-armor tank soaked ~8 of every hit, so small
+    // basic attacks landed for almost nothing (a healer's hit did literally 0).
+    dmg = dmg * (1 - this.armorValue / (this.armorValue + 55));
     // shield absorbs first
     if (this.shield > 0) {
       const absorbed = Math.min(this.shield, dmg);
@@ -1333,8 +1405,15 @@ function clampToMap(x, y, world) {
   return { x: Math.max(20, Math.min(m.width - 20, x)), y: Math.max(20, Math.min(m.height - 20, y)) };
 }
 
+// Global damage dial: everyone hits softer than raw kit numbers so fights last
+// long enough to react in. AI-controlled fighters take a further handicap so
+// they don't out-trade a human on pure cooldown uptime.
+const COMBAT_DAMAGE_SCALE = 0.8;
+const AI_DAMAGE_SCALE = 0.85;
+
 function dealDamageTo(target, amount, source, world) {
-  const dmg = amount * (source.damageMultiplier || 1);
+  let dmg = amount * (source.damageMultiplier || 1) * COMBAT_DAMAGE_SCALE;
+  if (source.isAI) dmg *= AI_DAMAGE_SCALE;
   const applied = target.takeDamage(dmg, source, world);
   if (applied > 0) {
     spawnEffect(world, {
@@ -1417,8 +1496,9 @@ const ABILITY_HANDLERS = {
   melee_strike(entity, ab, aimX, aimY, world) {
     const target = nearestEnemy(entity, world, ab.range);
     entity.facing = Math.atan2(aimY - entity.y, aimX - entity.x);
-    spawnEffect(world, { type: 'slash', x: entity.x, y: entity.y, angle: entity.facing, life: 0.2, color: entity.sheet.color, big: true });
-    if (!target) return true;
+    spawnEffect(world, { type: 'slash', x: entity.x, y: entity.y, angle: entity.facing, life: 0.2, color: entity.sheet.color, big: true, reach: ab.range });
+    // A whiff shows the swing but doesn't burn the cooldown.
+    if (!target) return false;
     let dmg = ab.damage;
     if (ab.executeBonus && target.hp / target.maxHp > 0.5) dmg *= (1 + ab.executeBonus);
     dealDamageTo(target, dmg, entity, world);
@@ -1571,20 +1651,18 @@ const ABILITY_HANDLERS = {
   },
   mark(entity, ab, aimX, aimY, world) {
     const target = nearestEnemy(entity, world, ab.range);
-    if (target) {
-      target.applyStatus('mark', ab.duration, world.time, { amount: ab.amount });
-      spawnEffect(world, { type: 'beam', x1: entity.x, y1: entity.y, x2: target.x, y2: target.y, color: '#ff6b4f', life: 0.4 });
-      spawnEffect(world, { type: 'castring', x: target.x, y: target.y, color: '#ff6b4f', radius: 40, life: 0.5 });
-    }
+    if (!target) return false;
+    target.applyStatus('mark', ab.duration, world.time, { amount: ab.amount });
+    spawnEffect(world, { type: 'beam', x1: entity.x, y1: entity.y, x2: target.x, y2: target.y, color: '#ff6b4f', life: 0.4 });
+    spawnEffect(world, { type: 'castring', x: target.x, y: target.y, color: '#ff6b4f', radius: 40, life: 0.5 });
     return true;
   },
   mark_and_strike(entity, ab, aimX, aimY, world) {
     const target = nearestEnemy(entity, world, ab.range);
-    if (target) {
-      target.applyStatus('mark', ab.markDuration, world.time, { amount: ab.markAmount });
-      dealDamageTo(target, ab.damage, entity, world);
-    }
-    spawnEffect(world, { type: 'slash', x: entity.x, y: entity.y, angle: entity.facing, life: 0.25, color: '#e03b3b', big: true });
+    if (!target) return false; // don't waste the ultimate on empty air
+    target.applyStatus('mark', ab.markDuration, world.time, { amount: ab.markAmount });
+    dealDamageTo(target, ab.damage, entity, world);
+    spawnEffect(world, { type: 'slash', x: entity.x, y: entity.y, angle: entity.facing, life: 0.25, color: '#e03b3b', big: true, reach: ab.range });
     return true;
   },
   debuff_area(entity, ab, aimX, aimY, world) {
@@ -1592,7 +1670,7 @@ const ABILITY_HANDLERS = {
     const d = Math.min(ab.range, Math.hypot(aimX - entity.x, aimY - entity.y));
     const cx = entity.x + Math.cos(ang) * d, cy = entity.y + Math.sin(ang) * d;
     for (const t of enemiesInRadius(cx, cy, ab.radius, entity, world)) t.applyStatus('weaken', ab.duration, world.time, { amount: ab.amount });
-    spawnEffect(world, { type: 'blast', x: cx, y: cy, radius: ab.radius, life: ab.duration, color: '#555' });
+    spawnEffect(world, { type: 'blast', x: cx, y: cy, radius: ab.radius, life: ab.duration, color: '#b9a7d6' });
     return true;
   }
 };
@@ -1691,15 +1769,36 @@ function updateEffects(world) {
 // (no pixel-perfect kiting, no frame-perfect combos).
 
 const AI_AWARENESS_RANGE = 620;
+// Difficulty dials. These are deliberately human-ish: an average player doesn't
+// react in 200ms, doesn't hit every shot, and doesn't dump four abilities the
+// instant they come off cooldown. Both teams run this same controller, so
+// allies are exactly as capable as opponents.
+const AI_REACTION_MIN = 0.35;      // seconds between decisions
+const AI_REACTION_SPREAD = 0.4;
+const AI_ABILITY_CHANCE = 0.55;    // chance to use an available offensive ability
+const AI_ULTIMATE_CHANCE = 0.6;
+const AI_ABILITY_GAP = 1.5;        // min seconds between an AI's ability casts
+const AI_AIM_ERROR = 46;           // pixels of aim scatter
+const AI_ATTACK_CHANCE = 0.9;      // chance to take an available basic attack
 
 function newAiState() {
   return {
-    nextDecision: Math.random() * 0.2,
+    nextDecision: Math.random() * 0.3,
+    nextAbilityAt: 0,
     moveDirX: 0, moveDirY: 0,
     aimX: 0, aimY: 0,
     targetId: null,
     aimError: 0
   };
+}
+
+// Can this AI cast anything right now? Gating all casts behind one shared timer
+// stops the "four abilities in one frame" burst that made fights unsurvivable.
+function aiCanCast(entity, world, st) {
+  return world.time >= st.nextAbilityAt;
+}
+function aiNoteCast(world, st) {
+  st.nextAbilityAt = world.time + AI_ABILITY_GAP * (0.75 + Math.random() * 0.5);
 }
 
 function aiPickTarget(entity, world) {
@@ -1710,7 +1809,9 @@ function aiPickTarget(entity, world) {
   for (const e of enemies) {
     const hpRatio = e.hp / e.maxHp;
     const d = dist(entity, e);
-    const score = (1 - hpRatio) * 120 - d * 0.15;
+    // Weaker pull toward low-health targets than before, plus per-AI jitter, so
+    // the whole enemy team doesn't collapse onto whoever is hurt (usually you).
+    const score = (1 - hpRatio) * 70 - d * 0.15 + Math.random() * 40;
     if (score > bestScore) { bestScore = score; best = e; }
   }
   return best;
@@ -1747,55 +1848,57 @@ function aiUtilityAbilityIndex(entity, world) {
 function aiDecide(entity, world, st) {
   const target = aiPickTarget(entity, world);
   st.targetId = target ? target.id : null;
-  st.aimError = (Math.random() - 0.5) * 40; // a little imprecision, not laser-perfect
+  st.aimError = (Math.random() - 0.5) * AI_AIM_ERROR;
 
   const hpRatio = entity.hp / entity.maxHp;
   const role = entity.sheet.role;
+  // At most one cast per decision, and never two casts closer than AI_ABILITY_GAP.
+  let casting = aiCanCast(entity, world, st);
 
   // 1. Emergency defense.
-  if (hpRatio < 0.35) {
+  if (casting && hpRatio < 0.35) {
     const di = aiDefensiveAbilityIndex(entity);
     if (di >= 0) {
       const ab = entity.sheet.abilities[di];
       const aim = ['heal_ally', 'heal_ally_shield', 'cleanse_ally', 'shield_ally'].includes(ab.type)
         ? pointOf(lowestHpAlly(entity, world, true, 500) || entity) : pointOf(entity);
-      useAbility(entity, di, aim.x, aim.y, world);
+      if (useAbility(entity, di, aim.x, aim.y, world)) { aiNoteCast(world, st); casting = false; }
     }
   }
 
   // 2. Healer role: keep the weakest ally topped up proactively.
-  if (role === 'healer') {
+  if (casting && role === 'healer') {
     const weakAlly = lowestHpAlly(entity, world, false, 550);
     if (weakAlly && weakAlly.hp / weakAlly.maxHp < 0.85) {
       const ui = aiUtilityAbilityIndex(entity, world);
       if (ui >= 0) {
         const p = pointOf(weakAlly);
-        useAbility(entity, ui, p.x, p.y, world);
+        if (useAbility(entity, ui, p.x, p.y, world)) { aiNoteCast(world, st); casting = false; }
       }
     }
-  } else if (Math.random() < 0.5) {
-    // Non-healers occasionally still pop team buffs (tank rally cries, scholar's team isn't the only support).
+  } else if (casting && Math.random() < 0.35) {
+    // Non-healers occasionally pop team buffs (tank rally cries and the like).
     const ui = aiUtilityAbilityIndex(entity, world);
     if (ui >= 0 && ['buff_team', 'buff_self'].includes(entity.sheet.abilities[ui].type)) {
-      useAbility(entity, ui, entity.x, entity.y, world);
+      if (useAbility(entity, ui, entity.x, entity.y, world)) { aiNoteCast(world, st); casting = false; }
     }
   }
 
   // 3. Ultimate when a fight is on.
-  if (target && entity.ultCooldown.remaining <= 0) {
+  if (casting && target && entity.ultCooldown.remaining <= 0 && Math.random() < AI_ULTIMATE_CHANCE) {
     const nearbyEnemies = enemiesInRadius(entity.x, entity.y, 260, entity, world).length;
     if (nearbyEnemies > 0 || role === 'healer') {
       const aim = pointOf(target);
-      useUltimate(entity, aim.x + st.aimError, aim.y + st.aimError, world);
+      if (useUltimate(entity, aim.x + st.aimError, aim.y + st.aimError, world)) { aiNoteCast(world, st); casting = false; }
     }
   }
 
-  // 4. Offensive ability on cooldown.
-  if (target) {
+  // 4. Offensive ability, sometimes.
+  if (casting && target) {
     const oi = aiOffensiveAbilityIndex(entity, target, world);
-    if (oi >= 0 && Math.random() < 0.85) {
+    if (oi >= 0 && Math.random() < AI_ABILITY_CHANCE) {
       const aim = pointOf(target);
-      useAbility(entity, oi, aim.x + st.aimError, aim.y + st.aimError, world);
+      if (useAbility(entity, oi, aim.x + st.aimError, aim.y + st.aimError, world)) { aiNoteCast(world, st); casting = false; }
     }
   }
 
@@ -1818,14 +1921,31 @@ function aiDecide(entity, world, st) {
     st.moveDirX = dx; st.moveDirY = dy;
     st.aimX = target.x + st.aimError; st.aimY = target.y + st.aimError;
   } else {
-    // No target: wander gently toward map center / random point.
-    if (!st.wanderX || Math.random() < 0.02) {
-      st.wanderX = 60 + Math.random() * (world.map.width - 120);
-      st.wanderY = 60 + Math.random() * (world.map.height - 120);
-    }
-    st.moveDirX = st.wanderX - entity.x; st.moveDirY = st.wanderY - entity.y;
+    // No target in sight: regroup rather than wander off alone. Teammates head
+    // for the squad's center of mass (and stay near the human player), which
+    // keeps allies useful instead of scattered across the map.
+    const dest = aiRegroupPoint(entity, world, st);
+    st.moveDirX = dest.x - entity.x; st.moveDirY = dest.y - entity.y;
     st.aimX = entity.x + st.moveDirX; st.aimY = entity.y + st.moveDirY;
   }
+}
+
+// Where an AI heads when it has nobody to fight.
+function aiRegroupPoint(entity, world, st) {
+  const allies = getAllies(entity, world).filter(a => a !== entity);
+  const human = allies.find(a => !a.isAI);
+  if (human) return { x: human.x + (Math.random() - 0.5) * 120, y: human.y + (Math.random() - 0.5) * 120 };
+  if (allies.length) {
+    const cx = allies.reduce((s, a) => s + a.x, 0) / allies.length;
+    const cy = allies.reduce((s, a) => s + a.y, 0) / allies.length;
+    return { x: cx + (Math.random() - 0.5) * 140, y: cy + (Math.random() - 0.5) * 140 };
+  }
+  // Solo (free-for-all): drift toward the middle where the action is, not a corner.
+  if (!st.wanderX || Math.random() < 0.05) {
+    st.wanderX = world.map.width * (0.3 + Math.random() * 0.4);
+    st.wanderY = world.map.height * (0.3 + Math.random() * 0.4);
+  }
+  return { x: st.wanderX, y: st.wanderY };
 }
 
 function pointOf(e) { return { x: e.x, y: e.y }; }
@@ -1837,14 +1957,14 @@ function updateAI(entity, world, dt) {
   st.nextDecision -= dt;
   if (st.nextDecision <= 0) {
     aiDecide(entity, world, st);
-    st.nextDecision = 0.18 + Math.random() * 0.22; // ~180-400ms reaction cadence
+    st.nextDecision = AI_REACTION_MIN + Math.random() * AI_REACTION_SPREAD;
   }
   applyMovement(entity, st.moveDirX, st.moveDirY, dt, world);
 
-  // Auto basic-attack whenever a target is in range, independent of the decision tick
-  // so it doesn't feel like it's missing free damage between "thinks".
+  // Basic attacks happen between decisions so the AI isn't idle mid-think, but
+  // it passes on some openings rather than achieving perfect uptime.
   const target = world.entities.find(e => e.id === st.targetId && e.alive);
-  if (target && dist(entity, target) <= entity.sheet.stats.attackRange + 10) {
+  if (target && dist(entity, target) <= entity.sheet.stats.attackRange + 10 && Math.random() < AI_ATTACK_CHANCE) {
     useBasicAttack(entity, target.x + st.aimError, target.y + st.aimError, world);
   }
 }
@@ -2073,14 +2193,22 @@ class MatchEngine {
     this.lastAim = worldAim;
     pe.facing = Math.atan2(worldAim.y - pe.y, worldAim.x - pe.x);
 
-    // One click, one swing. Touch players hold the aim stick to keep attacking.
-    if (this.input.consumePending('attack') || this.input.isTouchFiring()) {
+    // A click swings immediately; holding the button (or the touch aim stick)
+    // keeps swinging at the character's own attack speed.
+    if (this.input.consumePending('attack') || this.input.isHoldFiring() || this.input.isTouchFiring()) {
       useBasicAttack(pe, worldAim.x, worldAim.y, this.world);
     }
     for (let i = 0; i < 4; i++) {
-      if (this.input.consumePending('ability' + (i + 1))) useAbility(pe, i, worldAim.x, worldAim.y, this.world);
+      if (!this.input.consumePending('ability' + (i + 1))) continue;
+      const ability = pe.sheet.abilities[i];
+      const cd = pe.cooldowns[i];
+      if (cd.remaining > 0) showHudHint(`${ability.name} — ${Math.ceil(cd.remaining)}s`);
+      else if (!useAbility(pe, i, worldAim.x, worldAim.y, this.world)) showHudHint('No target in range');
     }
-    if (this.input.consumePending('ultimate')) useUltimate(pe, worldAim.x, worldAim.y, this.world);
+    if (this.input.consumePending('ultimate')) {
+      if (pe.ultCooldown.remaining > 0) showHudHint(`Ultimate — ${Math.ceil(pe.ultCooldown.remaining)}s`);
+      else if (!useUltimate(pe, worldAim.x, worldAim.y, this.world)) showHudHint('No target in range');
+    }
     this.input.clearFrame();
   }
 
@@ -2749,8 +2877,13 @@ function updateMatchHud(engine, elapsed) {
     respawnEl.hidden = true;
   }
 
+  // Rebuild when the character changes, not just when the ability *count*
+  // changes — every kit has 4 + 1, so a count check never fired and the hotbar
+  // kept showing the previous character's ability names.
   const abRoot = document.getElementById('hud-abilities');
-  if (abRoot.childElementCount !== pe.sheet.abilities.length + 1) {
+  const kitKey = `${pe.sheet.affinity.id}:${pe.sheet.teknik.id}`;
+  if (abRoot.dataset.kit !== kitKey) {
+    abRoot.dataset.kit = kitKey;
     abRoot.innerHTML = '';
     pe.sheet.abilities.forEach((a, i) => {
       const el = document.createElement('div');
@@ -2779,6 +2912,18 @@ function renderResultsStandings(container, result, playerTeam) {
        <span>${i + 1}. ${s.name}</span>
        <span class="rk">${s.kills} kills · ${s.deaths} deaths</span>
      </div>`).join('');
+}
+
+// Brief centered message explaining why an input didn't do what was expected
+// ("No target in range", "Ability — 4s").
+let hudHintTimer = null;
+function showHudHint(text) {
+  const el = document.getElementById('hud-hint');
+  if (!el) return;
+  el.textContent = text;
+  el.hidden = false;
+  clearTimeout(hudHintTimer);
+  hudHintTimer = setTimeout(() => { el.hidden = true; }, 1100);
 }
 
 function pushKillFeed(text) {
@@ -2836,8 +2981,10 @@ let playerSheet = null; // the confirmed, active character
 let hubEngine = null;
 let matchEngine = null;
 
+let paused = false;
 let pendingModeId = null;
 let pendingMapId = null;
+let lastMatchSetup = null; // { mode, mapId } so a paused match can be restarted
 let tournamentOpponentId = null;
 let activeTournament = null;
 let lastMatchResult = null;
@@ -2847,6 +2994,9 @@ function setScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   currentScreenId = id;
+  if (id !== 'screen-match') setPaused(false);
+  // Menu clicks must never leak through as attacks in the next match.
+  if (input) input.clearPending();
   canvas.classList.toggle('visible', id === 'screen-hub' || id === 'screen-match');
   if (id === 'screen-hub') input.setContext('hub');
   else if (id === 'screen-match') input.setContext('match');
@@ -2957,6 +3107,7 @@ function startMatchFromSelection() {
 function startMatch(mode, map, roster, isTournamentMatch) {
   document.getElementById('hud-killfeed').innerHTML = '';
   lastMatchWasTournament = isTournamentMatch;
+  lastMatchSetup = { mode, mapId: map.id, isTournamentMatch };
   matchEngine = new MatchEngine({
     map, mode, roster, playerSheet, input, canvas,
     onEnd: result => handleMatchEnd(result),
@@ -2999,6 +3150,41 @@ function continueAfterResults() {
   } else {
     setScreen('screen-hub');
   }
+}
+
+// ---------------- Pause ----------------
+function setPaused(value) {
+  paused = value;
+  const overlay = document.getElementById('pause-overlay');
+  if (overlay) overlay.hidden = !value;
+  if (value && matchEngine) {
+    const secs = Math.ceil(matchEngine.timeRemaining);
+    const standing = matchEngine.getStandings().find(s => s.team === matchEngine.playerEntity.team);
+    document.getElementById('pause-info').textContent =
+      `${matchEngine.mode.name} · ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')} left · your team on ${standing ? standing.kills : 0} kills`;
+    // A tournament round can't be replayed from scratch mid-bracket.
+    document.getElementById('btn-pause-restart').style.display = lastMatchWasTournament ? 'none' : '';
+  }
+  if (input) input.clearPending();
+}
+
+function togglePause() {
+  if (currentScreenId !== 'screen-match' || !matchEngine || matchEngine.ended) return;
+  setPaused(!paused);
+}
+
+function leaveMatch() {
+  setPaused(false);
+  matchEngine = null;
+  if (lastMatchWasTournament && activeTournament) openTournamentScreen();
+  else setScreen('screen-hub');
+}
+
+function restartMatch() {
+  if (!lastMatchSetup || lastMatchSetup.isTournamentMatch) return;
+  setPaused(false);
+  const { mode, mapId } = lastMatchSetup;
+  startMatch(mode, MAP_BY_ID[mapId], buildMatchRoster(mode, playerSheet), false);
 }
 
 // ---------------- Tournament ----------------
@@ -3066,6 +3252,23 @@ function wireUI() {
   });
 
   document.getElementById('btn-results-continue').addEventListener('click', continueAfterResults);
+
+  document.getElementById('btn-pause').addEventListener('click', togglePause);
+  document.getElementById('btn-pause-resume').addEventListener('click', () => setPaused(false));
+  document.getElementById('btn-pause-restart').addEventListener('click', restartMatch);
+  document.getElementById('btn-pause-leave').addEventListener('click', leaveMatch);
+  document.getElementById('btn-pause-menu').addEventListener('click', () => {
+    setPaused(false);
+    matchEngine = null;
+    setScreen('screen-menu');
+  });
+
+  // Esc pauses a match, or backs out of the hub to the main menu.
+  window.addEventListener('keydown', e => {
+    if (e.code !== 'Escape') return;
+    if (currentScreenId === 'screen-match') { e.preventDefault(); togglePause(); }
+    else if (currentScreenId === 'screen-hub') setScreen('screen-menu');
+  });
 }
 
 function loadSavedCharacter() {
@@ -3089,7 +3292,10 @@ function loop(now) {
     hubEngine.update(dt);
     renderHub(ctx, canvas, hubEngine);
   } else if (currentScreenId === 'screen-match' && matchEngine) {
-    matchEngine.update(dt);
+    // While paused the world is frozen but still drawn, so the pause menu sits
+    // over the scene rather than a blank screen.
+    if (!paused) matchEngine.update(dt);
+    else input.clearFrame();
     renderMatch(ctx, canvas, matchEngine);
     updateMatchHud(matchEngine);
   }

@@ -47,8 +47,15 @@ function clampToMap(x, y, world) {
   return { x: Math.max(20, Math.min(m.width - 20, x)), y: Math.max(20, Math.min(m.height - 20, y)) };
 }
 
+// Global damage dial: everyone hits softer than raw kit numbers so fights last
+// long enough to react in. AI-controlled fighters take a further handicap so
+// they don't out-trade a human on pure cooldown uptime.
+const COMBAT_DAMAGE_SCALE = 0.8;
+const AI_DAMAGE_SCALE = 0.85;
+
 function dealDamageTo(target, amount, source, world) {
-  const dmg = amount * (source.damageMultiplier || 1);
+  let dmg = amount * (source.damageMultiplier || 1) * COMBAT_DAMAGE_SCALE;
+  if (source.isAI) dmg *= AI_DAMAGE_SCALE;
   const applied = target.takeDamage(dmg, source, world);
   if (applied > 0) {
     spawnEffect(world, {
@@ -131,8 +138,9 @@ const ABILITY_HANDLERS = {
   melee_strike(entity, ab, aimX, aimY, world) {
     const target = nearestEnemy(entity, world, ab.range);
     entity.facing = Math.atan2(aimY - entity.y, aimX - entity.x);
-    spawnEffect(world, { type: 'slash', x: entity.x, y: entity.y, angle: entity.facing, life: 0.2, color: entity.sheet.color, big: true });
-    if (!target) return true;
+    spawnEffect(world, { type: 'slash', x: entity.x, y: entity.y, angle: entity.facing, life: 0.2, color: entity.sheet.color, big: true, reach: ab.range });
+    // A whiff shows the swing but doesn't burn the cooldown.
+    if (!target) return false;
     let dmg = ab.damage;
     if (ab.executeBonus && target.hp / target.maxHp > 0.5) dmg *= (1 + ab.executeBonus);
     dealDamageTo(target, dmg, entity, world);
@@ -285,20 +293,18 @@ const ABILITY_HANDLERS = {
   },
   mark(entity, ab, aimX, aimY, world) {
     const target = nearestEnemy(entity, world, ab.range);
-    if (target) {
-      target.applyStatus('mark', ab.duration, world.time, { amount: ab.amount });
-      spawnEffect(world, { type: 'beam', x1: entity.x, y1: entity.y, x2: target.x, y2: target.y, color: '#ff6b4f', life: 0.4 });
-      spawnEffect(world, { type: 'castring', x: target.x, y: target.y, color: '#ff6b4f', radius: 40, life: 0.5 });
-    }
+    if (!target) return false;
+    target.applyStatus('mark', ab.duration, world.time, { amount: ab.amount });
+    spawnEffect(world, { type: 'beam', x1: entity.x, y1: entity.y, x2: target.x, y2: target.y, color: '#ff6b4f', life: 0.4 });
+    spawnEffect(world, { type: 'castring', x: target.x, y: target.y, color: '#ff6b4f', radius: 40, life: 0.5 });
     return true;
   },
   mark_and_strike(entity, ab, aimX, aimY, world) {
     const target = nearestEnemy(entity, world, ab.range);
-    if (target) {
-      target.applyStatus('mark', ab.markDuration, world.time, { amount: ab.markAmount });
-      dealDamageTo(target, ab.damage, entity, world);
-    }
-    spawnEffect(world, { type: 'slash', x: entity.x, y: entity.y, angle: entity.facing, life: 0.25, color: '#e03b3b', big: true });
+    if (!target) return false; // don't waste the ultimate on empty air
+    target.applyStatus('mark', ab.markDuration, world.time, { amount: ab.markAmount });
+    dealDamageTo(target, ab.damage, entity, world);
+    spawnEffect(world, { type: 'slash', x: entity.x, y: entity.y, angle: entity.facing, life: 0.25, color: '#e03b3b', big: true, reach: ab.range });
     return true;
   },
   debuff_area(entity, ab, aimX, aimY, world) {
@@ -306,7 +312,7 @@ const ABILITY_HANDLERS = {
     const d = Math.min(ab.range, Math.hypot(aimX - entity.x, aimY - entity.y));
     const cx = entity.x + Math.cos(ang) * d, cy = entity.y + Math.sin(ang) * d;
     for (const t of enemiesInRadius(cx, cy, ab.radius, entity, world)) t.applyStatus('weaken', ab.duration, world.time, { amount: ab.amount });
-    spawnEffect(world, { type: 'blast', x: cx, y: cy, radius: ab.radius, life: ab.duration, color: '#555' });
+    spawnEffect(world, { type: 'blast', x: cx, y: cy, radius: ab.radius, life: ab.duration, color: '#b9a7d6' });
     return true;
   }
 };

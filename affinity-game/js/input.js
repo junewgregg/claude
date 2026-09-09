@@ -14,24 +14,37 @@ class InputController {
     this.pendingActions = new Set(); // one-shot presses this frame
     this.isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
 
+    // Pointer input listens on the window, not the canvas: the HUD/screen
+    // layers sit on top of the canvas, so canvas-bound listeners never fire.
+    // Anything landing on real UI (buttons, panels) is ignored instead.
     window.addEventListener('keydown', e => this.onKeyDown(e));
     window.addEventListener('keyup', e => this.keys.delete(e.code));
-    canvas.addEventListener('mousemove', e => this.onMouseMove(e));
-    // Each click is one basic attack — holding the button does not auto-repeat.
-    canvas.addEventListener('mousedown', e => {
-      if (e.button !== 0) return;
+    window.addEventListener('mousemove', e => this.onMouseMove(e));
+    window.addEventListener('mousedown', e => {
+      if (e.button !== 0 || this._isUiTarget(e)) return;
+      this.onMouseMove(e);
       this.mouse.down = true;
       this.pendingActions.add('attack');
     });
     window.addEventListener('mouseup', () => { this.mouse.down = false; });
+    window.addEventListener('blur', () => { this.mouse.down = false; this.keys.clear(); });
     canvas.addEventListener('contextmenu', e => e.preventDefault());
 
-    canvas.addEventListener('pointerdown', e => this.onPointerDown(e));
-    canvas.addEventListener('pointermove', e => this.onPointerMove(e));
-    canvas.addEventListener('pointerup', e => this.onPointerUp(e));
-    canvas.addEventListener('pointercancel', e => this.onPointerUp(e));
+    window.addEventListener('pointerdown', e => this.onPointerDown(e));
+    window.addEventListener('pointermove', e => this.onPointerMove(e));
+    window.addEventListener('pointerup', e => this.onPointerUp(e));
+    window.addEventListener('pointercancel', e => this.onPointerUp(e));
 
     this._buildMobileButtons();
+  }
+
+  // True when the event landed on interactive UI rather than the play area.
+  _isUiTarget(e) {
+    const t = e.target;
+    return !!(t && t.closest && t.closest(
+      'button, input, .menu-panel, .modal-panel, .card-grid, .wizard-footer, ' +
+      '.role-tabs, .hub-topbar, .mobile-buttons, .hud-abilities, .pause-overlay'
+    ));
   }
 
   onKeyDown(e) {
@@ -55,7 +68,8 @@ class InputController {
   }
 
   onPointerDown(e) {
-    if (!this.isTouch && e.pointerType !== 'touch') return;
+    if (e.pointerType !== 'touch') return;
+    if (this._isUiTarget(e)) return;
     const p = this._rectPos(e);
     const half = this.canvas.width / 2;
     if (p.x < half && !this.moveJoystick) {
@@ -142,9 +156,22 @@ class InputController {
     return { x: this.mouse.x, y: this.mouse.y, active: true };
   }
 
+  // A click queues one immediate attack ('attack' in pendingActions); holding
+  // the button keeps swinging at the character's own attack speed.
+  isHoldFiring() {
+    return this.mouse.down;
+  }
+
+  // Drop anything queued up, so clicks on menus never leak into the next match.
+  clearPending() {
+    this.pendingActions.clear();
+    this.mouse.down = false;
+    this.moveJoystick = null;
+    this.aimJoystick = null;
+  }
+
   // Touch players hold the aim stick to keep swinging; tapping repeatedly on a
-  // phone would be miserable. Mouse players get one attack per click instead,
-  // queued through pendingActions as 'attack'.
+  // phone would be miserable.
   isTouchFiring() {
     if (!this.aimJoystick) return false;
     const dx = this.aimJoystick.x - this.aimJoystick.originX;

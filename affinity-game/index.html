@@ -103,6 +103,8 @@
         <div id="hud-topinfo" class="hud-topinfo"></div>
         <div id="hud-scores" class="hud-scores"></div>
       </div>
+      <button id="btn-pause" class="btn-pause" title="Pause (Esc)">❚❚</button>
+      <div id="hud-hint" class="hud-hint" hidden></div>
       <div id="hud-respawn" class="hud-respawn" hidden></div>
       <div id="hud-killfeed" class="hud-killfeed"></div>
       <div class="hud-bottom">
@@ -124,6 +126,18 @@
       <button class="btn btn-primary" id="btn-results-continue">Continue</button>
     </div>
   </section>
+
+  <!-- PAUSE MENU (overlays a live match without unloading it) -->
+  <div id="pause-overlay" class="pause-overlay" hidden>
+    <div class="pause-panel">
+      <h2>Paused</h2>
+      <p id="pause-info" class="pause-info"></p>
+      <button class="btn btn-primary" id="btn-pause-resume">Resume</button>
+      <button class="btn" id="btn-pause-restart">Restart Match</button>
+      <button class="btn" id="btn-pause-leave">Leave Match</button>
+      <button class="btn" id="btn-pause-menu">Main Menu</button>
+    </div>
+  </div>
 
   <div id="hud-mobile-root"></div>
 </div>

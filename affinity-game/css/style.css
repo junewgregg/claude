@@ -17,6 +17,10 @@ html, body {
 }
 .screen.active { display: flex; }
 .screen.solid { background: #0a0c10; }
+/* The hub and match screens are HUD layers over the canvas: they must not
+   swallow clicks meant for the game. Their interactive bits opt back in. */
+#screen-hub, #screen-match { pointer-events: none; }
+#screen-hub button, #screen-match button, #screen-match .hud-abilities { pointer-events: auto; }
 
 /* ---------- Menu / Results ---------- */
 .menu-panel {
@@ -137,6 +141,29 @@ html, body {
 }
 .score-chip.mine { background: #122a3ad9; font-weight: 700; }
 .score-chip .sc { font-variant-numeric: tabular-nums; font-weight: 700; }
+.btn-pause {
+  position: absolute; top: 12px; left: 12px; pointer-events: auto;
+  width: 44px; height: 44px; border-radius: 10px; font-size: 0.9rem; letter-spacing: 1px;
+  background: #12161dcc; color: #eee; border: 1px solid #333c4a; cursor: pointer;
+}
+.btn-pause:hover { border-color: #4fd1ff; }
+.pause-overlay {
+  position: absolute; inset: 0; z-index: 30; display: flex;
+  background: rgba(5,7,10,0.82); backdrop-filter: blur(2px);
+}
+.pause-overlay[hidden] { display: none; }
+.pause-panel {
+  margin: auto; text-align: center; padding: 28px 34px; background: #10141b;
+  border: 1px solid #2a2f3a; border-radius: 16px; display: flex; flex-direction: column; min-width: 260px;
+}
+.pause-panel h2 { margin: 0 0 4px; letter-spacing: 0.12em; }
+.pause-info { color: #9aa; font-size: 0.85rem; margin: 0 0 16px; }
+.hud-hint {
+  position: absolute; bottom: 150px; left: 50%; transform: translateX(-50%);
+  background: #000000cc; color: #ffd24f; padding: 7px 16px; border-radius: 8px;
+  font-size: 0.9rem; font-weight: 600;
+}
+.hud-hint[hidden] { display: none; }
 .hud-respawn {
   position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%);
   background: #000000cc; padding: 18px 34px; border-radius: 14px; text-align: center;

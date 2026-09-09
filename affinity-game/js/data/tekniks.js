@@ -7,11 +7,11 @@ const TEKNIKS = [
   // ---------------- TANK ----------------
   {
     id: 'sword_knight', name: 'Sword Knight', role: 'tank', weaponGlyph: '🗡',
-    baseStats: { hp: 140, armor: 12, speed: 190, attackRange: 58, attackDamage: 10, attackCooldown: 0.9 },
+    baseStats: { hp: 140, armor: 12, speed: 190, attackRange: 82, attackDamage: 10, attackCooldown: 0.9 },
     attackType: 'melee',
     abilities: [
       { id: 'guard', base: 'Guard', type: 'shield_self', cooldown: 8, value: 0.25, duration: 4 },
-      { id: 'shield_bash', base: 'Shield Bash', type: 'melee_strike', cooldown: 6, damage: 14, range: 62, stun: 1.0 },
+      { id: 'shield_bash', base: 'Shield Bash', type: 'melee_strike', cooldown: 6, damage: 14, range: 86, stun: 1.0 },
       { id: 'rally_cry', base: 'Rally Cry', type: 'buff_team', cooldown: 14, radius: 150, stat: 'armor', amount: 0.15, duration: 5 },
       { id: 'charge', base: 'Charge', type: 'dash', cooldown: 10, damage: 12, distance: 220 }
     ],
@@ -19,7 +19,7 @@ const TEKNIKS = [
   },
   {
     id: 'mech', name: 'Mech', role: 'tank', weaponGlyph: '🤖',
-    baseStats: { hp: 150, armor: 14, speed: 170, attackRange: 66, attackDamage: 11, attackCooldown: 1.0 },
+    baseStats: { hp: 150, armor: 14, speed: 170, attackRange: 90, attackDamage: 11, attackCooldown: 1.0 },
     attackType: 'melee',
     abilities: [
       { id: 'servo_plating', base: 'Servo Plating', type: 'shield_self', cooldown: 9, value: 0.2, duration: 5 },
@@ -31,7 +31,7 @@ const TEKNIKS = [
   },
   {
     id: 'titan', name: 'Titan', role: 'tank', weaponGlyph: '⛰',
-    baseStats: { hp: 160, armor: 10, speed: 160, attackRange: 72, attackDamage: 12, attackCooldown: 1.0 },
+    baseStats: { hp: 160, armor: 10, speed: 160, attackRange: 96, attackDamage: 12, attackCooldown: 1.0 },
     attackType: 'melee',
     abilities: [
       { id: 'stone_skin', base: 'Stone Skin', type: 'shield_self', cooldown: 9, value: 0.22, duration: 5 },
@@ -69,10 +69,10 @@ const TEKNIKS = [
   },
   {
     id: 'surgeon', name: 'Surgeon', role: 'healer', weaponGlyph: '➕',
-    baseStats: { hp: 88, armor: 6, speed: 198, attackRange: 60, attackDamage: 7, attackCooldown: 0.7 },
+    baseStats: { hp: 88, armor: 6, speed: 198, attackRange: 82, attackDamage: 7, attackCooldown: 0.7 },
     attackType: 'melee',
     abilities: [
-      { id: 'triage_strike', base: 'Triage Strike', type: 'melee_strike', cooldown: 4, damage: 8, range: 62 },
+      { id: 'triage_strike', base: 'Triage Strike', type: 'melee_strike', cooldown: 4, damage: 8, range: 86 },
       { id: 'emergency_stabilize', base: 'Emergency Stabilize', type: 'heal_ally', cooldown: 10, value: 0.3 },
       { id: 'adrenaline_shot', base: 'Adrenaline Shot', type: 'buff_ally', cooldown: 9, stat: 'speed_damage', amount: 0.2, duration: 5 },
       { id: 'field_surgery', base: 'Field Surgery', type: 'cleanse_ally', cooldown: 11, value: 0.2 }
@@ -83,22 +83,22 @@ const TEKNIKS = [
   // ---------------- MELEE DPS ----------------
   {
     id: 'rogue', name: 'Rogue', role: 'meleeDPS', weaponGlyph: '🔪',
-    baseStats: { hp: 95, armor: 6, speed: 215, attackRange: 52, attackDamage: 11, attackCooldown: 0.6 },
+    baseStats: { hp: 95, armor: 6, speed: 215, attackRange: 76, attackDamage: 11, attackCooldown: 0.6 },
     attackType: 'melee',
     abilities: [
       { id: 'shadow_step', base: 'Shadow Step', type: 'dash', cooldown: 7, damage: 10, distance: 220 },
-      { id: 'backstab', base: 'Backstab', type: 'melee_strike', cooldown: 6, damage: 16, range: 55, executeBonus: 0.5 },
+      { id: 'backstab', base: 'Backstab', type: 'melee_strike', cooldown: 6, damage: 16, range: 79, executeBonus: 0.5 },
       { id: 'smoke_veil', base: 'Smoke Veil', type: 'stealth', cooldown: 12, duration: 2.5 },
       { id: 'throwing_knives', base: 'Throwing Knives', type: 'projectile', cooldown: 4, damage: 9, range: 240 }
     ],
-    ultimate: { id: 'death_mark', base: 'Death Mark', type: 'mark_and_strike', cooldown: 55, markAmount: 0.4, markDuration: 5, damage: 30, range: 60 }
+    ultimate: { id: 'death_mark', base: 'Death Mark', type: 'mark_and_strike', cooldown: 55, markAmount: 0.4, markDuration: 5, damage: 30, range: 84 }
   },
   {
     id: 'martial_artist', name: 'Martial Artist', role: 'meleeDPS', weaponGlyph: '👊',
-    baseStats: { hp: 100, armor: 7, speed: 205, attackRange: 55, attackDamage: 10, attackCooldown: 0.55 },
+    baseStats: { hp: 100, armor: 7, speed: 205, attackRange: 79, attackDamage: 10, attackCooldown: 0.55 },
     attackType: 'melee',
     abilities: [
-      { id: 'flowing_palm', base: 'Flowing Palm', type: 'melee_strike', cooldown: 4, damage: 13, range: 56 },
+      { id: 'flowing_palm', base: 'Flowing Palm', type: 'melee_strike', cooldown: 4, damage: 13, range: 80 },
       { id: 'rising_kick', base: 'Rising Kick', type: 'dash', cooldown: 7, damage: 12, distance: 160, stun: 0.8 },
       { id: 'iron_stance', base: 'Iron Stance', type: 'shield_self', cooldown: 10, value: 0.15, duration: 4 },
       { id: 'chi_burst', base: 'Chi Burst', type: 'aoe_damage', cooldown: 8, damage: 14, radius: 70, originSelf: true }
@@ -107,10 +107,10 @@ const TEKNIKS = [
   },
   {
     id: 'engineer', name: 'Engineer', role: 'meleeDPS', weaponGlyph: '🔧',
-    baseStats: { hp: 98, armor: 7, speed: 195, attackRange: 58, attackDamage: 10, attackCooldown: 0.6 },
+    baseStats: { hp: 98, armor: 7, speed: 195, attackRange: 82, attackDamage: 10, attackCooldown: 0.6 },
     attackType: 'melee',
     abilities: [
-      { id: 'wrench_smash', base: 'Wrench Smash', type: 'melee_strike', cooldown: 5, damage: 12, range: 58 },
+      { id: 'wrench_smash', base: 'Wrench Smash', type: 'melee_strike', cooldown: 5, damage: 12, range: 82 },
       { id: 'deploy_turret', base: 'Deploy Turret', type: 'summon_turret', cooldown: 14, duration: 8, damage: 4 },
       { id: 'tesla_coil', base: 'Tesla Coil', type: 'aoe_damage', cooldown: 9, damage: 13, radius: 90, slow: 0.3, originSelf: true },
       { id: 'overclock_gear', base: 'Overclock Gear', type: 'buff_self', cooldown: 11, stat: 'attackSpeed', amount: 0.25, duration: 5 }

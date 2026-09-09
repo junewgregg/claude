@@ -16,8 +16,10 @@ let playerSheet = null; // the confirmed, active character
 let hubEngine = null;
 let matchEngine = null;
 
+let paused = false;
 let pendingModeId = null;
 let pendingMapId = null;
+let lastMatchSetup = null; // { mode, mapId } so a paused match can be restarted
 let tournamentOpponentId = null;
 let activeTournament = null;
 let lastMatchResult = null;
@@ -27,6 +29,9 @@ function setScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   currentScreenId = id;
+  if (id !== 'screen-match') setPaused(false);
+  // Menu clicks must never leak through as attacks in the next match.
+  if (input) input.clearPending();
   canvas.classList.toggle('visible', id === 'screen-hub' || id === 'screen-match');
   if (id === 'screen-hub') input.setContext('hub');
   else if (id === 'screen-match') input.setContext('match');
@@ -137,6 +142,7 @@ function startMatchFromSelection() {
 function startMatch(mode, map, roster, isTournamentMatch) {
   document.getElementById('hud-killfeed').innerHTML = '';
   lastMatchWasTournament = isTournamentMatch;
+  lastMatchSetup = { mode, mapId: map.id, isTournamentMatch };
   matchEngine = new MatchEngine({
     map, mode, roster, playerSheet, input, canvas,
     onEnd: result => handleMatchEnd(result),
@@ -179,6 +185,41 @@ function continueAfterResults() {
   } else {
     setScreen('screen-hub');
   }
+}
+
+// ---------------- Pause ----------------
+function setPaused(value) {
+  paused = value;
+  const overlay = document.getElementById('pause-overlay');
+  if (overlay) overlay.hidden = !value;
+  if (value && matchEngine) {
+    const secs = Math.ceil(matchEngine.timeRemaining);
+    const standing = matchEngine.getStandings().find(s => s.team === matchEngine.playerEntity.team);
+    document.getElementById('pause-info').textContent =
+      `${matchEngine.mode.name} · ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')} left · your team on ${standing ? standing.kills : 0} kills`;
+    // A tournament round can't be replayed from scratch mid-bracket.
+    document.getElementById('btn-pause-restart').style.display = lastMatchWasTournament ? 'none' : '';
+  }
+  if (input) input.clearPending();
+}
+
+function togglePause() {
+  if (currentScreenId !== 'screen-match' || !matchEngine || matchEngine.ended) return;
+  setPaused(!paused);
+}
+
+function leaveMatch() {
+  setPaused(false);
+  matchEngine = null;
+  if (lastMatchWasTournament && activeTournament) openTournamentScreen();
+  else setScreen('screen-hub');
+}
+
+function restartMatch() {
+  if (!lastMatchSetup || lastMatchSetup.isTournamentMatch) return;
+  setPaused(false);
+  const { mode, mapId } = lastMatchSetup;
+  startMatch(mode, MAP_BY_ID[mapId], buildMatchRoster(mode, playerSheet), false);
 }
 
 // ---------------- Tournament ----------------
@@ -246,6 +287,23 @@ function wireUI() {
   });
 
   document.getElementById('btn-results-continue').addEventListener('click', continueAfterResults);
+
+  document.getElementById('btn-pause').addEventListener('click', togglePause);
+  document.getElementById('btn-pause-resume').addEventListener('click', () => setPaused(false));
+  document.getElementById('btn-pause-restart').addEventListener('click', restartMatch);
+  document.getElementById('btn-pause-leave').addEventListener('click', leaveMatch);
+  document.getElementById('btn-pause-menu').addEventListener('click', () => {
+    setPaused(false);
+    matchEngine = null;
+    setScreen('screen-menu');
+  });
+
+  // Esc pauses a match, or backs out of the hub to the main menu.
+  window.addEventListener('keydown', e => {
+    if (e.code !== 'Escape') return;
+    if (currentScreenId === 'screen-match') { e.preventDefault(); togglePause(); }
+    else if (currentScreenId === 'screen-hub') setScreen('screen-menu');
+  });
 }
 
 function loadSavedCharacter() {
@@ -269,7 +327,10 @@ function loop(now) {
     hubEngine.update(dt);
     renderHub(ctx, canvas, hubEngine);
   } else if (currentScreenId === 'screen-match' && matchEngine) {
-    matchEngine.update(dt);
+    // While paused the world is frozen but still drawn, so the pause menu sits
+    // over the scene rather than a blank screen.
+    if (!paused) matchEngine.update(dt);
+    else input.clearFrame();
     renderMatch(ctx, canvas, matchEngine);
     updateMatchHud(matchEngine);
   }
