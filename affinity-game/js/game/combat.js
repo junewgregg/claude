@@ -48,14 +48,14 @@ function clampToMap(x, y, world) {
 }
 
 // Global damage dial: everyone hits softer than raw kit numbers so fights last
-// long enough to react in. AI-controlled fighters take a further handicap so
-// they don't out-trade a human on pure cooldown uptime.
+// long enough to react in. AI fighters take a further handicap that scales with
+// their skill dial (see aiDamageScale in ai.js), so an easy opponent hits
+// noticeably softer than a tournament finalist.
 const COMBAT_DAMAGE_SCALE = 0.8;
-const AI_DAMAGE_SCALE = 0.85;
 
 function dealDamageTo(target, amount, source, world) {
   let dmg = amount * (source.damageMultiplier || 1) * COMBAT_DAMAGE_SCALE;
-  if (source.isAI) dmg *= AI_DAMAGE_SCALE;
+  if (source.isAI && source.sheet) dmg *= aiDamageScale(source);
   const applied = target.takeDamage(dmg, source, world);
   if (applied > 0) {
     spawnEffect(world, {

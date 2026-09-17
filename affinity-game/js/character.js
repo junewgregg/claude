@@ -28,7 +28,7 @@ function buildAbility(affinity, ability, statMods) {
   return named;
 }
 
-function createCharacterSheet({ affinityId, teknikId, name, isAI = false, team = null }) {
+function createCharacterSheet({ affinityId, teknikId, name, isAI = false, team = null, aiSkill = null }) {
   const affinity = AFFINITY_BY_ID[affinityId];
   const teknik = TEKNIK_BY_ID[teknikId];
   if (!affinity || !teknik) throw new Error('Unknown affinity/teknik combo');
@@ -52,6 +52,9 @@ function createCharacterSheet({ affinityId, teknikId, name, isAI = false, team =
     displayName: name || `${affinity.name} ${teknik.name}`,
     affinity, teknik, role: teknik.role,
     isAI, team,
+    // How sharp this fighter plays, ~0.4 to 1.0 (see ai.js). Null means the
+    // default casual skill; the tournament overrides it per round.
+    aiSkill,
     color: affinity.color, colorDark: affinity.colorDark,
     glyph: affinity.glyph, weaponGlyph: teknik.weaponGlyph,
     attackType: teknik.attackType,
@@ -61,8 +64,8 @@ function createCharacterSheet({ affinityId, teknikId, name, isAI = false, team =
   };
 }
 
-function randomCharacterSheet(name, isAI, team) {
+function randomCharacterSheet(name, isAI, team, aiSkill = null) {
   const affinity = AFFINITIES[Math.floor(Math.random() * AFFINITIES.length)];
   const teknik = TEKNIKS[Math.floor(Math.random() * TEKNIKS.length)];
-  return createCharacterSheet({ affinityId: affinity.id, teknikId: teknik.id, name, isAI, team });
+  return createCharacterSheet({ affinityId: affinity.id, teknikId: teknik.id, name, isAI, team, aiSkill });
 }

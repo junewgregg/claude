@@ -47,6 +47,24 @@ function dedupeNames(roster) {
   }
 }
 
+// ---------------- Difficulty ----------------
+// The tournament opens against a team that barely knows which end of the sword
+// to hold and finishes against one that plays sharper than your own squad.
+// Index = round (0 = Round of 16, 3 = Final). See aiParams() in ai.js.
+const TOURNAMENT_SKILL_BY_ROUND = [0.42, 0.60, 0.80, 1.0];
+const ALLY_SKILL = 0.75; // your teammates hold steady at casual-match skill
+
+function tournamentRoundSkill(roundIndex) {
+  return TOURNAMENT_SKILL_BY_ROUND[Math.min(roundIndex, TOURNAMENT_SKILL_BY_ROUND.length - 1)];
+}
+
+function skillLabel(skill) {
+  if (skill < 0.5) return 'Rookie';
+  if (skill < 0.7) return 'Contender';
+  if (skill < 0.9) return 'Veteran';
+  return 'Champion';
+}
+
 function teamLabel(t) {
   const names = ['', 'Crimson Squad', 'Azure Squad', 'Golden Squad', 'Violet Squad', 'Jade Squad', 'Silver Squad', 'Amber Squad'];
   return names[t] || `Squad ${t}`;

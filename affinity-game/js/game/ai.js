@@ -4,17 +4,36 @@
 // (no pixel-perfect kiting, no frame-perfect combos).
 
 const AI_AWARENESS_RANGE = 620;
-// Difficulty dials. These are deliberately human-ish: an average player doesn't
-// react in 200ms, doesn't hit every shot, and doesn't dump four abilities the
-// instant they come off cooldown. Both teams run this same controller, so
-// allies are exactly as capable as opponents.
-const AI_REACTION_MIN = 0.35;      // seconds between decisions
-const AI_REACTION_SPREAD = 0.4;
-const AI_ABILITY_CHANCE = 0.55;    // chance to use an available offensive ability
-const AI_ULTIMATE_CHANCE = 0.6;
-const AI_ABILITY_GAP = 1.5;        // min seconds between an AI's ability casts
-const AI_AIM_ERROR = 46;           // pixels of aim scatter
-const AI_ATTACK_CHANCE = 0.9;      // chance to take an available basic attack
+
+// Difficulty is a single dial per fighter: sheet.aiSkill, roughly 0.4 (clumsy)
+// to 1.0 (sharp). Everything human-ish about the AI scales off it — how fast it
+// reacts, how straight it aims, how freely it spends abilities, how hard it
+// hits. AI_DEFAULT_SKILL is what a casual match uses; the tournament raises the
+// opponents' dial round by round (see modes.js).
+const AI_DEFAULT_SKILL = 0.75;
+
+function aiSkillOf(entity) {
+  const s = entity.sheet.aiSkill;
+  return typeof s === 'number' ? s : AI_DEFAULT_SKILL;
+}
+
+// All the tuning in one place, derived from skill.
+function aiParams(skill) {
+  return {
+    reactionMin: 0.30 + (1 - skill) * 0.45,   // seconds between decisions
+    reactionRange: 0.30 + (1 - skill) * 0.40,
+    abilityChance: 0.20 + skill * 0.40,       // chance to spend an offensive ability
+    ultimateChance: 0.25 + skill * 0.45,
+    abilityGap: 1.1 + (1 - skill) * 1.8,      // min seconds between casts
+    aimError: 30 + (1 - skill) * 70,          // pixels of aim scatter
+    attackChance: 0.60 + skill * 0.30         // chance to take an available swing
+  };
+}
+
+// Damage handicap, also skill-scaled; combat.js applies this to AI hits.
+function aiDamageScale(entity) {
+  return 0.55 + aiSkillOf(entity) * 0.35;
+}
 
 function newAiState() {
   return {
@@ -32,8 +51,8 @@ function newAiState() {
 function aiCanCast(entity, world, st) {
   return world.time >= st.nextAbilityAt;
 }
-function aiNoteCast(world, st) {
-  st.nextAbilityAt = world.time + AI_ABILITY_GAP * (0.75 + Math.random() * 0.5);
+function aiNoteCast(world, st, params) {
+  st.nextAbilityAt = world.time + params.abilityGap * (0.75 + Math.random() * 0.5);
 }
 
 function aiPickTarget(entity, world) {
@@ -83,11 +102,12 @@ function aiUtilityAbilityIndex(entity, world) {
 function aiDecide(entity, world, st) {
   const target = aiPickTarget(entity, world);
   st.targetId = target ? target.id : null;
-  st.aimError = (Math.random() - 0.5) * AI_AIM_ERROR;
+  const params = aiParams(aiSkillOf(entity));
+  st.aimError = (Math.random() - 0.5) * params.aimError;
 
   const hpRatio = entity.hp / entity.maxHp;
   const role = entity.sheet.role;
-  // At most one cast per decision, and never two casts closer than AI_ABILITY_GAP.
+  // At most one cast per decision, and never two casts closer than the skill's ability gap.
   let casting = aiCanCast(entity, world, st);
 
   // 1. Emergency defense.
@@ -97,7 +117,7 @@ function aiDecide(entity, world, st) {
       const ab = entity.sheet.abilities[di];
       const aim = ['heal_ally', 'heal_ally_shield', 'cleanse_ally', 'shield_ally'].includes(ab.type)
         ? pointOf(lowestHpAlly(entity, world, true, 500) || entity) : pointOf(entity);
-      if (useAbility(entity, di, aim.x, aim.y, world)) { aiNoteCast(world, st); casting = false; }
+      if (useAbility(entity, di, aim.x, aim.y, world)) { aiNoteCast(world, st, params); casting = false; }
     }
   }
 
@@ -108,32 +128,32 @@ function aiDecide(entity, world, st) {
       const ui = aiUtilityAbilityIndex(entity, world);
       if (ui >= 0) {
         const p = pointOf(weakAlly);
-        if (useAbility(entity, ui, p.x, p.y, world)) { aiNoteCast(world, st); casting = false; }
+        if (useAbility(entity, ui, p.x, p.y, world)) { aiNoteCast(world, st, params); casting = false; }
       }
     }
   } else if (casting && Math.random() < 0.35) {
     // Non-healers occasionally pop team buffs (tank rally cries and the like).
     const ui = aiUtilityAbilityIndex(entity, world);
     if (ui >= 0 && ['buff_team', 'buff_self'].includes(entity.sheet.abilities[ui].type)) {
-      if (useAbility(entity, ui, entity.x, entity.y, world)) { aiNoteCast(world, st); casting = false; }
+      if (useAbility(entity, ui, entity.x, entity.y, world)) { aiNoteCast(world, st, params); casting = false; }
     }
   }
 
   // 3. Ultimate when a fight is on.
-  if (casting && target && entity.ultCooldown.remaining <= 0 && Math.random() < AI_ULTIMATE_CHANCE) {
+  if (casting && target && entity.ultCooldown.remaining <= 0 && Math.random() < params.ultimateChance) {
     const nearbyEnemies = enemiesInRadius(entity.x, entity.y, 260, entity, world).length;
     if (nearbyEnemies > 0 || role === 'healer') {
       const aim = pointOf(target);
-      if (useUltimate(entity, aim.x + st.aimError, aim.y + st.aimError, world)) { aiNoteCast(world, st); casting = false; }
+      if (useUltimate(entity, aim.x + st.aimError, aim.y + st.aimError, world)) { aiNoteCast(world, st, params); casting = false; }
     }
   }
 
   // 4. Offensive ability, sometimes.
   if (casting && target) {
     const oi = aiOffensiveAbilityIndex(entity, target, world);
-    if (oi >= 0 && Math.random() < AI_ABILITY_CHANCE) {
+    if (oi >= 0 && Math.random() < params.abilityChance) {
       const aim = pointOf(target);
-      if (useAbility(entity, oi, aim.x + st.aimError, aim.y + st.aimError, world)) { aiNoteCast(world, st); casting = false; }
+      if (useAbility(entity, oi, aim.x + st.aimError, aim.y + st.aimError, world)) { aiNoteCast(world, st, params); casting = false; }
     }
   }
 
@@ -192,14 +212,16 @@ function updateAI(entity, world, dt) {
   st.nextDecision -= dt;
   if (st.nextDecision <= 0) {
     aiDecide(entity, world, st);
-    st.nextDecision = AI_REACTION_MIN + Math.random() * AI_REACTION_SPREAD;
+    const params = aiParams(aiSkillOf(entity));
+    st.nextDecision = params.reactionMin + Math.random() * params.reactionRange;
   }
   applyMovement(entity, st.moveDirX, st.moveDirY, dt, world);
 
   // Basic attacks happen between decisions so the AI isn't idle mid-think, but
   // it passes on some openings rather than achieving perfect uptime.
   const target = world.entities.find(e => e.id === st.targetId && e.alive);
-  if (target && dist(entity, target) <= entity.sheet.stats.attackRange + 10 && Math.random() < AI_ATTACK_CHANCE) {
+  if (target && dist(entity, target) <= entity.sheet.stats.attackRange + 10
+      && Math.random() < aiParams(aiSkillOf(entity)).attackChance) {
     useBasicAttack(entity, target.x + st.aimError, target.y + st.aimError, world);
   }
 }

@@ -114,7 +114,11 @@ html, body {
 .tournament-status { text-align: center; font-weight: 600; color: #f4c542; min-height: 1.2em; }
 .tournament-current { flex: 1; overflow-y: auto; padding: 10px 0; }
 .bracket-round { margin-bottom: 10px; }
-.bracket-round h4 { margin: 6px 0; color: #8ab; }
+.bracket-round h4 { margin: 6px 0; color: #8ab; display: flex; gap: 10px; align-items: baseline; }
+.round-skill {
+  font-size: 0.72rem; font-weight: 500; color: #f4c542; text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
 .matchup { display: flex; justify-content: space-between; background: #12161d; border-radius: 8px; padding: 8px 12px; margin-bottom: 6px; font-size: 0.85rem; }
 .matchup.player { border: 1px solid #4fd1ff; }
 .matchup.done { opacity: 0.6; }
@@ -909,7 +913,7 @@ function buildAbility(affinity, ability, statMods) {
   return named;
 }
 
-function createCharacterSheet({ affinityId, teknikId, name, isAI = false, team = null }) {
+function createCharacterSheet({ affinityId, teknikId, name, isAI = false, team = null, aiSkill = null }) {
   const affinity = AFFINITY_BY_ID[affinityId];
   const teknik = TEKNIK_BY_ID[teknikId];
   if (!affinity || !teknik) throw new Error('Unknown affinity/teknik combo');
@@ -933,6 +937,9 @@ function createCharacterSheet({ affinityId, teknikId, name, isAI = false, team =
     displayName: name || `${affinity.name} ${teknik.name}`,
     affinity, teknik, role: teknik.role,
     isAI, team,
+    // How sharp this fighter plays, ~0.4 to 1.0 (see ai.js). Null means the
+    // default casual skill; the tournament overrides it per round.
+    aiSkill,
     color: affinity.color, colorDark: affinity.colorDark,
     glyph: affinity.glyph, weaponGlyph: teknik.weaponGlyph,
     attackType: teknik.attackType,
@@ -942,10 +949,10 @@ function createCharacterSheet({ affinityId, teknikId, name, isAI = false, team =
   };
 }
 
-function randomCharacterSheet(name, isAI, team) {
+function randomCharacterSheet(name, isAI, team, aiSkill = null) {
   const affinity = AFFINITIES[Math.floor(Math.random() * AFFINITIES.length)];
   const teknik = TEKNIKS[Math.floor(Math.random() * TEKNIKS.length)];
-  return createCharacterSheet({ affinityId: affinity.id, teknikId: teknik.id, name, isAI, team });
+  return createCharacterSheet({ affinityId: affinity.id, teknikId: teknik.id, name, isAI, team, aiSkill });
 }
 
 // ==== js/input.js ====
@@ -1406,14 +1413,14 @@ function clampToMap(x, y, world) {
 }
 
 // Global damage dial: everyone hits softer than raw kit numbers so fights last
-// long enough to react in. AI-controlled fighters take a further handicap so
-// they don't out-trade a human on pure cooldown uptime.
+// long enough to react in. AI fighters take a further handicap that scales with
+// their skill dial (see aiDamageScale in ai.js), so an easy opponent hits
+// noticeably softer than a tournament finalist.
 const COMBAT_DAMAGE_SCALE = 0.8;
-const AI_DAMAGE_SCALE = 0.85;
 
 function dealDamageTo(target, amount, source, world) {
   let dmg = amount * (source.damageMultiplier || 1) * COMBAT_DAMAGE_SCALE;
-  if (source.isAI) dmg *= AI_DAMAGE_SCALE;
+  if (source.isAI && source.sheet) dmg *= aiDamageScale(source);
   const applied = target.takeDamage(dmg, source, world);
   if (applied > 0) {
     spawnEffect(world, {
@@ -1769,17 +1776,36 @@ function updateEffects(world) {
 // (no pixel-perfect kiting, no frame-perfect combos).
 
 const AI_AWARENESS_RANGE = 620;
-// Difficulty dials. These are deliberately human-ish: an average player doesn't
-// react in 200ms, doesn't hit every shot, and doesn't dump four abilities the
-// instant they come off cooldown. Both teams run this same controller, so
-// allies are exactly as capable as opponents.
-const AI_REACTION_MIN = 0.35;      // seconds between decisions
-const AI_REACTION_SPREAD = 0.4;
-const AI_ABILITY_CHANCE = 0.55;    // chance to use an available offensive ability
-const AI_ULTIMATE_CHANCE = 0.6;
-const AI_ABILITY_GAP = 1.5;        // min seconds between an AI's ability casts
-const AI_AIM_ERROR = 46;           // pixels of aim scatter
-const AI_ATTACK_CHANCE = 0.9;      // chance to take an available basic attack
+
+// Difficulty is a single dial per fighter: sheet.aiSkill, roughly 0.4 (clumsy)
+// to 1.0 (sharp). Everything human-ish about the AI scales off it — how fast it
+// reacts, how straight it aims, how freely it spends abilities, how hard it
+// hits. AI_DEFAULT_SKILL is what a casual match uses; the tournament raises the
+// opponents' dial round by round (see modes.js).
+const AI_DEFAULT_SKILL = 0.75;
+
+function aiSkillOf(entity) {
+  const s = entity.sheet.aiSkill;
+  return typeof s === 'number' ? s : AI_DEFAULT_SKILL;
+}
+
+// All the tuning in one place, derived from skill.
+function aiParams(skill) {
+  return {
+    reactionMin: 0.30 + (1 - skill) * 0.45,   // seconds between decisions
+    reactionRange: 0.30 + (1 - skill) * 0.40,
+    abilityChance: 0.20 + skill * 0.40,       // chance to spend an offensive ability
+    ultimateChance: 0.25 + skill * 0.45,
+    abilityGap: 1.1 + (1 - skill) * 1.8,      // min seconds between casts
+    aimError: 30 + (1 - skill) * 70,          // pixels of aim scatter
+    attackChance: 0.60 + skill * 0.30         // chance to take an available swing
+  };
+}
+
+// Damage handicap, also skill-scaled; combat.js applies this to AI hits.
+function aiDamageScale(entity) {
+  return 0.55 + aiSkillOf(entity) * 0.35;
+}
 
 function newAiState() {
   return {
@@ -1797,8 +1823,8 @@ function newAiState() {
 function aiCanCast(entity, world, st) {
   return world.time >= st.nextAbilityAt;
 }
-function aiNoteCast(world, st) {
-  st.nextAbilityAt = world.time + AI_ABILITY_GAP * (0.75 + Math.random() * 0.5);
+function aiNoteCast(world, st, params) {
+  st.nextAbilityAt = world.time + params.abilityGap * (0.75 + Math.random() * 0.5);
 }
 
 function aiPickTarget(entity, world) {
@@ -1848,11 +1874,12 @@ function aiUtilityAbilityIndex(entity, world) {
 function aiDecide(entity, world, st) {
   const target = aiPickTarget(entity, world);
   st.targetId = target ? target.id : null;
-  st.aimError = (Math.random() - 0.5) * AI_AIM_ERROR;
+  const params = aiParams(aiSkillOf(entity));
+  st.aimError = (Math.random() - 0.5) * params.aimError;
 
   const hpRatio = entity.hp / entity.maxHp;
   const role = entity.sheet.role;
-  // At most one cast per decision, and never two casts closer than AI_ABILITY_GAP.
+  // At most one cast per decision, and never two casts closer than the skill's ability gap.
   let casting = aiCanCast(entity, world, st);
 
   // 1. Emergency defense.
@@ -1862,7 +1889,7 @@ function aiDecide(entity, world, st) {
       const ab = entity.sheet.abilities[di];
       const aim = ['heal_ally', 'heal_ally_shield', 'cleanse_ally', 'shield_ally'].includes(ab.type)
         ? pointOf(lowestHpAlly(entity, world, true, 500) || entity) : pointOf(entity);
-      if (useAbility(entity, di, aim.x, aim.y, world)) { aiNoteCast(world, st); casting = false; }
+      if (useAbility(entity, di, aim.x, aim.y, world)) { aiNoteCast(world, st, params); casting = false; }
     }
   }
 
@@ -1873,32 +1900,32 @@ function aiDecide(entity, world, st) {
       const ui = aiUtilityAbilityIndex(entity, world);
       if (ui >= 0) {
         const p = pointOf(weakAlly);
-        if (useAbility(entity, ui, p.x, p.y, world)) { aiNoteCast(world, st); casting = false; }
+        if (useAbility(entity, ui, p.x, p.y, world)) { aiNoteCast(world, st, params); casting = false; }
       }
     }
   } else if (casting && Math.random() < 0.35) {
     // Non-healers occasionally pop team buffs (tank rally cries and the like).
     const ui = aiUtilityAbilityIndex(entity, world);
     if (ui >= 0 && ['buff_team', 'buff_self'].includes(entity.sheet.abilities[ui].type)) {
-      if (useAbility(entity, ui, entity.x, entity.y, world)) { aiNoteCast(world, st); casting = false; }
+      if (useAbility(entity, ui, entity.x, entity.y, world)) { aiNoteCast(world, st, params); casting = false; }
     }
   }
 
   // 3. Ultimate when a fight is on.
-  if (casting && target && entity.ultCooldown.remaining <= 0 && Math.random() < AI_ULTIMATE_CHANCE) {
+  if (casting && target && entity.ultCooldown.remaining <= 0 && Math.random() < params.ultimateChance) {
     const nearbyEnemies = enemiesInRadius(entity.x, entity.y, 260, entity, world).length;
     if (nearbyEnemies > 0 || role === 'healer') {
       const aim = pointOf(target);
-      if (useUltimate(entity, aim.x + st.aimError, aim.y + st.aimError, world)) { aiNoteCast(world, st); casting = false; }
+      if (useUltimate(entity, aim.x + st.aimError, aim.y + st.aimError, world)) { aiNoteCast(world, st, params); casting = false; }
     }
   }
 
   // 4. Offensive ability, sometimes.
   if (casting && target) {
     const oi = aiOffensiveAbilityIndex(entity, target, world);
-    if (oi >= 0 && Math.random() < AI_ABILITY_CHANCE) {
+    if (oi >= 0 && Math.random() < params.abilityChance) {
       const aim = pointOf(target);
-      if (useAbility(entity, oi, aim.x + st.aimError, aim.y + st.aimError, world)) { aiNoteCast(world, st); casting = false; }
+      if (useAbility(entity, oi, aim.x + st.aimError, aim.y + st.aimError, world)) { aiNoteCast(world, st, params); casting = false; }
     }
   }
 
@@ -1957,14 +1984,16 @@ function updateAI(entity, world, dt) {
   st.nextDecision -= dt;
   if (st.nextDecision <= 0) {
     aiDecide(entity, world, st);
-    st.nextDecision = AI_REACTION_MIN + Math.random() * AI_REACTION_SPREAD;
+    const params = aiParams(aiSkillOf(entity));
+    st.nextDecision = params.reactionMin + Math.random() * params.reactionRange;
   }
   applyMovement(entity, st.moveDirX, st.moveDirY, dt, world);
 
   // Basic attacks happen between decisions so the AI isn't idle mid-think, but
   // it passes on some openings rather than achieving perfect uptime.
   const target = world.entities.find(e => e.id === st.targetId && e.alive);
-  if (target && dist(entity, target) <= entity.sheet.stats.attackRange + 10 && Math.random() < AI_ATTACK_CHANCE) {
+  if (target && dist(entity, target) <= entity.sheet.stats.attackRange + 10
+      && Math.random() < aiParams(aiSkillOf(entity)).attackChance) {
     useBasicAttack(entity, target.x + st.aimError, target.y + st.aimError, world);
   }
 }
@@ -2017,6 +2046,24 @@ function dedupeNames(roster) {
     seen[base] = (seen[base] || 0) + 1;
     if (seen[base] > 1) sheet.displayName = `${base} ${seen[base]}`;
   }
+}
+
+// ---------------- Difficulty ----------------
+// The tournament opens against a team that barely knows which end of the sword
+// to hold and finishes against one that plays sharper than your own squad.
+// Index = round (0 = Round of 16, 3 = Final). See aiParams() in ai.js.
+const TOURNAMENT_SKILL_BY_ROUND = [0.42, 0.60, 0.80, 1.0];
+const ALLY_SKILL = 0.75; // your teammates hold steady at casual-match skill
+
+function tournamentRoundSkill(roundIndex) {
+  return TOURNAMENT_SKILL_BY_ROUND[Math.min(roundIndex, TOURNAMENT_SKILL_BY_ROUND.length - 1)];
+}
+
+function skillLabel(skill) {
+  if (skill < 0.5) return 'Rookie';
+  if (skill < 0.7) return 'Contender';
+  if (skill < 0.9) return 'Veteran';
+  return 'Champion';
 }
 
 function teamLabel(t) {
@@ -2116,13 +2163,14 @@ function resolvePlayerMatchAndAdvance(tourney, playerWon) {
 function clampNum(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
 class MatchEngine {
-  constructor({ map, mode, roster, playerSheet, input, canvas, onEnd, onKillFeed }) {
+  constructor({ map, mode, roster, playerSheet, input, canvas, onEnd, onKillFeed, label }) {
     this.map = map;
     this.mode = mode;
     this.input = input;
     this.canvas = canvas;
     this.onEnd = onEnd;
     this.onKillFeed = onKillFeed || (() => {});
+    this.label = label || mode.name;
     this.ended = false;
     this.camera = { x: 0, y: 0 };
 
@@ -2855,7 +2903,7 @@ function updateMatchHud(engine, elapsed) {
   timerEl.classList.toggle('urgent', secs <= 30);
 
   document.getElementById('hud-topinfo').textContent =
-    `${engine.mode.name} · most kills wins · you: ${pe.kills} K / ${pe.deaths} D`;
+    `${engine.label} · most kills wins · you: ${pe.kills} K / ${pe.deaths} D`;
 
   // Live scoreboard: the player's team always shows, plus the top rivals.
   const standings = engine.getStandings();
@@ -2947,7 +2995,9 @@ function renderTournament(container, tourney) {
     const wrap = document.createElement('div');
     wrap.className = 'bracket-round';
     const roundNames = ['Round of 16', 'Quarterfinals', 'Semifinals', 'Final'];
-    wrap.innerHTML = `<h4>${roundNames[ri] || `Round ${ri + 1}`}</h4>`;
+    const skill = tournamentRoundSkill(ri);
+    wrap.innerHTML = `<h4>${roundNames[ri] || `Round ${ri + 1}`}
+      <span class="round-skill">opponents: ${skillLabel(skill)}</span></h4>`;
     round.forEach(m => {
       const row = document.createElement('div');
       const isPlayer = m.teamIds.includes(tourney.playerTeamId);
@@ -3096,20 +3146,24 @@ function startMatchFromSelection() {
   if (pendingModeId === 'tournament') {
     const teamA = activeTournament.teams[activeTournament.playerTeamId];
     const teamB = activeTournament.teams[tournamentOpponentId];
-    teamA.forEach(s => s.team = 0);
-    teamB.forEach(s => s.team = 1);
-    startMatch(mode, map, teamA.concat(teamB), true);
+    // Opponents sharpen every round; your own squad stays at casual skill.
+    const roundSkill = tournamentRoundSkill(activeTournament.currentRound);
+    teamA.forEach(s => { s.team = 0; if (s.isAI) s.aiSkill = ALLY_SKILL; });
+    teamB.forEach(s => { s.team = 1; s.aiSkill = roundSkill; });
+    const roundNames = ['Round of 16', 'Quarterfinals', 'Semifinals', 'Final'];
+    const label = `${roundNames[activeTournament.currentRound] || 'Tournament'} · ${skillLabel(roundSkill)} opponents`;
+    startMatch(mode, map, teamA.concat(teamB), true, label);
   } else {
     startMatch(mode, map, buildMatchRoster(mode, playerSheet), false);
   }
 }
 
-function startMatch(mode, map, roster, isTournamentMatch) {
+function startMatch(mode, map, roster, isTournamentMatch, label) {
   document.getElementById('hud-killfeed').innerHTML = '';
   lastMatchWasTournament = isTournamentMatch;
   lastMatchSetup = { mode, mapId: map.id, isTournamentMatch };
   matchEngine = new MatchEngine({
-    map, mode, roster, playerSheet, input, canvas,
+    map, mode, roster, playerSheet, input, canvas, label,
     onEnd: result => handleMatchEnd(result),
     onKillFeed: (victim, killer) => pushKillFeed(
       killer ? `${victim.sheet.displayName} was defeated by ${killer.sheet.displayName}` : `${victim.sheet.displayName} fell to the storm`

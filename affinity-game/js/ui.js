@@ -145,7 +145,7 @@ function updateMatchHud(engine, elapsed) {
   timerEl.classList.toggle('urgent', secs <= 30);
 
   document.getElementById('hud-topinfo').textContent =
-    `${engine.mode.name} · most kills wins · you: ${pe.kills} K / ${pe.deaths} D`;
+    `${engine.label} · most kills wins · you: ${pe.kills} K / ${pe.deaths} D`;
 
   // Live scoreboard: the player's team always shows, plus the top rivals.
   const standings = engine.getStandings();
@@ -237,7 +237,9 @@ function renderTournament(container, tourney) {
     const wrap = document.createElement('div');
     wrap.className = 'bracket-round';
     const roundNames = ['Round of 16', 'Quarterfinals', 'Semifinals', 'Final'];
-    wrap.innerHTML = `<h4>${roundNames[ri] || `Round ${ri + 1}`}</h4>`;
+    const skill = tournamentRoundSkill(ri);
+    wrap.innerHTML = `<h4>${roundNames[ri] || `Round ${ri + 1}`}
+      <span class="round-skill">opponents: ${skillLabel(skill)}</span></h4>`;
     round.forEach(m => {
       const row = document.createElement('div');
       const isPlayer = m.teamIds.includes(tourney.playerTeamId);

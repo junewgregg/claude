@@ -131,20 +131,24 @@ function startMatchFromSelection() {
   if (pendingModeId === 'tournament') {
     const teamA = activeTournament.teams[activeTournament.playerTeamId];
     const teamB = activeTournament.teams[tournamentOpponentId];
-    teamA.forEach(s => s.team = 0);
-    teamB.forEach(s => s.team = 1);
-    startMatch(mode, map, teamA.concat(teamB), true);
+    // Opponents sharpen every round; your own squad stays at casual skill.
+    const roundSkill = tournamentRoundSkill(activeTournament.currentRound);
+    teamA.forEach(s => { s.team = 0; if (s.isAI) s.aiSkill = ALLY_SKILL; });
+    teamB.forEach(s => { s.team = 1; s.aiSkill = roundSkill; });
+    const roundNames = ['Round of 16', 'Quarterfinals', 'Semifinals', 'Final'];
+    const label = `${roundNames[activeTournament.currentRound] || 'Tournament'} · ${skillLabel(roundSkill)} opponents`;
+    startMatch(mode, map, teamA.concat(teamB), true, label);
   } else {
     startMatch(mode, map, buildMatchRoster(mode, playerSheet), false);
   }
 }
 
-function startMatch(mode, map, roster, isTournamentMatch) {
+function startMatch(mode, map, roster, isTournamentMatch, label) {
   document.getElementById('hud-killfeed').innerHTML = '';
   lastMatchWasTournament = isTournamentMatch;
   lastMatchSetup = { mode, mapId: map.id, isTournamentMatch };
   matchEngine = new MatchEngine({
-    map, mode, roster, playerSheet, input, canvas,
+    map, mode, roster, playerSheet, input, canvas, label,
     onEnd: result => handleMatchEnd(result),
     onKillFeed: (victim, killer) => pushKillFeed(
       killer ? `${victim.sheet.displayName} was defeated by ${killer.sheet.displayName}` : `${victim.sheet.displayName} fell to the storm`

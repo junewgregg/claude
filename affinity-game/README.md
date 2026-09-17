@@ -49,13 +49,18 @@ closes in over the match, herding everyone toward the middle for the endgame.
 - **Game modes:** 8-Player Free-for-All, 4v4 Battle Royale, 2v2v2v2 Battle
   Royale (both with a shrinking storm zone), and a 16-team single-elimination
   4v4 Tournament where your squad stays together across every round while the
-  rest of the bracket plays out around you.
+  rest of the bracket plays out around you. **The tournament ramps**: the Round
+  of 16 fields Rookie opponents, then Contender, Veteran, and finally Champion
+  teams that play sharper than your own squad. The bracket screen and the match
+  HUD both name the round's difficulty.
 - **5 arenas** plus the hub, all drawn with canvas primitives.
-- **AI opponents and allies** running the same controller, so your squad is
-  exactly as capable as the enemy. They're tuned to play like an average
-  human rather than a machine: ~350-750ms reaction time, scattered aim, a
-  minimum gap between ability casts (no four-ability dumps), and they pass on
-  some openings. Teammates regroup on you when there's nobody to fight.
+- **AI opponents and allies** driven by a single skill dial (`sheet.aiSkill`,
+  roughly 0.4 to 1.0) that scales reaction time, aim scatter, how freely they
+  spend abilities, and how hard they hit. Casual matches run everyone at 0.75:
+  ~0.4-0.8s reactions, ~48px of aim scatter, a minimum gap between casts (no
+  four-ability dumps), and some openings passed up. Your teammates hold that
+  same skill in the tournament while opponents climb past it, and they regroup
+  on you when there's nobody to fight.
 - **Damage model** where armor reduces damage by a percentage rather than
   subtracting a flat amount, so every attack lands for something — a flat
   system meant heavy tanks shrugged off small hits entirely.

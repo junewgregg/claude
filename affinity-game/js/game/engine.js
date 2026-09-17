@@ -9,13 +9,14 @@
 function clampNum(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
 class MatchEngine {
-  constructor({ map, mode, roster, playerSheet, input, canvas, onEnd, onKillFeed }) {
+  constructor({ map, mode, roster, playerSheet, input, canvas, onEnd, onKillFeed, label }) {
     this.map = map;
     this.mode = mode;
     this.input = input;
     this.canvas = canvas;
     this.onEnd = onEnd;
     this.onKillFeed = onKillFeed || (() => {});
+    this.label = label || mode.name;
     this.ended = false;
     this.camera = { x: 0, y: 0 };
 

@@ -111,7 +111,11 @@ html, body {
 .tournament-status { text-align: center; font-weight: 600; color: #f4c542; min-height: 1.2em; }
 .tournament-current { flex: 1; overflow-y: auto; padding: 10px 0; }
 .bracket-round { margin-bottom: 10px; }
-.bracket-round h4 { margin: 6px 0; color: #8ab; }
+.bracket-round h4 { margin: 6px 0; color: #8ab; display: flex; gap: 10px; align-items: baseline; }
+.round-skill {
+  font-size: 0.72rem; font-weight: 500; color: #f4c542; text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
 .matchup { display: flex; justify-content: space-between; background: #12161d; border-radius: 8px; padding: 8px 12px; margin-bottom: 6px; font-size: 0.85rem; }
 .matchup.player { border: 1px solid #4fd1ff; }
 .matchup.done { opacity: 0.6; }
