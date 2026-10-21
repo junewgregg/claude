@@ -4,3 +4,9 @@ __pycache__/
 .venv/
 venv/
 .env
+# Personal network data, never commit
+linkedin_export/
+*.zip
+output/
+touchpoints.csv
+network_config.json
