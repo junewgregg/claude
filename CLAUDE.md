@@ -19,7 +19,7 @@ Jun Gregg is Grant Strategy and Product Funding Executive at Grant Engine (jun@g
 ## Contracting and pricing
 - Contracting and pricing threads include ONLY: the client, contracts@grantengine.com, Diane (diane@grantengine.com, invoices), Sam, PFEs and Zachary. Never delivery team members (e.g. Sasmita, Samia), even if they were on the incoming email.
 - Hand-off protocol needs all three emails:
-  1. Contracting: to the client, cc contracts@ and Sam, BCC HubSpot.
+  1. Contracting: to the client, cc contracts@ and Sam, BCC HubSpot. Every contracting email (including amendments) keeps economics confidential with this sentence right after the "keep this thread between you, me and our Contracting team" line: "We do not disclose any economics with our Delivery teams as they treat all project with 100% effort. Thank you kindly!"
   2. Invoice trigger: to Diane, BCC HubSpot, Sam and contracts@, starting with "PLEASE ISSUE WHEN CONTRACTING TEAM CONFIRMS SIGNATURE ON AGREEMENT".
   3. Delivery hand-off: to the client, cc Sam, Madhav, Rich and Samia (sobryan@). Never cc or mention the SME.
 - Delivery hand-off includes the kick-off deck paragraph: "In preparation for the project initiation, I've included a deck highlighting how best to get the most out of our collaboration (with p5-7 for a reminder of the agreed collaborative workflow and deliverables): Grant Engine Kick-off Presentation" (deck link: https://hubs.ly/Q04hf2y40).
