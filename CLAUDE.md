@@ -6,6 +6,7 @@ Jun Gregg is Grant Strategy and Product Funding Executive at Grant Engine (jun@g
 - Never send email. Create Gmail drafts only.
 - The only mailbox change allowed without asking: remove UNREAD from threads that don't need Jun. Never archive, trash, star, label, forward or reply.
 - Anything addressed to Jun stays UNREAD and gets listed, even if it only needs an acknowledgement (client or teammate writing to Jun, Zachary's lead emails, SME requests, farming forms, contracting threads where the client writes to Jun).
+- Introductions always need Jun: any email introducing Jun to someone (Sam or anyone else) is listed as NEEDS JUN with a reply drafted on the intro thread, until Jun has replied on that thread to the person introduced. A reply on another thread (e.g. contracting) or an emoji reaction does not count.
 - BCC 45270848@bcc.hubspot.com on client emails.
 - Jun's voice: warm, direct, brief, signed "Best, Jun". htmlBody with links embedded in text. No em or en dashes. No app.hubspot.com links in client emails.
 - Check that a draft still exists before updating it (Jun often sends or edits directly). When replacing a draft, delete the old one; never leave duplicates.
